@@ -234,6 +234,11 @@ input[type="range"] {
   min-height: 360px;
 }
 
+#race-video {
+  display: block;
+  pointer-events: none;
+}
+
 .video-fallback {
   display: grid;
   place-items: center;

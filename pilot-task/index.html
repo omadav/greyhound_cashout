@@ -90,7 +90,15 @@
             <p class="muted" id="race-copy"></p>
           </div>
           <div class="video-wrap">
-            <video id="race-video" controls playsinline preload="auto"></video>
+            <video
+              id="race-video"
+              playsinline
+              preload="auto"
+              disablepictureinpicture
+              disableremoteplayback
+              controlslist="nodownload nofullscreen noplaybackrate noremoteplayback"
+              tabindex="-1"
+            ></video>
             <div id="video-fallback" class="video-fallback hidden">
               <h3>Video unavailable</h3>
               <p>

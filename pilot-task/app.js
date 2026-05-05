@@ -21,7 +21,8 @@
     points: 0,
     results: [],
     startedAt: null,
-    videoEndedHandler: null
+    videoEndedHandler: null,
+    allowVideoPause: false
   };
 
   const els = {
@@ -191,6 +192,7 @@
     els.raceCopy.textContent =
       `If an offer appears, decide whether to cash out for ${trial.cashoutOffer} points ` +
       `or let the full race play out.`;
+    state.allowVideoPause = true;
     els.cashoutPanel.classList.add("hidden");
     els.videoFallback.classList.add("hidden");
     els.raceHelper.textContent = "The race will pause automatically if a cash-out offer appears.";
@@ -211,6 +213,7 @@
     els.raceVideo.addEventListener("ended", state.videoEndedHandler, { once: true });
 
     showScreen("race");
+    state.allowVideoPause = false;
 
     const playPromise = els.raceVideo.play();
     if (playPromise && typeof playPromise.catch === "function") {
@@ -225,6 +228,7 @@
   function showCashoutPanel() {
     const trial = state.currentTrial;
     state.cashoutShown = true;
+    state.allowVideoPause = true;
     els.raceVideo.pause();
     els.cashoutTitle.textContent = `Cash out now for ${trial.cashoutOffer} points?`;
     els.cashoutCopy.textContent =
@@ -245,7 +249,17 @@
 
   function handleCashout(choice) {
     state.cashoutChoice = choice;
+    state.allowVideoPause = false;
     els.cashoutPanel.classList.add("hidden");
+    els.raceVideo.play().catch(() => {
+      els.videoFallback.classList.remove("hidden");
+    });
+  }
+
+  function handleRacePause() {
+    if (state.allowVideoPause || els.raceVideo.ended || !state.currentTrial) {
+      return;
+    }
     els.raceVideo.play().catch(() => {
       els.videoFallback.classList.remove("hidden");
     });
@@ -263,6 +277,7 @@
   }
 
   function handleRaceEnded() {
+    state.allowVideoPause = true;
     const trial = state.currentTrial;
     const chosenDog = state.currentDogCards[state.selectedDogIndex];
     const pointsWon = pointsForTrial(trial, state.cashoutChoice);
@@ -413,7 +428,11 @@
   els.downloadJson.addEventListener("click", downloadJson);
   els.downloadCsv.addEventListener("click", downloadCsv);
   els.restartButton.addEventListener("click", restartPilot);
+  els.raceVideo.addEventListener("pause", handleRacePause);
   els.raceVideo.addEventListener("timeupdate", handleRaceTimeUpdate);
+  els.raceVideo.addEventListener("contextmenu", (event) => {
+    event.preventDefault();
+  });
   els.raceVideo.addEventListener("error", () => {
     els.videoFallback.classList.remove("hidden");
   });

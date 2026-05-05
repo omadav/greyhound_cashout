@@ -65,7 +65,7 @@ const PILOT_CONFIG = {
       finishLabel: "1st",
       finishOrder: [3, 2, 1, 4, 5, 6],
       cashoutOffer: 5,
-      cashoutPauseSec: 8.5,
+      cashoutPauseSec: 13.25,
       notes: "Interface pilot only. Uses the demo clip as a narrow-win style trial."
     },
     {
@@ -80,7 +80,7 @@ const PILOT_CONFIG = {
       finishLabel: "2nd",
       finishOrder: [3, 2, 1, 4, 5, 6],
       cashoutOffer: 7,
-      cashoutPauseSec: 9.25,
+      cashoutPauseSec: 13.75,
       notes: "Interface pilot only. Uses the demo clip as a near-miss trial."
     },
     {
@@ -95,7 +95,7 @@ const PILOT_CONFIG = {
       finishLabel: "3rd",
       finishOrder: [3, 2, 1, 4, 5, 6],
       cashoutOffer: 3,
-      cashoutPauseSec: 8.75,
+      cashoutPauseSec: 13.5,
       notes: "Interface pilot only. Uses the demo clip as a clear-loss style placeholder."
     },
     {
@@ -110,7 +110,7 @@ const PILOT_CONFIG = {
       finishLabel: "1st",
       finishOrder: [3, 2, 1, 4, 5, 6],
       cashoutOffer: 5,
-      cashoutPauseSec: 8.25,
+      cashoutPauseSec: 13.0,
       notes: "Interface pilot only. Replace with a true clear-win clip once AVIs are converted."
     }
   ]
