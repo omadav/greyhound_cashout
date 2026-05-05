@@ -239,6 +239,21 @@ input[type="range"] {
   pointer-events: none;
 }
 
+#race-video::-webkit-media-controls,
+#race-video::-webkit-media-controls-enclosure,
+#race-video::-webkit-media-controls-panel,
+#race-video::-webkit-media-controls-play-button,
+#race-video::-webkit-media-controls-start-playback-button,
+#race-video::-webkit-media-controls-timeline,
+#race-video::-webkit-media-controls-current-time-display,
+#race-video::-webkit-media-controls-time-remaining-display,
+#race-video::-webkit-media-controls-fullscreen-button,
+#race-video::-webkit-media-controls-mute-button,
+#race-video::-webkit-media-controls-volume-slider {
+  display: none !important;
+  -webkit-appearance: none;
+}
+
 .video-fallback {
   display: grid;
   place-items: center;
@@ -256,6 +271,41 @@ input[type="range"] {
   border-radius: 22px;
   background: rgba(20, 17, 13, 0.88);
   color: #fff8eb;
+}
+
+.race-intro-panel {
+  text-align: center;
+}
+
+.signal-lights {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  margin: 18px 0;
+}
+
+.signal-light {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+}
+
+.signal-light.active {
+  background: #f25f3a;
+  box-shadow: 0 0 18px rgba(242, 95, 58, 0.55);
+}
+
+.signal-light.go {
+  background: #2fbf71;
+  box-shadow: 0 0 18px rgba(47, 191, 113, 0.6);
+}
+
+.cashout-timer {
+  margin: 6px 0 0;
+  color: #f0e0b6;
+  font-weight: 700;
 }
 
 .hidden {

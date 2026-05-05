@@ -42,10 +42,14 @@
     raceTitle: document.getElementById("race-title"),
     raceCopy: document.getElementById("race-copy"),
     raceVideo: document.getElementById("race-video"),
+    raceIntroPanel: document.getElementById("race-intro-panel"),
+    raceIntroTitle: document.getElementById("race-intro-title"),
+    raceIntroCopy: document.getElementById("race-intro-copy"),
     videoFallback: document.getElementById("video-fallback"),
     cashoutPanel: document.getElementById("cashout-panel"),
     cashoutTitle: document.getElementById("cashout-title"),
     cashoutCopy: document.getElementById("cashout-copy"),
+    cashoutTimer: document.getElementById("cashout-timer"),
     cashoutAccept: document.getElementById("cashout-accept"),
     cashoutReject: document.getElementById("cashout-reject"),
     raceHelper: document.getElementById("race-helper"),
@@ -68,6 +72,11 @@
     downloadCsv: document.getElementById("download-csv"),
     restartButton: document.getElementById("restart-button")
   };
+
+  const raceIntroLights = Array.from(document.querySelectorAll(".signal-light"));
+  let raceIntroTimers = [];
+  let cashoutTimerInterval = null;
+  let cashoutExpiryTimeout = null;
 
   function showScreen(name) {
     Object.values(screens).forEach((screen) => screen.classList.remove("active"));
@@ -151,6 +160,38 @@
     return encodeURI(path);
   }
 
+  function lockVideoChrome() {
+    els.raceVideo.controls = false;
+    els.raceVideo.removeAttribute("controls");
+    els.raceVideo.setAttribute(
+      "controlslist",
+      "nodownload nofullscreen noplaybackrate noremoteplayback"
+    );
+    els.raceVideo.disablePictureInPicture = true;
+  }
+
+  function clearRaceIntroTimers() {
+    raceIntroTimers.forEach((timerId) => window.clearTimeout(timerId));
+    raceIntroTimers = [];
+  }
+
+  function resetSignalLights() {
+    raceIntroLights.forEach((light) => {
+      light.classList.remove("active", "go");
+    });
+  }
+
+  function clearCashoutTimers() {
+    if (cashoutTimerInterval) {
+      window.clearInterval(cashoutTimerInterval);
+      cashoutTimerInterval = null;
+    }
+    if (cashoutExpiryTimeout) {
+      window.clearTimeout(cashoutExpiryTimeout);
+      cashoutExpiryTimeout = null;
+    }
+  }
+
   function prepareTrial() {
     state.currentTrialIndex += 1;
     state.currentTrial = PILOT_CONFIG.trials[state.currentTrialIndex];
@@ -194,8 +235,16 @@
       `or let the full race play out.`;
     state.allowVideoPause = true;
     els.cashoutPanel.classList.add("hidden");
+    els.raceIntroPanel.classList.remove("hidden");
     els.videoFallback.classList.add("hidden");
-    els.raceHelper.textContent = "The race will pause automatically if a cash-out offer appears.";
+    els.raceHelper.textContent =
+      "The race begins automatically and will pause only for the cash-out offer.";
+    els.raceIntroTitle.textContent = "Race starts in 3";
+    els.raceIntroCopy.textContent = "Keep your eyes on your trap. The race will begin automatically.";
+    resetSignalLights();
+    clearRaceIntroTimers();
+    clearCashoutTimers();
+    lockVideoChrome();
 
     if (state.videoEndedHandler) {
       els.raceVideo.removeEventListener("ended", state.videoEndedHandler);
@@ -211,18 +260,53 @@
     };
 
     els.raceVideo.addEventListener("ended", state.videoEndedHandler, { once: true });
+    els.raceVideo.controls = false;
 
     showScreen("race");
-    state.allowVideoPause = false;
 
-    const playPromise = els.raceVideo.play();
-    if (playPromise && typeof playPromise.catch === "function") {
-      playPromise.catch(() => {
-        els.videoFallback.classList.remove("hidden");
-        els.raceHelper.textContent =
-          "Playback was blocked or unsupported. You can still use this pilot to test the flow.";
-      });
-    }
+    raceIntroTimers.push(
+      window.setTimeout(() => {
+        els.raceIntroTitle.textContent = "Race starts in 3";
+        raceIntroLights[0].classList.add("active");
+      }, 0)
+    );
+    raceIntroTimers.push(
+      window.setTimeout(() => {
+        els.raceIntroTitle.textContent = "Race starts in 2";
+        raceIntroLights[1].classList.add("active");
+      }, 700)
+    );
+    raceIntroTimers.push(
+      window.setTimeout(() => {
+        els.raceIntroTitle.textContent = "Race starts in 1";
+        raceIntroLights[2].classList.add("active");
+      }, 1400)
+    );
+    raceIntroTimers.push(
+      window.setTimeout(() => {
+        els.raceIntroTitle.textContent = "They're off";
+        els.raceIntroCopy.textContent = `Track Trap ${trial.assignedTrap} through the run-in.`;
+        raceIntroLights.forEach((light) => {
+          light.classList.remove("active");
+          light.classList.add("go");
+        });
+      }, 2100)
+    );
+    raceIntroTimers.push(
+      window.setTimeout(() => {
+        els.raceIntroPanel.classList.add("hidden");
+        state.allowVideoPause = false;
+        lockVideoChrome();
+        const playPromise = els.raceVideo.play();
+        if (playPromise && typeof playPromise.catch === "function") {
+          playPromise.catch(() => {
+            els.videoFallback.classList.remove("hidden");
+            els.raceHelper.textContent =
+              "Playback was blocked or unsupported. You can still use this pilot to test the flow.";
+          });
+        }
+      }, 2500)
+    );
   }
 
   function showCashoutPanel() {
@@ -234,7 +318,18 @@
     els.cashoutCopy.textContent =
       `Choose a guaranteed ${trial.cashoutOffer} points now, or keep betting for the full ` +
       `${PILOT_CONFIG.baseWinPoints}-point outcome if your dog wins.`;
+    els.cashoutTimer.textContent = "Offer expires in 4.0s";
     els.cashoutPanel.classList.remove("hidden");
+    const startedAt = Date.now();
+    clearCashoutTimers();
+    cashoutTimerInterval = window.setInterval(() => {
+      const remaining = Math.max(0, 4000 - (Date.now() - startedAt));
+      els.cashoutTimer.textContent = `Offer expires in ${(remaining / 1000).toFixed(1)}s`;
+    }, 100);
+    cashoutExpiryTimeout = window.setTimeout(() => {
+      els.raceHelper.textContent = "Offer expired. Your bet stayed live.";
+      handleCashout("reject");
+    }, 4000);
   }
 
   function handleRaceTimeUpdate() {
@@ -248,9 +343,11 @@
   }
 
   function handleCashout(choice) {
+    clearCashoutTimers();
     state.cashoutChoice = choice;
     state.allowVideoPause = false;
     els.cashoutPanel.classList.add("hidden");
+    lockVideoChrome();
     els.raceVideo.play().catch(() => {
       els.videoFallback.classList.remove("hidden");
     });
@@ -277,6 +374,8 @@
   }
 
   function handleRaceEnded() {
+    clearRaceIntroTimers();
+    clearCashoutTimers();
     state.allowVideoPause = true;
     const trial = state.currentTrial;
     const chosenDog = state.currentDogCards[state.selectedDogIndex];
@@ -395,6 +494,9 @@
   }
 
   function restartPilot() {
+    clearRaceIntroTimers();
+    clearCashoutTimers();
+    resetSignalLights();
     state.currentTrialIndex = -1;
     state.currentTrial = null;
     state.currentDogCards = [];
@@ -429,6 +531,8 @@
   els.downloadCsv.addEventListener("click", downloadCsv);
   els.restartButton.addEventListener("click", restartPilot);
   els.raceVideo.addEventListener("pause", handleRacePause);
+  els.raceVideo.addEventListener("play", lockVideoChrome);
+  els.raceVideo.addEventListener("loadedmetadata", lockVideoChrome);
   els.raceVideo.addEventListener("timeupdate", handleRaceTimeUpdate);
   els.raceVideo.addEventListener("contextmenu", (event) => {
     event.preventDefault();
@@ -443,4 +547,5 @@
   wireSlider(els.luckSlider, els.luckValue);
 
   updateHeader();
+  lockVideoChrome();
 })();
