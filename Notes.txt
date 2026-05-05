@@ -1,0 +1,11 @@
+﻿Notes
+
+Written for Kate Champion Part II Project, 2013-14.
+
+Working, but not particularly polished
+
+Known bug 
+ * Browse duration not recorded for 'final' part of browse.
+ * (that is - the duration that the tab pane *last shown* was shown before 'confirm' was clicked)
+
+(fixed for use by Sophie Miller, Dec 2014)

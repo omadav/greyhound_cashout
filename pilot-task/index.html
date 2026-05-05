@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Greyhound Pilot Task</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Greyhound Prolific Pilot</p>
+          <h1>Race Choice and Cash-Out Demo</h1>
+        </div>
+        <div class="status">
+          <span id="trial-status">Trial 0 / 0</span>
+          <span id="points-status">Points: 0</span>
+        </div>
+      </header>
+
+      <section id="screen-intro" class="screen active">
+        <div class="card narrow">
+          <h2>Workflow Pilot</h2>
+          <p>
+            This browser prototype tests the full task flow: dog choice, hidden assignment,
+            confidence rating, race playback, mid-race cash-out, outcome feedback, and
+            post-race motivation ratings.
+          </p>
+          <p>
+            The current pilot reuses one demo video and is meant for interface testing, not
+            formal data collection. The full study will need converted web-ready race videos
+            and a finalized stimulus schedule.
+          </p>
+          <ul class="plain-list">
+            <li>You will complete 4 short demo trials.</li>
+            <li>One trial includes a practice-style walkthrough of the cash-out flow.</li>
+            <li>Your responses are stored in the browser until you download them at the end.</li>
+          </ul>
+          <button id="start-button" class="button primary">Start pilot</button>
+        </div>
+      </section>
+
+      <section id="screen-choice" class="screen">
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <p class="eyebrow" id="condition-chip">Condition</p>
+              <h2>Choose your dog</h2>
+            </div>
+            <p class="muted" id="choice-copy">Pick one dog for this race.</p>
+          </div>
+          <div id="dog-grid" class="dog-grid"></div>
+          <div class="actions">
+            <button id="choice-next" class="button primary" disabled>Continue</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="screen-assignment" class="screen">
+        <div class="card narrow">
+          <p class="eyebrow">Trap Assignment</p>
+          <h2 id="assignment-title">Your dog is ready</h2>
+          <p id="assignment-copy"></p>
+          <button id="assignment-next" class="button primary">Rate confidence</button>
+        </div>
+      </section>
+
+      <section id="screen-confidence" class="screen">
+        <div class="card narrow">
+          <p class="eyebrow">Pre-race rating</p>
+          <h2>How confident are you that your dog will win?</h2>
+          <label class="slider-wrap" for="confidence-slider">
+            <span>Not at all confident</span>
+            <input id="confidence-slider" type="range" min="0" max="100" step="1" value="50">
+            <span>Very confident</span>
+          </label>
+          <p class="value-readout"><span id="confidence-value">50</span>/100</p>
+          <button id="confidence-next" class="button primary">Watch race</button>
+        </div>
+      </section>
+
+      <section id="screen-race" class="screen">
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <p class="eyebrow">Race video</p>
+              <h2 id="race-title">Follow your dog</h2>
+            </div>
+            <p class="muted" id="race-copy"></p>
+          </div>
+          <div class="video-wrap">
+            <video id="race-video" controls playsinline preload="auto"></video>
+            <div id="video-fallback" class="video-fallback hidden">
+              <h3>Video unavailable</h3>
+              <p>
+                This pilot expects a browser-compatible video file. If this appears, the task
+                flow is still working but the clip could not be played in your browser.
+              </p>
+            </div>
+          </div>
+          <div id="cashout-panel" class="overlay-panel hidden">
+            <p class="eyebrow">Cash-out offer</p>
+            <h3 id="cashout-title">Cash out now?</h3>
+            <p id="cashout-copy"></p>
+            <div class="button-row">
+              <button id="cashout-accept" class="button secondary">Cash out now</button>
+              <button id="cashout-reject" class="button primary">Keep betting</button>
+            </div>
+          </div>
+          <p id="race-helper" class="helper-text">
+            The race will pause automatically if a cash-out offer appears.
+          </p>
+        </div>
+      </section>
+
+      <section id="screen-result" class="screen">
+        <div class="card narrow">
+          <p class="eyebrow">Outcome</p>
+          <h2 id="result-title">Race complete</h2>
+          <p id="result-copy"></p>
+          <div class="result-grid">
+            <div>
+              <span class="result-label">Dog</span>
+              <strong id="result-dog"></strong>
+            </div>
+            <div>
+              <span class="result-label">Trap</span>
+              <strong id="result-trap"></strong>
+            </div>
+            <div>
+              <span class="result-label">Finish</span>
+              <strong id="result-place"></strong>
+            </div>
+            <div>
+              <span class="result-label">Points this trial</span>
+              <strong id="result-points"></strong>
+            </div>
+          </div>
+          <button id="result-next" class="button primary">Continue</button>
+        </div>
+      </section>
+
+      <section id="screen-postrace" class="screen">
+        <div class="card narrow">
+          <p class="eyebrow">Post-race ratings</p>
+          <h2>How did that race feel?</h2>
+          <div class="question-block">
+            <label for="pleased-slider">How pleased were you with the outcome of this race?</label>
+            <input id="pleased-slider" type="range" min="0" max="100" step="1" value="50">
+            <p class="value-readout"><span id="pleased-value">50</span>/100</p>
+          </div>
+          <div class="question-block">
+            <label for="motivation-slider">Right now, how much do you want to play the next race?</label>
+            <input id="motivation-slider" type="range" min="0" max="100" step="1" value="50">
+            <p class="value-readout"><span id="motivation-value">50</span>/100</p>
+          </div>
+          <div class="question-block">
+            <label for="luck-slider">How lucky or unlucky do you feel right now?</label>
+            <input id="luck-slider" type="range" min="0" max="100" step="1" value="50">
+            <p class="value-readout"><span id="luck-value">50</span>/100</p>
+          </div>
+          <button id="postrace-next" class="button primary">Next</button>
+        </div>
+      </section>
+
+      <section id="screen-finish" class="screen">
+        <div class="card narrow">
+          <p class="eyebrow">Pilot complete</p>
+          <h2>Session summary</h2>
+          <p id="finish-copy"></p>
+          <div class="button-row">
+            <button id="download-json" class="button primary">Download JSON</button>
+            <button id="download-csv" class="button secondary">Download CSV</button>
+          </div>
+          <div class="button-row">
+            <button id="restart-button" class="button ghost">Run pilot again</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="./trial-config.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
