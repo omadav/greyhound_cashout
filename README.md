@@ -11,6 +11,7 @@ This repository contains materials for the greyhound race project, including:
 - the current Prolific study design draft in `prolific_greyhound_design_proposal.md`
 - a browser pilot prototype in `pilot-task/`
 - a GitHub Pages publish copy in `docs/`
+- bilingual UChile/FACSO ethics protocol drafts in `uchile_facso_ethics_protocol_greyhound_es.md` and `uchile_facso_ethics_protocol_greyhound_en.md`
 
 ## Current Goal
 
@@ -38,6 +39,8 @@ Adapt the earlier greyhound race task into a Prolific-compatible online experime
 - created this `README.md` as a running session record
 - built a dependency-light browser pilot in `pilot-task/` with dog choice, hidden trap assignment, confidence rating, race playback, cash-out, outcome feedback, post-race ratings, and JSON/CSV export
 - packaged the pilot for one-click GitHub Pages hosting by moving the demo clip inside the app and creating a deployable `docs/` copy
+- added a post-task PGSI questionnaire to both the source pilot and live Pages copy
+- drafted University of Chile / FACSO ethics protocol versions in Spanish and English
 
 #### Key findings
 
