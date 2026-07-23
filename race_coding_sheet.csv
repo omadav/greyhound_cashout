@@ -9,7 +9,7 @@ priority,race_id,video_file,duration_sec,challenged,lead_change_late,second_clos
 1,37,Races/37.mp4,21.69,,,,,,,DISPUTED,disputed,0.07,narrow,1,3,5,,,,,NO-cut-short,,
 2,4,Races/4.mp4,23.12,,,,,NW,,CATCHUP,3/3,0.05,narrow,3,5,2,6,,,,yes,all 3 raters agree,
 2,5,Races/5.mp4,23.09,,,,,NW,,FALLBACK,3/3,0.09,grey,2,3,1,6,,,,yes,all 3 raters agree,
-2,7,Races/7.mp4,27.46,,,,,CW,,FALLBACK,3/3,,unknown,6,2,3,6,,,,yes,no margin recorded in 2013 sheet,
+2,7,Races/7.mp4,27.46,,,,,NW,,FALLBACK,3/3,,unknown,6,2,3,6,,,,yes,no margin recorded in 2013 sheet,Rewatched: super close finish -> NW (close). Agrees with 2013 (all 3 raters coded it close/fallback).
 2,9,Races/9.mp4,23.56,,,,,NW,,FALLBACK,3/3,0.10,grey,4,1,2,6,,,,yes,"lead change midway, not at the line - check",
 2,15,Races/15.mp4,22.49,,,,,NW,,FALLBACK,3/3,0.05,narrow,1,3,4,6,,,,yes,all 3 raters agree,
 2,27,Races/27.mp4,23.06,,,,,,,FALLBACK,2/3,0.23,grey,6,2,1,,,,,NO-cut-short,,
@@ -36,4 +36,4 @@ priority,race_id,video_file,duration_sec,challenged,lead_change_late,second_clos
 1,18,Races/18.mp4,22.66,n,n,n,CLEAR,CW,,STABLE,2/3,0.26,grey,4,6,5,6,,,y,yes,,"Clear win by 4. Order 4,6,5 - same top-3 as race 14 but confirmed different video (final time differs)."
 1,20,Races/20.mp4,21.35,n,n,n,CLEAR,NW,,DISPUTED,disputed,0.14,grey,1,4,5,6,,,y,yes,Luke 'between clear and narrow',"Eye: NW but borderline - field piles up behind winner, not far back, distance maintained through the run-in, winner never challenged."
 1,21,Races/21.mp4,21.76,n,n,n,CLEAR,NW,,STABLE,3/3,0.05,narrow,3,1,4,6,,,y,yes,,"Clear win by 3, verified on video: 3 several lengths clear at the line; 1 and 4 locked together for 2nd. Scoreboard 3-1-4, race time 18.89."
-1,22,Races/22.mp4,21.65,,,,,NW,,STABLE,2/3,0.58,clear,3,5,4,6,,,y,yes,margin wide - may not be near at all,RETRACTED Claude's STABLE call: measured gap 0.58s = clear by the 2013 rule. Visual call was unreliable (winner likely out of frame). Needs dynamics coding only.
+1,22,Races/22.mp4,21.65,,,,,NW,,STABLE,2/3,0.58,clear,3,5,4,5,6,,y,yes,margin wide - may not be near at all,"5 runners, trap 6 (striped) vacant. Top3 3,5,4. (Earlier fast pass logged as 6 by mistake.)"

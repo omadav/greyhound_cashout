@@ -58,7 +58,7 @@ const STUDY = {
     { id: 4, video: "4.mp4", kind: "close", nRunners: 6, missing: [], winner: 3, runnerUp: 5, third: 2 },
     { id: 5, video: "5.mp4", kind: "close", nRunners: 6, missing: [], winner: 2, runnerUp: 3, third: 1 },
     { id: 6, video: "6.mp4", kind: "clear", nRunners: 6, missing: [], winner: 6, runnerUp: 3, third: 5 },
-    { id: 7, video: "7.mp4", kind: "clear", nRunners: 6, missing: [], winner: 6, runnerUp: 2, third: 3 },
+    { id: 7, video: "7.mp4", kind: "close", nRunners: 6, missing: [], winner: 6, runnerUp: 2, third: 3 },
     { id: 8, video: "8.mp4", kind: "clear", nRunners: 6, missing: [], winner: 6, runnerUp: 1, third: 3 },
     { id: 9, video: "9.mp4", kind: "close", nRunners: 6, missing: [], winner: 4, runnerUp: 1, third: 2 },
     { id: 10, video: "10.mp4", kind: "clear", nRunners: 5, missing: [6], winner: 1, runnerUp: 3, third: 4 },
@@ -73,7 +73,7 @@ const STUDY = {
     { id: 19, video: "19.mp4", kind: "clear", nRunners: 5, missing: [6], winner: 1, runnerUp: 3, third: 4 },
     { id: 20, video: "20.mp4", kind: "close", nRunners: 6, missing: [], winner: 1, runnerUp: 4, third: 5 },
     { id: 21, video: "21.mp4", kind: "close", nRunners: 6, missing: [], winner: 3, runnerUp: 1, third: 4 },
-    { id: 22, video: "22.mp4", kind: "close", nRunners: 6, missing: [], winner: 3, runnerUp: 5, third: 4 },
+    { id: 22, video: "22.mp4", kind: "close", nRunners: 5, missing: [6], winner: 3, runnerUp: 5, third: 4 },
     { id: 23, video: "23.mp4", kind: "clear", nRunners: 6, missing: [], winner: 3, runnerUp: 5, third: 1 }
   ],
 
