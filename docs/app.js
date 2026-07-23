@@ -15,8 +15,9 @@
     schedule: [],
     currentTrialIndex: -1,
     currentTrial: null,
+    namePool: [],
     currentDogNames: [],
-    currentTrapNames: [],
+    currentDogInfo: [],
     selectedDogIndex: null,
     trapAssignments: null,
     cashoutShown: false,
@@ -146,8 +147,8 @@
   function updateHeader() {
     const total = state.schedule.length || STUDY.repsPerCondition * STUDY.allocation.length;
     const shownTrial = Math.max(state.currentTrialIndex + 1, 0);
-    els.trialStatus.textContent = `Trial ${shownTrial} / ${total}`;
-    els.pointsStatus.textContent = `Points: ${state.points}`;
+    els.trialStatus.textContent = `Race ${shownTrial} / ${total}`;
+    els.pointsStatus.textContent = `${STUDY.currency}${state.points}`;
   }
 
   // ---- schedule ---------------------------------------------------------
@@ -211,8 +212,38 @@
 
   // ---- dog choice -------------------------------------------------------
 
+  function randOf(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  // Every prefix x word combination, shuffled. Names are dealt without replacement
+  // across the whole session so no dog name is ever seen twice by a participant.
+  function buildNamePool() {
+    const combos = [];
+    STUDY.namePrefixes.forEach((p) => STUDY.nameWords.forEach((w) => combos.push(`${p} ${w}`)));
+    return shuffle(combos);
+  }
+
   function drawDogNames(count) {
-    return shuffle(STUDY.dogNames).slice(0, count);
+    if (state.namePool.length < count) {
+      state.namePool = state.namePool.concat(buildNamePool()); // safety refill; should never trigger
+    }
+    return state.namePool.splice(0, count);
+  }
+
+  // Decorative form details. Random and identically distributed across conditions,
+  // so they carry no information about the (trap-determined) outcome.
+  function makeDogInfo(name) {
+    const form = Array.from({ length: 4 }, () => 1 + Math.floor(Math.random() * 6)).join("-");
+    return {
+      name: name,
+      age: (1.5 + Math.random() * 2.5).toFixed(1) + "yr",
+      weight: (28 + Math.random() * 7).toFixed(1) + "kg",
+      form: form,
+      trainer: randOf(STUDY.trainers),
+      town: randOf(STUDY.towns),
+      odds: randOf(STUDY.oddsBoard)
+    };
   }
 
   function buildTrapAssignments(chosenName, assignedTrap, trial) {
@@ -233,15 +264,32 @@
 
   function renderDogChoices() {
     els.dogGrid.innerHTML = "";
-    state.currentDogNames = drawDogNames(state.currentTrial.nRunners);
+    const names = drawDogNames(state.currentTrial.nRunners);
+    state.currentDogInfo = names.map(makeDogInfo);
+    state.currentDogNames = names;
     state.selectedDogIndex = null;
     els.choiceNext.disabled = true;
 
-    state.currentDogNames.forEach((name, index) => {
+    // Trap numbers are deliberately NOT shown here — the trap is revealed after the
+    // choice, which is where the chosen dog is mapped onto its condition trap.
+    state.currentDogInfo.forEach((dog, index) => {
       const button = document.createElement("button");
       button.type = "button";
       button.className = "dog-card";
-      button.innerHTML = `<h3>${name}</h3>`;
+      button.innerHTML = `
+        <div class="dog-card-top">
+          <h3>${dog.name}</h3>
+          <span class="odds">${dog.odds}</span>
+        </div>
+        <div class="dog-stats">
+          <span><em>Form</em>${dog.form}</span>
+          <span><em>Trainer</em>${dog.trainer}</span>
+          <span><em>Age</em>${dog.age}</span>
+          <span><em>Weight</em>${dog.weight}</span>
+          <span><em>Track</em>${dog.town}</span>
+        </div>
+        <span class="pick-tag">Back this dog</span>
+      `;
       button.addEventListener("click", () => {
         state.selectedDogIndex = index;
         Array.from(els.dogGrid.children).forEach((card) => card.classList.remove("selected"));
@@ -385,8 +433,9 @@
     state.trapAssignments = null;
     updateHeader();
 
-    els.conditionChip.textContent = `Race ${state.currentTrialIndex + 1}`;
-    els.choiceCopy.textContent = "Pick the dog you want to back in this race.";
+    els.conditionChip.textContent =
+      `Race ${state.currentTrialIndex + 1} · ${state.currentTrial.nRunners} runners`;
+    els.choiceCopy.textContent = "Study the card and back a dog to win.";
     renderDogChoices();
     showScreen("choice");
   }
@@ -583,6 +632,7 @@
       videoFile: trial.video.split("/").pop(),
       nRunners: trial.nRunners,
       chosenDog: chosenName,
+      chosenDogOdds: (state.currentDogInfo[state.selectedDogIndex] || {}).odds || "",
       assignedTrap: trial.assignedTrap,
       trapRole: trial.role,
       winnerTrap: trial.winnerTrap,
@@ -604,7 +654,7 @@
     els.resultDog.textContent = chosenName;
     els.resultTrap.textContent = `Trap ${trial.assignedTrap}`;
     els.resultPlace.textContent = finishLabel;
-    els.resultPoints.textContent = String(pointsWon);
+    els.resultPoints.textContent = `${STUDY.currency}${pointsWon}`;
 
     showScreen("result");
   }
@@ -629,7 +679,7 @@
     const pgsiTotal = pgsiResponses.reduce((sum, value) => sum + value, 0);
     const pgsiCategory = getPgsiCategory(pgsiTotal);
     els.finishCopy.textContent =
-      `You completed ${totalTrials} races and earned ${state.points} points. ` +
+      `You completed ${totalTrials} races. Final balance: ${STUDY.currency}${state.points}. ` +
       `PGSI total: ${pgsiTotal} (${pgsiCategory}). ` +
       `Download the session data below for inspection.`;
     showScreen("finish");
@@ -698,13 +748,15 @@
     clearCashoutTimers();
     resetSignalLights();
     state.schedule = buildSchedule();
+    state.namePool = buildNamePool();
     state.currentTrialIndex = -1;
     state.currentTrial = null;
+    state.currentDogInfo = [];
     state.selectedDogIndex = null;
     state.trapAssignments = null;
     state.cashoutShown = false;
     state.cashoutChoice = STUDY.cashout ? "pending" : "n/a";
-    state.points = 0;
+    state.points = STUDY.startingBalance;
     state.results = [];
     state.startedAt = new Date().toISOString();
     resetPgsiForm();

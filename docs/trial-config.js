@@ -16,7 +16,11 @@
  */
 const STUDY = {
   id: "study1",
-  title: "Greyhound Race Task",
+  title: "Greyhound Race Task", // internal / data only — never shown to participants
+  brand: "Trackside", // participant-facing name; neutral, does not hint at near misses
+  tagline: "Live Greyhound Racing",
+  currency: "£",
+  startingBalance: 0,
   cashout: false,
   baseWinPoints: 10,
   cashoutOffers: [3, 5, 7],
@@ -77,24 +81,36 @@ const STUDY = {
     { id: 23, video: "23.mp4", kind: "clear", nRunners: 6, missing: [], winner: 3, runnerUp: 5, third: 1 }
   ],
 
-  // Dog-name database. A fresh set is drawn for every trial so no narrative about
-  // "my dog" builds up across trials.
-  dogNames: [
-    "Ballyregan Bob", "Swift Arrow", "Manic Miner", "Ninja Nell", "Clonmel Storm",
-    "Rapid Ranger", "Bandit Bay", "Silver Streak", "Midnight Mabel", "Turbo Tilly",
-    "Lightning Lou", "Coolvally Comet", "Rebel Roscoe", "Dashing Dora", "Quicksilver",
-    "Riverdale Rush", "Blazing Bella", "Nimble Ned", "Foxford Flyer", "Meadow Mist",
-    "Rocket Rusty", "Shady Shamrock", "Whistling Winnie", "Amber Ace", "Brisk Barney",
-    "Copper Coin", "Dandy Dexter", "Echo Ember", "Frisky Finn", "Galway Gale",
-    "Hasty Hazel", "Iron Ivy", "Jaunty Jasper", "Kestrel King", "Lively Lottie",
-    "Mossy Mo", "Noble Nala", "Onyx Otto", "Plucky Pip", "Rusty Rue",
-    "Sable Sid", "Tawny Teddy", "Vivid Vera", "Windy Willow", "Zesty Zane",
-    "Ardent Alfie", "Breezy Bonnie", "Cobbler Clyde", "Dusky Della", "Elm Eddie",
-    "Feisty Flo", "Gusto Gnasher", "Harbour Hugh", "Inky India", "Jolly Jute",
-    "Keen Kayla", "Lucky Larkin", "Marble Milo", "Nifty Nora", "Opal Ozzy",
-    "Pippin Pearl", "Quilty Quinn", "Ripple Reggie", "Sprig Sasha", "Timber Toby",
-    "Umber Una", "Velvet Vic", "Wren Wanda", "Yarrow York", "Zephyr Zola"
-  ]
+  // Dog names are built by combining a kennel prefix with a word, greyhound-registry
+  // style (e.g. "Ballymac Rocket"). The app makes every prefix x word combination,
+  // shuffles, and deals names WITHOUT replacement across the whole session, so no
+  // participant ever sees the same dog name twice (avoids learning effects).
+  namePrefixes: [
+    "Ballymac", "Droopys", "Coolavanny", "Newinn", "Kilbride", "Rathcoole",
+    "Clonbrien", "Skywalker", "Ballyanne", "Sidarian", "Tullymurry", "Whiteforest",
+    "Bockos", "Portmageehy", "Lemon", "Swift", "Good", "Romeo", "Signet", "Jaytee"
+  ],
+  nameWords: [
+    "Rocket", "Bullet", "Comet", "Blaze", "Storm", "Flyer", "Arrow", "Dash",
+    "Bolt", "Chief", "Ranger", "Rebel", "Gold", "Ace", "King", "Star",
+    "Dancer", "Hero", "Spirit", "Thunder", "Champ", "Fury", "Jet", "Magic",
+    "Legend", "Wonder", "Prince", "Rascal", "Turbo", "Vision"
+  ],
+
+  // Purely decorative form details shown on the choice card. They carry no
+  // information about the outcome (the outcome is set by trap assignment). Their
+  // only job is to make the choice feel engaging, as in the original lab task.
+  trainers: [
+    "P. Kennedy", "R. Holt", "M. O'Donnell", "S. Cahill", "J. Mullins",
+    "L. Field", "K. Boon", "T. Levers", "D. Mullins", "A. Taylor",
+    "B. Foster", "G. Baggs", "N. Savva", "C. Philpott", "H. Keightley"
+  ],
+  towns: [
+    "Romford", "Hove", "Sheffield", "Nottingham", "Sunderland", "Newcastle",
+    "Crayford", "Perry Barr", "Monmore", "Yarmouth", "Doncaster", "Swindon",
+    "Harlow", "Central Park", "Towcester", "Kinsley"
+  ],
+  oddsBoard: ["6/4", "7/4", "2/1", "9/4", "5/2", "3/1", "7/2", "4/1", "9/2", "5/1", "6/1", "8/1"]
 };
 
 // Back-compat alias so older references keep working.

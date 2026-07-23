@@ -3,36 +3,39 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Greyhound Pilot Task</title>
+    <title>Trackside — Live Greyhound Racing</title>
     <link rel="stylesheet" href="./styles.css">
   </head>
   <body>
     <main class="app-shell">
       <header class="topbar">
-        <div>
-          <p class="eyebrow">Greyhound Race Task — Study 1</p>
-          <h1>Near-Miss Race Task</h1>
+        <div class="brand">
+          <span class="brand-mark">Trackside</span>
+          <span class="brand-tag">Live Greyhound Racing</span>
         </div>
         <div class="status">
-          <span id="trial-status">Trial 0 / 0</span>
-          <span id="points-status">Points: 0</span>
+          <span class="status-race" id="trial-status">Race 0 / 0</span>
+          <span class="status-balance">
+            <span class="balance-label">Balance</span>
+            <span class="balance-amount" id="points-status">£0</span>
+          </span>
         </div>
       </header>
 
       <section id="screen-intro" class="screen active">
         <div class="card narrow">
-          <h2>Welcome</h2>
+          <p class="eyebrow">Welcome to the track</p>
+          <h2>Ready to play the dogs?</h2>
           <p>
-            In each race you will choose a dog, see which trap it runs from, rate how
-            confident you are, then watch a real greyhound race and see how your dog did.
-            After each race you will answer three short questions.
+            You'll play 20 races. In each one you study the race card, back a dog to win,
+            and watch the race live. Win and your balance goes up.
           </p>
           <ul class="plain-list">
-            <li>You will complete 20 races.</li>
+            <li>Pick a dog from the card, then see which trap it runs from.</li>
             <li>Your dog wears a coloured jacket by trap number — follow that jacket.</li>
-            <li>Your responses are stored in the browser until you download them at the end.</li>
+            <li>After each race, tell us how it felt.</li>
           </ul>
-          <button id="start-button" class="button primary">Start</button>
+          <button id="start-button" class="button primary">Enter the track</button>
         </div>
       </section>
 
@@ -40,25 +43,25 @@
         <div class="card">
           <div class="card-head">
             <div>
-              <p class="eyebrow" id="condition-chip">Condition</p>
-              <h2>Choose your dog</h2>
+              <p class="eyebrow" id="condition-chip">Race</p>
+              <h2>Race card</h2>
             </div>
-            <p class="muted" id="choice-copy">Pick one dog for this race.</p>
+            <p class="muted" id="choice-copy">Study the card and back a dog to win.</p>
           </div>
           <div id="dog-grid" class="dog-grid"></div>
           <div class="actions">
-            <button id="choice-next" class="button primary" disabled>Continue</button>
+            <button id="choice-next" class="button primary" disabled>Place bet</button>
           </div>
         </div>
       </section>
 
       <section id="screen-assignment" class="screen">
         <div class="card narrow">
-          <p class="eyebrow">Trap Assignment</p>
+          <p class="eyebrow">Bet placed</p>
           <h2 id="assignment-title">Your dog is ready</h2>
           <div class="jacket-badge" id="assignment-jacket" aria-hidden="true"></div>
           <p id="assignment-copy"></p>
-          <button id="assignment-next" class="button primary">Rate confidence</button>
+          <button id="assignment-next" class="button primary">Continue</button>
         </div>
       </section>
 
@@ -150,7 +153,7 @@
               <strong id="result-place"></strong>
             </div>
             <div>
-              <span class="result-label">Points this trial</span>
+              <span class="result-label">Returns</span>
               <strong id="result-points"></strong>
             </div>
           </div>
@@ -196,7 +199,7 @@
 
       <section id="screen-finish" class="screen">
         <div class="card narrow">
-          <p class="eyebrow">Pilot complete</p>
+          <p class="eyebrow">That's the last race</p>
           <h2>Session summary</h2>
           <p id="finish-copy"></p>
           <div class="button-row">
@@ -204,7 +207,7 @@
             <button id="download-csv" class="button secondary">Download CSV</button>
           </div>
           <div class="button-row">
-            <button id="restart-button" class="button ghost">Run pilot again</button>
+            <button id="restart-button" class="button ghost">Play again</button>
           </div>
         </div>
       </section>
