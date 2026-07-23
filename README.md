@@ -225,6 +225,65 @@ Study 2 needs 12 narrow and is one race short of buildable from 1-23 alone.
 - This is what Ty Hayes (Warwick, via Luke) is being consulted about — how betting
   operators actually set cash-out values.
 
+#### Task refinements (design, payment, data quality)
+
+Pool corrections:
+
+- Race 7 rewatched: it is a close (photo) finish, not a clear win -> moved to the
+  close pool. Race 22: only 5 dogs ran, trap 6 (striped) vacant -> the earlier fast
+  count pass had it wrong. Pool is now 11 clear / 12 close.
+- The fast runner-count pass can hold other errors; the symptom is a choice screen
+  showing a dog that never leaves the traps. Fix as spotted (race id + empty trap).
+
+Presentation:
+
+- Rebranded participant-facing task as **"Trackside — Live Greyhound Racing"**.
+  "Near miss" / "Study 1" appear nowhere a participant can see them (would cue the
+  manipulation). Dark bookmaker visual theme.
+- Restored engagement details on the race card (form, trainer, age, weight, track),
+  random and identical across conditions so they leak nothing about the outcome.
+  Trap number is withheld until after the pick, preserving the rig.
+- **Odds removed**: they imply a payout/win-probability tied to the outcome, a
+  confound. Dropped from card, data, and config.
+- Dog names dealt without replacement across the whole session (prefix x word,
+  ~600 combos), so no name is ever seen twice -> no learning effects.
+
+Payment (set on Prolific, not in code):
+
+- £2.00 completion + £2.00 bonus. Every participant wins exactly 10 races
+  (5 CW + 5 NW), so the bonus is a flat £2 for everyone -> it is motivational
+  framing, not variable pay. Effective ~£10-12/hr for a 20-25 min session
+  (includes PGSI). Confirm the base against the pilot's real median time.
+- In-task tally shows **credits** (100 at the end), not GBP, since it is not real
+  cash; 100 credits convert to the £2 bonus. Budget ~£4/participant flat; Prolific
+  fees + VAT add ~40% on top (~£1,700 all-in for 300).
+- Demographics come from Prolific's database (age, sex, nationality, etc.) — do not
+  re-collect; add a custom item only for something Prolific does not hold.
+
+Data quality:
+
+- Rating sliders start at a **random** position each time (removes the central
+  anchor Luke flagged) and must be moved to continue. Start position and response
+  time are logged (confidenceStart/RT, *Start, postraceRT_ms).
+- **Two attention checks** per session, one at random in races 3-10 and one in
+  races 11-18 (spread, never first/last, different races per person). Each is a
+  **standalone screen after the confidence rating** — deliberately NOT among the
+  post-race emotion sliders, so its salient wording cannot capture attention and
+  perturb those DVs. Random target (20/40/60/80), pass within +/-5; logged as
+  attentionTarget / attentionResponse / attentionPass / attentionRT_ms.
+- Exclusion is prevention + flags, not "did not move a slider": everyone must move
+  every slider to advance, and the within-subject design means careless responders
+  dilute the effect rather than fake one. Use failed attention checks, implausible
+  RTs, and straight-lining to exclude.
+
+Open follow-ups:
+
+- Slider scale wording still to be confirmed by Luke, then applied.
+- Seat assignment (winner vs runner-up for close races) is currently random per
+  draw; add strict counterbalancing (each close race NW for half, NM for half)
+  for the main run.
+- Add a straight-lining detector to the export.
+
 ## Future Sessions
 
 Append future dated entries to the `Session Log` section above so this file becomes a running record of design decisions, coding progress, and open questions.
