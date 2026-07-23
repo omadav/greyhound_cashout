@@ -109,6 +109,9 @@
   let raceIntroTimers = [];
   let cashoutTimerInterval = null;
   let cashoutExpiryTimeout = null;
+  let confShownAt = 0;
+  let confidenceRT = 0;
+  let postraceShownAt = 0;
 
   // ---- helpers ----------------------------------------------------------
 
@@ -148,7 +151,7 @@
     const total = state.schedule.length || STUDY.repsPerCondition * STUDY.allocation.length;
     const shownTrial = Math.max(state.currentTrialIndex + 1, 0);
     els.trialStatus.textContent = `Race ${shownTrial} / ${total}`;
-    els.pointsStatus.textContent = `${STUDY.currency}${state.points}`;
+    els.pointsStatus.textContent = `${state.points}`;
   }
 
   // ---- schedule ---------------------------------------------------------
@@ -356,8 +359,12 @@
   function resetRatingSlider(cfg) {
     const slider = els[cfg.slider];
     const valueNode = els[cfg.value];
-    slider.value = "50";
+    // Random start position each time, so the thumb never sits at a fixed centre
+    // that would anchor responses. The participant must move it to continue.
+    const start = Math.floor(Math.random() * 101);
+    slider.value = String(start);
     slider.dataset.touched = "false";
+    slider.dataset.start = String(start);
     slider.classList.add("untouched");
     valueNode.textContent = "–";
     if (cfg.next) els[cfg.next].disabled = true;
@@ -455,11 +462,13 @@
 
   function handleAssignmentContinue() {
     resetRatingSlider(RATING_SLIDERS[0]);
+    confShownAt = Date.now();
     showScreen("confidence");
   }
 
   function startRace() {
     const trial = state.currentTrial;
+    confidenceRT = Date.now() - confShownAt;
     const chosenName = state.trapAssignments[trial.assignedTrap];
     const colour = STUDY.trapColours[trial.assignedTrap];
 
@@ -636,6 +645,8 @@
       finishLabel: finishLabel,
       topThree: topThree.join(" | "),
       confidence: ratingValue(RATING_SLIDERS[0]),
+      confidenceStart: Number(els.confidenceSlider.dataset.start),
+      confidenceRT_ms: confidenceRT,
       cashoutEnabled: STUDY.cashout,
       cashoutOffer: STUDY.cashout ? trial.cashoutOffer : "",
       cashoutChoice: STUDY.cashout ? (state.cashoutChoice === "pending" ? "reject" : state.cashoutChoice) : "n/a",
@@ -649,7 +660,7 @@
     els.resultDog.textContent = chosenName;
     els.resultTrap.textContent = `Trap ${trial.assignedTrap}`;
     els.resultPlace.textContent = finishLabel;
-    els.resultPoints.textContent = `${STUDY.currency}${pointsWon}`;
+    els.resultPoints.textContent = pointsWon > 0 ? `+${pointsWon} ${STUDY.creditLabel}` : `0 ${STUDY.creditLabel}`;
 
     showScreen("result");
   }
@@ -657,8 +668,12 @@
   function handlePostraceContinue() {
     const record = currentTrialRecord();
     record.pleased = ratingValue(RATING_SLIDERS[1]);
+    record.pleasedStart = Number(els.pleasedSlider.dataset.start);
     record.motivation = ratingValue(RATING_SLIDERS[2]);
+    record.motivationStart = Number(els.motivationSlider.dataset.start);
     record.luck = ratingValue(RATING_SLIDERS[3]);
+    record.luckStart = Number(els.luckSlider.dataset.start);
+    record.postraceRT_ms = Date.now() - postraceShownAt;
 
     if (state.currentTrialIndex === state.schedule.length - 1) {
       showScreen("pgsi");
@@ -674,8 +689,8 @@
     const pgsiTotal = pgsiResponses.reduce((sum, value) => sum + value, 0);
     const pgsiCategory = getPgsiCategory(pgsiTotal);
     els.finishCopy.textContent =
-      `You completed ${totalTrials} races. Final balance: ${STUDY.currency}${state.points}. ` +
-      `PGSI total: ${pgsiTotal} (${pgsiCategory}). ` +
+      `You completed ${totalTrials} races and won ${state.points} ${STUDY.creditLabel}, ` +
+      `which convert to your cash bonus. PGSI total: ${pgsiTotal} (${pgsiCategory}). ` +
       `Download the session data below for inspection.`;
     showScreen("finish");
   }
@@ -777,6 +792,7 @@
   els.resultNext.addEventListener("click", () => {
     RATING_SLIDERS.slice(1).forEach(resetRatingSlider);
     els.postraceNext.disabled = true;
+    postraceShownAt = Date.now();
     showScreen("postrace");
   });
   els.postraceNext.addEventListener("click", handlePostraceContinue);

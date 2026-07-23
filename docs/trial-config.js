@@ -19,8 +19,11 @@ const STUDY = {
   title: "Greyhound Race Task", // internal / data only — never shown to participants
   brand: "Trackside", // participant-facing name; neutral, does not hint at near misses
   tagline: "Live Greyhound Racing",
-  currency: "£",
+  creditLabel: "credits", // in-task currency shown to participants (not real money)
   startingBalance: 0,
+  // Payment (set on Prolific, not here): £2.00 completion fee + up to £2.00 bonus.
+  // Every participant wins 10 races -> 100 credits, so the bonus is a flat £2 for all
+  // (100 credits x £0.02). Effective ~£10-12/hr for a 20-25 min session.
   cashout: false,
   baseWinPoints: 10,
   cashoutOffers: [3, 5, 7],
