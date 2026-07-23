@@ -241,8 +241,7 @@
       weight: (28 + Math.random() * 7).toFixed(1) + "kg",
       form: form,
       trainer: randOf(STUDY.trainers),
-      town: randOf(STUDY.towns),
-      odds: randOf(STUDY.oddsBoard)
+      town: randOf(STUDY.towns)
     };
   }
 
@@ -277,10 +276,7 @@
       button.type = "button";
       button.className = "dog-card";
       button.innerHTML = `
-        <div class="dog-card-top">
-          <h3>${dog.name}</h3>
-          <span class="odds">${dog.odds}</span>
-        </div>
+        <h3>${dog.name}</h3>
         <div class="dog-stats">
           <span><em>Form</em>${dog.form}</span>
           <span><em>Trainer</em>${dog.trainer}</span>
@@ -632,7 +628,6 @@
       videoFile: trial.video.split("/").pop(),
       nRunners: trial.nRunners,
       chosenDog: chosenName,
-      chosenDogOdds: (state.currentDogInfo[state.selectedDogIndex] || {}).odds || "",
       assignedTrap: trial.assignedTrap,
       trapRole: trial.role,
       winnerTrap: trial.winnerTrap,

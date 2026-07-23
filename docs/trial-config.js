@@ -109,8 +109,7 @@ const STUDY = {
     "Romford", "Hove", "Sheffield", "Nottingham", "Sunderland", "Newcastle",
     "Crayford", "Perry Barr", "Monmore", "Yarmouth", "Doncaster", "Swindon",
     "Harlow", "Central Park", "Towcester", "Kinsley"
-  ],
-  oddsBoard: ["6/4", "7/4", "2/1", "9/4", "5/2", "3/1", "7/2", "4/1", "9/2", "5/1", "6/1", "8/1"]
+  ]
 };
 
 // Back-compat alias so older references keep working.

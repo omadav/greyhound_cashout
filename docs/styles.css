@@ -184,24 +184,7 @@ button, input { font: inherit; }
   box-shadow: 0 0 0 2px rgba(244, 179, 42, 0.35), var(--shadow);
 }
 
-.dog-card-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-}
 .dog-card h3 { margin: 0; font-size: 1.05rem; line-height: 1.2; }
-
-.odds {
-  flex: none;
-  font-family: var(--mono);
-  font-weight: 700;
-  font-size: 0.95rem;
-  color: #0c1411;
-  background: var(--gold);
-  padding: 3px 9px;
-  border-radius: 8px;
-}
 
 .dog-stats {
   display: grid;
