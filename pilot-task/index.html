@@ -80,6 +80,20 @@
         </div>
       </section>
 
+      <section id="screen-attention" class="screen">
+        <div class="card narrow">
+          <p class="eyebrow">One quick check</p>
+          <h2 id="attention-label">Please move the slider as instructed.</h2>
+          <label class="slider-wrap" for="attention-slider">
+            <span>0</span>
+            <input id="attention-slider" class="untouched" type="range" min="0" max="100" step="1" value="50">
+            <span>100</span>
+          </label>
+          <p class="value-readout"><span id="attention-value">–</span>/100</p>
+          <button id="attention-next" class="button primary" disabled>Continue</button>
+        </div>
+      </section>
+
       <section id="screen-race" class="screen">
         <div class="card">
           <div class="card-head">

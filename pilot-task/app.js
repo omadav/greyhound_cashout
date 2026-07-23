@@ -4,6 +4,7 @@
     choice: document.getElementById("screen-choice"),
     assignment: document.getElementById("screen-assignment"),
     confidence: document.getElementById("screen-confidence"),
+    attention: document.getElementById("screen-attention"),
     race: document.getElementById("screen-race"),
     result: document.getElementById("screen-result"),
     postrace: document.getElementById("screen-postrace"),
@@ -20,6 +21,7 @@
     currentDogInfo: [],
     selectedDogIndex: null,
     trapAssignments: null,
+    pendingAttention: null,
     cashoutShown: false,
     cashoutChoice: "n/a",
     points: 0,
@@ -44,6 +46,10 @@
     confidenceSlider: document.getElementById("confidence-slider"),
     confidenceValue: document.getElementById("confidence-value"),
     confidenceNext: document.getElementById("confidence-next"),
+    attentionLabel: document.getElementById("attention-label"),
+    attentionSlider: document.getElementById("attention-slider"),
+    attentionValue: document.getElementById("attention-value"),
+    attentionNext: document.getElementById("attention-next"),
     raceTitle: document.getElementById("race-title"),
     raceCopy: document.getElementById("race-copy"),
     raceVideo: document.getElementById("race-video"),
@@ -104,6 +110,9 @@
     { slider: "motivationSlider", value: "motivationValue" },
     { slider: "luckSlider", value: "luckValue" }
   ];
+  const ATTENTION = { slider: "attentionSlider", value: "attentionValue", next: "attentionNext" };
+  const ATTENTION_TARGETS = [20, 40, 60, 80];
+  const ATTENTION_TOLERANCE = 5;
 
   const raceIntroLights = Array.from(document.querySelectorAll(".signal-light"));
   let raceIntroTimers = [];
@@ -112,6 +121,7 @@
   let confShownAt = 0;
   let confidenceRT = 0;
   let postraceShownAt = 0;
+  let attnShownAt = 0;
 
   // ---- helpers ----------------------------------------------------------
 
@@ -189,7 +199,19 @@
       }
     });
 
-    return orderTrials(trials);
+    return assignAttentionChecks(orderTrials(trials));
+  }
+
+  // Two attention checks, one placed at random in races 3-10 and one in races 11-18,
+  // so they are spread out, never first or last, and fall on different races per person.
+  function assignAttentionChecks(ordered) {
+    const pick = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
+    [pick(2, 9), pick(10, 17)].forEach((i) => {
+      if (ordered[i]) {
+        ordered[i].attention = { target: randOf(ATTENTION_TARGETS) };
+      }
+    });
+    return ordered;
   }
 
   // Randomise order, but no more than two of the same condition in a row and
@@ -434,6 +456,7 @@
     state.cashoutShown = false;
     state.cashoutChoice = STUDY.cashout ? "pending" : "n/a";
     state.trapAssignments = null;
+    state.pendingAttention = null;
     updateHeader();
 
     els.conditionChip.textContent =
@@ -466,9 +489,37 @@
     showScreen("confidence");
   }
 
+  function handleConfidenceContinue() {
+    confidenceRT = Date.now() - confShownAt;
+    if (state.currentTrial.attention) {
+      showAttentionScreen();
+    } else {
+      startRace();
+    }
+  }
+
+  function showAttentionScreen() {
+    resetRatingSlider(ATTENTION);
+    els.attentionLabel.textContent =
+      `To show you are paying attention, please move the slider to ${state.currentTrial.attention.target}.`;
+    attnShownAt = Date.now();
+    showScreen("attention");
+  }
+
+  function handleAttentionContinue() {
+    const t = state.currentTrial.attention;
+    const resp = ratingValue(ATTENTION);
+    state.pendingAttention = {
+      target: t.target,
+      response: resp,
+      pass: resp !== null && Math.abs(resp - t.target) <= ATTENTION_TOLERANCE,
+      rt: Date.now() - attnShownAt
+    };
+    startRace();
+  }
+
   function startRace() {
     const trial = state.currentTrial;
-    confidenceRT = Date.now() - confShownAt;
     const chosenName = state.trapAssignments[trial.assignedTrap];
     const colour = STUDY.trapColours[trial.assignedTrap];
 
@@ -647,6 +698,11 @@
       confidence: ratingValue(RATING_SLIDERS[0]),
       confidenceStart: Number(els.confidenceSlider.dataset.start),
       confidenceRT_ms: confidenceRT,
+      attentionCheck: !!trial.attention,
+      attentionTarget: trial.attention ? state.pendingAttention.target : "",
+      attentionResponse: trial.attention ? state.pendingAttention.response : "",
+      attentionPass: trial.attention ? state.pendingAttention.pass : "",
+      attentionRT_ms: trial.attention ? state.pendingAttention.rt : "",
       cashoutEnabled: STUDY.cashout,
       cashoutOffer: STUDY.cashout ? trial.cashoutOffer : "",
       cashoutChoice: STUDY.cashout ? (state.cashoutChoice === "pending" ? "reject" : state.cashoutChoice) : "n/a",
@@ -786,7 +842,8 @@
   });
   els.choiceNext.addEventListener("click", handleChoiceContinue);
   els.assignmentNext.addEventListener("click", handleAssignmentContinue);
-  els.confidenceNext.addEventListener("click", startRace);
+  els.confidenceNext.addEventListener("click", handleConfidenceContinue);
+  els.attentionNext.addEventListener("click", handleAttentionContinue);
   els.cashoutAccept.addEventListener("click", () => handleCashout("accept"));
   els.cashoutReject.addEventListener("click", () => handleCashout("reject"));
   els.resultNext.addEventListener("click", () => {
@@ -807,6 +864,7 @@
   els.raceVideo.addEventListener("error", () => els.videoFallback.classList.remove("hidden"));
 
   RATING_SLIDERS.forEach(wireRatingSlider);
+  wireRatingSlider(ATTENTION);
   // Post-race Next stays disabled until all three post-race sliders are touched.
   [RATING_SLIDERS[1], RATING_SLIDERS[2], RATING_SLIDERS[3]].forEach((cfg) => {
     els[cfg.slider].addEventListener("input", () => {
