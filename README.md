@@ -89,6 +89,107 @@ Build a first Prolific version with:
 - decide whether to make `Greyhound_NM` its own git repository before pushing to GitHub
 - enable GitHub Pages from `/docs` once the standalone repository exists
 
+### 2026-07-23
+
+Session with Luke (meeting notes) plus a full pass over the 2013 stimulus materials.
+
+#### Study programme agreed
+
+| Study | Content |
+|---|---|
+| 1 | 4 conditions, no cash-out. Tests the basic near-miss effect. **Build this first.** |
+| 2 | Adds the anticipation/dynamics split (catch-up vs fallback near misses) |
+| 3 | Study 1 + cash-out |
+| 4 | Study 2 + cash-out |
+
+#### Terminology (fixed, use everywhere)
+
+All labels are written **from the point of view of the second-place dog**. The 2013
+materials wrote them from the winner's point of view, which is why "overtake" was
+ambiguous — it never said who overtook.
+
+Clip shape, a fixed property of the video:
+
+- `CLEAR` — winner never seriously challenged
+- `STABLE` — close finish, no lead change, no late charge
+- `FALLBACK` — the front-runner is passed near the line (2013 called this "overtake")
+- `CATCHUP` — the second dog gains late but never gets there
+
+Trial condition, what the participant experiences = clip shape x which dog they are
+assigned:
+
+| Clip | Assigned winner | Assigned runner-up | Assigned back dog |
+|---|---|---|---|
+| `CLEAR` | `CW` clear win | — | `CL` clear loss |
+| `STABLE` | `RW` narrow win | stable near miss | `CL` |
+| `FALLBACK` | narrow win | `FNM` fallback near miss | `CL` |
+| `CATCHUP` | narrow win | `CNM` catch-up near miss | `CL` |
+
+Study 1 uses `CW` / `RW` / `NM` (pooled) / `CL`. Study 2 splits `NM` into `FNM` / `CNM`.
+
+#### Key findings this session
+
+- **The 2013 rule was found**, in `KateChampion/EthicsSubmission/Clark_Greyhound_PREform.docx`:
+  a narrow win is when the second dog finishes **under 0.09s** behind the winner; a clear
+  win is **more than 0.26s**. Nearly half the pool falls in the undefined middle, which is
+  why the 2013 coding was never finished.
+- The spreadsheet's `Distance` column is therefore the **winner-to-runner-up gap in
+  seconds** (roughly 0.08s per length). It is objective and should be used for the
+  closeness axis. Judging closeness by eye proved unreliable for both of us, in both
+  directions.
+- The 2013 team already had the two-axis idea — closeness *and* dynamics
+  (stable / catch-up / overtake), citing Kahneman & Varey (1990). They never applied it.
+- **Races 1-23 end with the result board; races 24-38 do not** — they cut off with the
+  dogs still running. Confirmed in the original AVIs, so this is in the source material,
+  not a conversion artefact. Two different recording sessions.
+- The pilot's demo clip is **race 2** (board reads `321` / `19:36`, matching Kate's file
+  `NM Catch up 3 320 19.36 321 edit.mp4`). Kate considered race 2 a catch-up near miss.
+- Only the **top three** finishers are ever displayed. A dog outside the top three is
+  "unplaced" — which is how real racing reports it, so `CL` can be delivered as
+  "unplaced" and no 4th-6th coding is needed.
+- Videos converted to browser-ready H.264 MP4 (854x480, 29.97fps, faststart) in `Races/`;
+  originals preserved in `Races_avi/` (gitignored). All 39 verified against source
+  durations.
+
+#### Pool, using narrow <= 0.14s and clear > 0.24s
+
+| Set | Narrow | Clear | Middle | Unknown |
+|---|---|---|---|---|
+| Races 1-23 (result visible) | 11 | 7 | 4 | 1 (race 7) |
+| Races 24-38 (no result shown) | 8 | 3 | 4 | 0 |
+
+Study 1 needs 8 narrow + 4 clear per participant, so **races 1-23 are sufficient**.
+Study 2 needs 12 narrow and is one race short of buildable from 1-23 alone.
+
+#### Other decisions
+
+- **Randomise trial order per participant.** The meeting notes said "same order for
+  everyone", but the earlier slot-machine study's fixed sequence produced unexpected
+  results, which is why that study moved to randomised order. Randomise, with light
+  constraints (no more than two of the same condition in a row, no near miss on trial 1).
+- Fresh dog names each trial, drawn from a name database, so no narrative accumulates
+  about "my dog" across trials.
+- Outcome conditions stay **within-subject**. Only the clip-to-role assignment and the
+  cash-out manipulation are between-subjects. PGSI is between-subjects, so a
+  within x between interaction is well powered at n~300; between x between would not be.
+- Sample: pilot of 30 first, then ~300.
+
+#### Problems to look at
+
+- The **winning post is not identifiable** in races 24-38. Until it is, those 15 races
+  cannot be used, which is what blocks Study 2.
+- Race 7 has no gap recorded in the 2013 sheet; needs measuring.
+- Race 16 may have a **vacant trap** — trap 2 was never seen. If a race has five
+  runners the choice screen for that trial can only offer five dogs.
+- The 0.14-0.24s middle band (8 races) is unused. Revisit if the pool gets tight.
+- `race_coding_sheet.csv` holds the working classification. Races 3 and 16 are coded
+  `CATCHUP`; 2, 14, 18, 20, 21 as `CLEAR` — but those five were judged before we knew
+  closeness comes from the clock, and by that measure 2, 14 and 21 are all narrow. They
+  need a dynamics label, not a closeness one.
+- The PGSI questionnaire is implemented in the working tree but **not committed**, so the
+  live Pages demo does not have it.
+- `pilot-task/` and `docs/` are duplicate copies kept in sync by hand.
+
 ## Future Sessions
 
 Append future dated entries to the `Session Log` section above so this file becomes a running record of design decisions, coding progress, and open questions.

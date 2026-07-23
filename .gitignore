@@ -7,3 +7,10 @@ Sophie data/
 Sophie data/
 Races/
 KateChampion/NM Catch up 3 320 19.36 321 edit.mp4
+Races_avi/
+
+# dev-only video copy (docs/ copy is the one Pages serves)
+pilot-task/assets/videos/
+# throwaway coding aids
+starts_1to23.mp4
+gap_examples/

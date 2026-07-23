@@ -7,17 +7,20 @@
     race: document.getElementById("screen-race"),
     result: document.getElementById("screen-result"),
     postrace: document.getElementById("screen-postrace"),
+    pgsi: document.getElementById("screen-pgsi"),
     finish: document.getElementById("screen-finish")
   };
 
   const state = {
+    schedule: [],
     currentTrialIndex: -1,
     currentTrial: null,
-    currentDogCards: [],
+    currentDogNames: [],
+    currentTrapNames: [],
     selectedDogIndex: null,
     trapAssignments: null,
     cashoutShown: false,
-    cashoutChoice: "pending",
+    cashoutChoice: "n/a",
     points: 0,
     results: [],
     startedAt: null,
@@ -35,6 +38,7 @@
     choiceCopy: document.getElementById("choice-copy"),
     assignmentTitle: document.getElementById("assignment-title"),
     assignmentCopy: document.getElementById("assignment-copy"),
+    assignmentJacket: document.getElementById("assignment-jacket"),
     assignmentNext: document.getElementById("assignment-next"),
     confidenceSlider: document.getElementById("confidence-slider"),
     confidenceValue: document.getElementById("confidence-value"),
@@ -67,16 +71,72 @@
     luckSlider: document.getElementById("luck-slider"),
     luckValue: document.getElementById("luck-value"),
     postraceNext: document.getElementById("postrace-next"),
+    pgsiForm: document.getElementById("pgsi-form"),
+    pgsiNext: document.getElementById("pgsi-next"),
     finishCopy: document.getElementById("finish-copy"),
     downloadJson: document.getElementById("download-json"),
     downloadCsv: document.getElementById("download-csv"),
     restartButton: document.getElementById("restart-button")
   };
 
+  const PGSI_ITEMS = [
+    "Have you bet more than you could really afford to lose?",
+    "Have you needed to gamble with larger amounts of money to get the same feeling of excitement?",
+    "Have you gone back another day to try to win back the money you lost?",
+    "Have you borrowed money or sold anything to get money to gamble?",
+    "Have you felt that you might have a problem with gambling?",
+    "Has gambling caused you any health problems, including stress or anxiety?",
+    "Have people criticized your betting or told you that you had a gambling problem, whether or not you thought it was true?",
+    "Has your gambling caused any financial problems for you or your household?",
+    "Have you felt guilty about the way you gamble or what happens when you gamble?"
+  ];
+  const PGSI_OPTIONS = [
+    { label: "Never", value: 0 },
+    { label: "Sometimes", value: 1 },
+    { label: "Most of the time", value: 2 },
+    { label: "Almost always", value: 3 }
+  ];
+
+  const RATING_SLIDERS = [
+    { slider: "confidenceSlider", value: "confidenceValue", next: "confidenceNext" },
+    { slider: "pleasedSlider", value: "pleasedValue" },
+    { slider: "motivationSlider", value: "motivationValue" },
+    { slider: "luckSlider", value: "luckValue" }
+  ];
+
   const raceIntroLights = Array.from(document.querySelectorAll(".signal-light"));
   let raceIntroTimers = [];
   let cashoutTimerInterval = null;
   let cashoutExpiryTimeout = null;
+
+  // ---- helpers ----------------------------------------------------------
+
+  function shuffle(array) {
+    const a = array.slice();
+    for (let i = a.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function availableTraps(race) {
+    const out = [];
+    for (let t = 1; t <= 6; t += 1) {
+      if (!race.missing.includes(t)) out.push(t);
+    }
+    return out;
+  }
+
+  function trapForRole(race, role) {
+    if (role === "winner") return race.winner;
+    if (role === "runnerUp") return race.runnerUp;
+    // back: any running trap that is not in the top three
+    const back = availableTraps(race).filter(
+      (t) => t !== race.winner && t !== race.runnerUp && t !== race.third
+    );
+    return back[Math.floor(Math.random() * back.length)];
+  }
 
   function showScreen(name) {
     Object.values(screens).forEach((screen) => screen.classList.remove("active"));
@@ -84,68 +144,104 @@
   }
 
   function updateHeader() {
-    const total = PILOT_CONFIG.trials.length;
+    const total = state.schedule.length || STUDY.repsPerCondition * STUDY.allocation.length;
     const shownTrial = Math.max(state.currentTrialIndex + 1, 0);
     els.trialStatus.textContent = `Trial ${shownTrial} / ${total}`;
     els.pointsStatus.textContent = `Points: ${state.points}`;
   }
 
-  function resetSlider(slider, valueNode, defaultValue) {
-    slider.value = String(defaultValue);
-    valueNode.textContent = String(defaultValue);
-  }
+  // ---- schedule ---------------------------------------------------------
 
-  function wireSlider(slider, valueNode) {
-    slider.addEventListener("input", () => {
-      valueNode.textContent = slider.value;
-    });
-  }
+  function buildSchedule() {
+    const pools = {
+      clear: shuffle(STUDY.races.filter((r) => r.kind === "clear")),
+      close: shuffle(STUDY.races.filter((r) => r.kind === "close"))
+    };
+    const trials = [];
 
-  function cloneDogPool() {
-    return PILOT_CONFIG.dogPool.map((dog) => ({ ...dog }));
-  }
-
-  function buildTrapAssignments(selectedDogIndex, assignedTrap) {
-    const traps = {};
-    const remainingTraps = [1, 2, 3, 4, 5, 6].filter((trap) => trap !== assignedTrap);
-    const dogs = cloneDogPool();
-    const selectedDog = dogs[selectedDogIndex];
-
-    traps[assignedTrap] = selectedDog;
-
-    let remainingDogIndex = 0;
-    dogs.forEach((dog, index) => {
-      if (index === selectedDogIndex) {
-        return;
+    STUDY.allocation.forEach((alloc) => {
+      const cond = STUDY.conditions[alloc.condition];
+      for (let i = 0; i < alloc.count; i += 1) {
+        const race = pools[alloc.pool].shift();
+        if (!race) {
+          throw new Error(`Not enough ${alloc.pool} races for ${alloc.condition}`);
+        }
+        const assignedTrap = trapForRole(race, cond.role);
+        trials.push({
+          condition: cond.code,
+          conditionLabel: cond.label,
+          role: cond.role,
+          raceId: race.id,
+          video: STUDY.videoDir + race.video,
+          nRunners: race.nRunners,
+          availableTraps: availableTraps(race),
+          winnerTrap: race.winner,
+          runnerUpTrap: race.runnerUp,
+          thirdTrap: race.third,
+          assignedTrap: assignedTrap,
+          cashoutOffer: STUDY.cashoutOffers[Math.floor(Math.random() * STUDY.cashoutOffers.length)],
+          cashoutPauseSec: null // set per video at run time (last third)
+        });
       }
-      traps[remainingTraps[remainingDogIndex]] = dog;
-      remainingDogIndex += 1;
     });
 
+    return orderTrials(trials);
+  }
+
+  // Randomise order, but no more than two of the same condition in a row and
+  // never open on a near miss or clear loss.
+  function orderTrials(trials) {
+    for (let attempt = 0; attempt < 500; attempt += 1) {
+      const order = shuffle(trials);
+      if (["NM", "CL"].includes(order[0].condition)) continue;
+      let ok = true;
+      for (let i = 2; i < order.length; i += 1) {
+        if (
+          order[i].condition === order[i - 1].condition &&
+          order[i].condition === order[i - 2].condition
+        ) {
+          ok = false;
+          break;
+        }
+      }
+      if (ok) return order;
+    }
+    return shuffle(trials);
+  }
+
+  // ---- dog choice -------------------------------------------------------
+
+  function drawDogNames(count) {
+    return shuffle(STUDY.dogNames).slice(0, count);
+  }
+
+  function buildTrapAssignments(chosenName, assignedTrap, trial) {
+    const traps = {};
+    traps[assignedTrap] = chosenName;
+    const otherTraps = trial.availableTraps.filter((t) => t !== assignedTrap);
+    const otherNames = state.currentDogNames.filter((n) => n !== chosenName);
+    otherTraps.forEach((trap, i) => {
+      traps[trap] = otherNames[i];
+    });
     return traps;
+  }
+
+  function jacketStyle(trap) {
+    const c = STUDY.trapColours[trap];
+    return `background:${c.css};color:${c.text};`;
   }
 
   function renderDogChoices() {
     els.dogGrid.innerHTML = "";
-    const dogs = cloneDogPool();
-    state.currentDogCards = dogs;
+    state.currentDogNames = drawDogNames(state.currentTrial.nRunners);
     state.selectedDogIndex = null;
     els.choiceNext.disabled = true;
 
-    dogs.forEach((dog, index) => {
+    state.currentDogNames.forEach((name, index) => {
       const button = document.createElement("button");
       button.type = "button";
       button.className = "dog-card";
-      button.innerHTML = `
-        <h3>${dog.name}</h3>
-        <div class="dog-stats">
-          <span>County: ${dog.county}</span>
-          <span>Age: ${dog.age}</span>
-          <span>Recent form: ${dog.recentForm}</span>
-          <span>Season win %: ${dog.seasonWinPct}</span>
-          <span>Avg. finish: ${dog.avgPos}</span>
-        </div>
-      `;
+      button.innerHTML = `<h3>${name}</h3>`;
       button.addEventListener("click", () => {
         state.selectedDogIndex = index;
         Array.from(els.dogGrid.children).forEach((card) => card.classList.remove("selected"));
@@ -159,6 +255,95 @@
   function encodeVideoPath(path) {
     return encodeURI(path);
   }
+
+  // ---- PGSI -------------------------------------------------------------
+
+  function renderPgsiForm() {
+    els.pgsiForm.innerHTML = "";
+    PGSI_ITEMS.forEach((item, index) => {
+      const fieldset = document.createElement("fieldset");
+      fieldset.className = "pgsi-item";
+      fieldset.innerHTML = `<legend>${index + 1}. ${item}</legend>`;
+      const optionsWrap = document.createElement("div");
+      optionsWrap.className = "pgsi-options";
+      PGSI_OPTIONS.forEach((option) => {
+        const id = `pgsi-${index + 1}-${option.value}`;
+        const label = document.createElement("label");
+        label.className = "pgsi-option";
+        label.setAttribute("for", id);
+        label.innerHTML = `
+          <input type="radio" id="${id}" name="pgsi-${index + 1}" value="${option.value}">
+          <span>${option.label}</span>
+        `;
+        optionsWrap.appendChild(label);
+      });
+      fieldset.appendChild(optionsWrap);
+      els.pgsiForm.appendChild(fieldset);
+    });
+  }
+
+  function getPgsiResponses() {
+    return PGSI_ITEMS.map((_, index) => {
+      const checked = document.querySelector(`input[name="pgsi-${index + 1}"]:checked`);
+      return checked ? Number(checked.value) : null;
+    });
+  }
+
+  function getPgsiCategory(total) {
+    if (total === 0) return "non-problem";
+    if (total <= 2) return "low-risk";
+    if (total <= 7) return "moderate-risk";
+    return "problem gambling";
+  }
+
+  function resetPgsiForm() {
+    document.querySelectorAll('#pgsi-form input[type="radio"]').forEach((input) => {
+      input.checked = false;
+    });
+    els.pgsiNext.disabled = true;
+  }
+
+  function updatePgsiButtonState() {
+    els.pgsiNext.disabled = getPgsiResponses().some((value) => value === null);
+  }
+
+  // ---- rating sliders (no central default) ------------------------------
+
+  function resetRatingSlider(cfg) {
+    const slider = els[cfg.slider];
+    const valueNode = els[cfg.value];
+    slider.value = "50";
+    slider.dataset.touched = "false";
+    slider.classList.add("untouched");
+    valueNode.textContent = "–";
+    if (cfg.next) els[cfg.next].disabled = true;
+  }
+
+  function wireRatingSlider(cfg) {
+    const slider = els[cfg.slider];
+    const valueNode = els[cfg.value];
+    const mark = () => {
+      slider.dataset.touched = "true";
+      slider.classList.remove("untouched");
+      valueNode.textContent = slider.value;
+      if (cfg.next) els[cfg.next].disabled = false;
+    };
+    slider.addEventListener("input", mark);
+    slider.addEventListener("change", mark);
+  }
+
+  function ratingValue(cfg) {
+    const slider = els[cfg.slider];
+    return slider.dataset.touched === "true" ? Number(slider.value) : null;
+  }
+
+  function postraceComplete() {
+    return [RATING_SLIDERS[1], RATING_SLIDERS[2], RATING_SLIDERS[3]].every(
+      (cfg) => els[cfg.slider].dataset.touched === "true"
+    );
+  }
+
+  // ---- video chrome -----------------------------------------------------
 
   function lockVideoChrome() {
     els.raceVideo.controls = false;
@@ -176,9 +361,7 @@
   }
 
   function resetSignalLights() {
-    raceIntroLights.forEach((light) => {
-      light.classList.remove("active", "go");
-    });
+    raceIntroLights.forEach((light) => light.classList.remove("active", "go"));
   }
 
   function clearCashoutTimers() {
@@ -192,55 +375,62 @@
     }
   }
 
+  // ---- trial flow -------------------------------------------------------
+
   function prepareTrial() {
     state.currentTrialIndex += 1;
-    state.currentTrial = PILOT_CONFIG.trials[state.currentTrialIndex];
+    state.currentTrial = state.schedule[state.currentTrialIndex];
     state.cashoutShown = false;
-    state.cashoutChoice = "pending";
+    state.cashoutChoice = STUDY.cashout ? "pending" : "n/a";
     state.trapAssignments = null;
     updateHeader();
 
-    els.conditionChip.textContent = `${state.currentTrial.label} - ${state.currentTrial.condition}`;
-    els.choiceCopy.textContent = state.currentTrial.conditionCopy;
+    els.conditionChip.textContent = `Race ${state.currentTrialIndex + 1}`;
+    els.choiceCopy.textContent = "Pick the dog you want to back in this race.";
     renderDogChoices();
     showScreen("choice");
   }
 
   function handleChoiceContinue() {
-    const chosenDog = state.currentDogCards[state.selectedDogIndex];
-    state.trapAssignments = buildTrapAssignments(
-      state.selectedDogIndex,
-      state.currentTrial.assignedTrap
-    );
+    const trial = state.currentTrial;
+    const chosenName = state.currentDogNames[state.selectedDogIndex];
+    state.trapAssignments = buildTrapAssignments(chosenName, trial.assignedTrap, trial);
 
-    els.assignmentTitle.textContent = `${chosenDog.name} is ready to race`;
+    const colour = STUDY.trapColours[trial.assignedTrap];
+    els.assignmentTitle.textContent = `${chosenName} is ready to race`;
     els.assignmentCopy.textContent =
-      `${chosenDog.name} will run from Trap ${state.currentTrial.assignedTrap}. ` +
-      `Keep an eye on Trap ${state.currentTrial.assignedTrap} during the race.`;
+      `${chosenName} will run from Trap ${trial.assignedTrap}, wearing the ${colour.name} jacket. ` +
+      `Follow the ${colour.name} jacket during the race.`;
+    if (els.assignmentJacket) {
+      els.assignmentJacket.setAttribute("style", jacketStyle(trial.assignedTrap));
+      els.assignmentJacket.textContent = String(trial.assignedTrap);
+    }
     showScreen("assignment");
   }
 
   function handleAssignmentContinue() {
-    resetSlider(els.confidenceSlider, els.confidenceValue, 50);
+    resetRatingSlider(RATING_SLIDERS[0]);
     showScreen("confidence");
   }
 
   function startRace() {
-    const chosenDog = state.currentDogCards[state.selectedDogIndex];
     const trial = state.currentTrial;
+    const chosenName = state.trapAssignments[trial.assignedTrap];
+    const colour = STUDY.trapColours[trial.assignedTrap];
 
-    els.raceTitle.textContent = `Follow ${chosenDog.name} in Trap ${trial.assignedTrap}`;
-    els.raceCopy.textContent =
-      `If an offer appears, decide whether to cash out for ${trial.cashoutOffer} points ` +
-      `or let the full race play out.`;
+    els.raceTitle.textContent = `Follow the ${colour.name} jacket (Trap ${trial.assignedTrap})`;
+    els.raceCopy.textContent = STUDY.cashout
+      ? `If an offer appears, decide whether to cash out or let the full race play out.`
+      : `Watch the race to the finish.`;
     state.allowVideoPause = true;
     els.cashoutPanel.classList.add("hidden");
     els.raceIntroPanel.classList.remove("hidden");
     els.videoFallback.classList.add("hidden");
-    els.raceHelper.textContent =
-      "The race begins automatically and will pause only for the cash-out offer.";
+    els.raceHelper.textContent = STUDY.cashout
+      ? "The race begins automatically and will pause only for the cash-out offer."
+      : "The race begins automatically.";
     els.raceIntroTitle.textContent = "Race starts in 3";
-    els.raceIntroCopy.textContent = "Keep your eyes on your trap. The race will begin automatically.";
+    els.raceIntroCopy.textContent = "Keep your eyes on your jacket. The race will begin automatically.";
     resetSignalLights();
     clearRaceIntroTimers();
     clearCashoutTimers();
@@ -252,40 +442,33 @@
 
     els.raceVideo.pause();
     els.raceVideo.currentTime = 0;
-    els.raceVideo.src = encodeVideoPath(trial.videoSrc || PILOT_CONFIG.demoVideoSrc);
+    els.raceVideo.src = encodeVideoPath(trial.video);
     els.raceVideo.load();
 
-    state.videoEndedHandler = () => {
-      handleRaceEnded();
-    };
+    // Cash-out pause at ~75% of the clip once we know its duration.
+    els.raceVideo.addEventListener(
+      "loadedmetadata",
+      () => {
+        if (Number.isFinite(els.raceVideo.duration)) {
+          trial.cashoutPauseSec = els.raceVideo.duration * 0.75;
+        }
+      },
+      { once: true }
+    );
 
+    state.videoEndedHandler = () => handleRaceEnded();
     els.raceVideo.addEventListener("ended", state.videoEndedHandler, { once: true });
     els.raceVideo.controls = false;
 
     showScreen("race");
 
-    raceIntroTimers.push(
-      window.setTimeout(() => {
-        els.raceIntroTitle.textContent = "Race starts in 3";
-        raceIntroLights[0].classList.add("active");
-      }, 0)
-    );
-    raceIntroTimers.push(
-      window.setTimeout(() => {
-        els.raceIntroTitle.textContent = "Race starts in 2";
-        raceIntroLights[1].classList.add("active");
-      }, 700)
-    );
-    raceIntroTimers.push(
-      window.setTimeout(() => {
-        els.raceIntroTitle.textContent = "Race starts in 1";
-        raceIntroLights[2].classList.add("active");
-      }, 1400)
-    );
+    raceIntroTimers.push(window.setTimeout(() => { els.raceIntroTitle.textContent = "Race starts in 3"; raceIntroLights[0].classList.add("active"); }, 0));
+    raceIntroTimers.push(window.setTimeout(() => { els.raceIntroTitle.textContent = "Race starts in 2"; raceIntroLights[1].classList.add("active"); }, 700));
+    raceIntroTimers.push(window.setTimeout(() => { els.raceIntroTitle.textContent = "Race starts in 1"; raceIntroLights[2].classList.add("active"); }, 1400));
     raceIntroTimers.push(
       window.setTimeout(() => {
         els.raceIntroTitle.textContent = "They're off";
-        els.raceIntroCopy.textContent = `Track Trap ${trial.assignedTrap} through the run-in.`;
+        els.raceIntroCopy.textContent = `Track the ${colour.name} jacket through the run-in.`;
         raceIntroLights.forEach((light) => {
           light.classList.remove("active");
           light.classList.add("go");
@@ -302,7 +485,7 @@
           playPromise.catch(() => {
             els.videoFallback.classList.remove("hidden");
             els.raceHelper.textContent =
-              "Playback was blocked or unsupported. You can still use this pilot to test the flow.";
+              "Playback was blocked or unsupported. You can still use this build to test the flow.";
           });
         }
       }, 2500)
@@ -316,25 +499,15 @@
     els.raceVideo.pause();
     els.cashoutTitle.textContent = `Cash out now for ${trial.cashoutOffer} points?`;
     els.cashoutCopy.textContent =
-      `Choose a guaranteed ${trial.cashoutOffer} points now, or keep betting for the full ` +
-      `${PILOT_CONFIG.baseWinPoints}-point outcome if your dog wins.`;
-    els.cashoutTimer.textContent = "Offer expires in 4.0s";
+      `Take a guaranteed ${trial.cashoutOffer} points now, or keep betting for the full ` +
+      `${STUDY.baseWinPoints}-point outcome if your dog wins.`;
+    els.cashoutTimer.textContent = "";
     els.cashoutPanel.classList.remove("hidden");
-    const startedAt = Date.now();
-    clearCashoutTimers();
-    cashoutTimerInterval = window.setInterval(() => {
-      const remaining = Math.max(0, 4000 - (Date.now() - startedAt));
-      els.cashoutTimer.textContent = `Offer expires in ${(remaining / 1000).toFixed(1)}s`;
-    }, 100);
-    cashoutExpiryTimeout = window.setTimeout(() => {
-      els.raceHelper.textContent = "Offer expired. Your bet stayed live.";
-      handleCashout("reject");
-    }, 4000);
   }
 
   function handleRaceTimeUpdate() {
     const trial = state.currentTrial;
-    if (!trial || state.cashoutShown) {
+    if (!STUDY.cashout || !trial || state.cashoutShown || !trial.cashoutPauseSec) {
       return;
     }
     if (els.raceVideo.currentTime >= trial.cashoutPauseSec) {
@@ -348,25 +521,36 @@
     state.allowVideoPause = false;
     els.cashoutPanel.classList.add("hidden");
     lockVideoChrome();
-    els.raceVideo.play().catch(() => {
-      els.videoFallback.classList.remove("hidden");
-    });
+    els.raceVideo.play().catch(() => els.videoFallback.classList.remove("hidden"));
   }
 
   function handleRacePause() {
     if (state.allowVideoPause || els.raceVideo.ended || !state.currentTrial) {
       return;
     }
-    els.raceVideo.play().catch(() => {
-      els.videoFallback.classList.remove("hidden");
-    });
+    els.raceVideo.play().catch(() => els.videoFallback.classList.remove("hidden"));
   }
 
-  function pointsForTrial(trial, cashoutChoice) {
-    if (cashoutChoice === "accept") {
+  // finishing position of the chosen dog, from its trap
+  function chosenFinishPosition(trial) {
+    if (trial.assignedTrap === trial.winnerTrap) return 1;
+    if (trial.assignedTrap === trial.runnerUpTrap) return 2;
+    if (trial.assignedTrap === trial.thirdTrap) return 3;
+    return 99; // unplaced
+  }
+
+  function placeLabel(pos) {
+    if (pos === 1) return "1st";
+    if (pos === 2) return "2nd";
+    if (pos === 3) return "3rd";
+    return "Unplaced";
+  }
+
+  function pointsForTrial(trial, pos) {
+    if (STUDY.cashout && state.cashoutChoice === "accept") {
       return trial.cashoutOffer;
     }
-    return trial.finishPosition === 1 ? PILOT_CONFIG.baseWinPoints : 0;
+    return pos === 1 ? STUDY.baseWinPoints : 0;
   }
 
   function currentTrialRecord() {
@@ -378,42 +562,48 @@
     clearCashoutTimers();
     state.allowVideoPause = true;
     const trial = state.currentTrial;
-    const chosenDog = state.currentDogCards[state.selectedDogIndex];
-    const pointsWon = pointsForTrial(trial, state.cashoutChoice);
+    const chosenName = state.trapAssignments[trial.assignedTrap];
+    const pos = chosenFinishPosition(trial);
+    const finishLabel = placeLabel(pos);
+    const pointsWon = pointsForTrial(trial, pos);
     state.points += pointsWon;
     updateHeader();
 
-    const topThree = trial.finishOrder.slice(0, 3).map((trap, index) => {
-      const dog = state.trapAssignments[trap];
-      return `${index + 1}. ${dog.name} (Trap ${trap})`;
+    const topThree = [trial.winnerTrap, trial.runnerUpTrap, trial.thirdTrap].map((trap, i) => {
+      return `${i + 1}. ${state.trapAssignments[trap]} (Trap ${trap})`;
     });
 
     state.results.push({
-      participantSessionStartedAt: state.startedAt,
+      studyId: STUDY.id,
+      sessionStartedAt: state.startedAt,
       submittedAt: new Date().toISOString(),
       trialNumber: state.currentTrialIndex + 1,
-      trialId: trial.trialId,
-      raceId: trial.raceId,
       condition: trial.condition,
-      chosenDog: chosenDog.name,
+      raceId: trial.raceId,
+      videoFile: trial.video.split("/").pop(),
+      nRunners: trial.nRunners,
+      chosenDog: chosenName,
       assignedTrap: trial.assignedTrap,
-      finishPosition: trial.finishPosition,
-      finishLabel: trial.finishLabel,
-      finishOrder: trial.finishOrder.join(">"),
+      trapRole: trial.role,
+      winnerTrap: trial.winnerTrap,
+      runnerUpTrap: trial.runnerUpTrap,
+      finishPosition: pos === 99 ? "unplaced" : pos,
+      finishLabel: finishLabel,
       topThree: topThree.join(" | "),
-      confidence: Number(els.confidenceSlider.value),
-      cashoutOffer: trial.cashoutOffer,
-      cashoutChoice: state.cashoutChoice === "pending" ? "reject" : state.cashoutChoice,
-      pointsWon
+      confidence: ratingValue(RATING_SLIDERS[0]),
+      cashoutEnabled: STUDY.cashout,
+      cashoutOffer: STUDY.cashout ? trial.cashoutOffer : "",
+      cashoutChoice: STUDY.cashout ? (state.cashoutChoice === "pending" ? "reject" : state.cashoutChoice) : "n/a",
+      pointsWon: pointsWon
     });
 
-    els.resultTitle.textContent =
-      trial.finishPosition === 1 ? "Your dog won the race" : "Race complete";
+    const won = pos === 1;
+    els.resultTitle.textContent = won ? "Your dog won the race" : "Race complete";
     els.resultCopy.textContent =
-      `${chosenDog.name} finished ${trial.finishLabel}. Top 3: ${topThree.join(" | ")}.`;
-    els.resultDog.textContent = chosenDog.name;
+      `${chosenName} finished ${finishLabel}. Top 3: ${topThree.join(" | ")}.`;
+    els.resultDog.textContent = chosenName;
     els.resultTrap.textContent = `Trap ${trial.assignedTrap}`;
-    els.resultPlace.textContent = trial.finishLabel;
+    els.resultPlace.textContent = finishLabel;
     els.resultPoints.textContent = String(pointsWon);
 
     showScreen("result");
@@ -421,28 +611,45 @@
 
   function handlePostraceContinue() {
     const record = currentTrialRecord();
-    record.pleased = Number(els.pleasedSlider.value);
-    record.motivation = Number(els.motivationSlider.value);
-    record.luck = Number(els.luckSlider.value);
+    record.pleased = ratingValue(RATING_SLIDERS[1]);
+    record.motivation = ratingValue(RATING_SLIDERS[2]);
+    record.luck = ratingValue(RATING_SLIDERS[3]);
 
-    if (state.currentTrialIndex === PILOT_CONFIG.trials.length - 1) {
-      showFinish();
+    if (state.currentTrialIndex === state.schedule.length - 1) {
+      showScreen("pgsi");
       return;
     }
-
     prepareTrial();
   }
 
   function showFinish() {
     updateHeader();
     const totalTrials = state.results.length;
-    const acceptedCashouts = state.results.filter((row) => row.cashoutChoice === "accept").length;
+    const pgsiResponses = getPgsiResponses();
+    const pgsiTotal = pgsiResponses.reduce((sum, value) => sum + value, 0);
+    const pgsiCategory = getPgsiCategory(pgsiTotal);
     els.finishCopy.textContent =
-      `You completed ${totalTrials} demo trials and earned ${state.points} points. ` +
-      `Cash-out was accepted on ${acceptedCashouts} trial(s). Download the session data ` +
-      `below for inspection or upload to a shared analysis folder.`;
+      `You completed ${totalTrials} races and earned ${state.points} points. ` +
+      `PGSI total: ${pgsiTotal} (${pgsiCategory}). ` +
+      `Download the session data below for inspection.`;
     showScreen("finish");
   }
+
+  function handlePgsiContinue() {
+    const pgsiResponses = getPgsiResponses();
+    const pgsiTotal = pgsiResponses.reduce((sum, value) => sum + value, 0);
+    const pgsiCategory = getPgsiCategory(pgsiTotal);
+    state.results.forEach((row) => {
+      pgsiResponses.forEach((value, index) => {
+        row[`pgsi_${index + 1}`] = value;
+      });
+      row.pgsi_total = pgsiTotal;
+      row.pgsi_category = pgsiCategory;
+    });
+    showFinish();
+  }
+
+  // ---- export -----------------------------------------------------------
 
   function csvEscape(value) {
     const text = String(value ?? "");
@@ -466,14 +673,9 @@
 
   function downloadJson() {
     downloadFile(
-      "greyhound-pilot-session.json",
+      "greyhound-study1-session.json",
       JSON.stringify(
-        {
-          studyTitle: PILOT_CONFIG.studyTitle,
-          exportedAt: new Date().toISOString(),
-          totalPoints: state.points,
-          trials: state.results
-        },
+        { studyTitle: STUDY.title, studyId: STUDY.id, exportedAt: new Date().toISOString(), totalPoints: state.points, trials: state.results },
         null,
         2
       ),
@@ -482,37 +684,42 @@
   }
 
   function downloadCsv() {
-    if (!state.results.length) {
-      return;
-    }
+    if (!state.results.length) return;
     const keys = Object.keys(state.results[0]);
     const rows = [
       keys.join(","),
       ...state.results.map((row) => keys.map((key) => csvEscape(row[key])).join(","))
     ];
-    downloadFile("greyhound-pilot-session.csv", rows.join("\n"), "text/csv;charset=utf-8");
+    downloadFile("greyhound-study1-session.csv", rows.join("\n"), "text/csv;charset=utf-8");
   }
 
-  function restartPilot() {
+  function startSession() {
     clearRaceIntroTimers();
     clearCashoutTimers();
     resetSignalLights();
+    state.schedule = buildSchedule();
     state.currentTrialIndex = -1;
     state.currentTrial = null;
-    state.currentDogCards = [];
     state.selectedDogIndex = null;
     state.trapAssignments = null;
     state.cashoutShown = false;
-    state.cashoutChoice = "pending";
+    state.cashoutChoice = STUDY.cashout ? "pending" : "n/a";
     state.points = 0;
     state.results = [];
     state.startedAt = new Date().toISOString();
+    resetPgsiForm();
     updateHeader();
+  }
+
+  function restartTask() {
+    startSession();
     showScreen("intro");
   }
 
+  // ---- wiring -----------------------------------------------------------
+
   els.startButton.addEventListener("click", () => {
-    state.startedAt = new Date().toISOString();
+    startSession();
     prepareTrial();
   });
   els.choiceNext.addEventListener("click", handleChoiceContinue);
@@ -521,30 +728,31 @@
   els.cashoutAccept.addEventListener("click", () => handleCashout("accept"));
   els.cashoutReject.addEventListener("click", () => handleCashout("reject"));
   els.resultNext.addEventListener("click", () => {
-    resetSlider(els.pleasedSlider, els.pleasedValue, 50);
-    resetSlider(els.motivationSlider, els.motivationValue, 50);
-    resetSlider(els.luckSlider, els.luckValue, 50);
+    RATING_SLIDERS.slice(1).forEach(resetRatingSlider);
+    els.postraceNext.disabled = true;
     showScreen("postrace");
   });
   els.postraceNext.addEventListener("click", handlePostraceContinue);
+  els.pgsiNext.addEventListener("click", handlePgsiContinue);
   els.downloadJson.addEventListener("click", downloadJson);
   els.downloadCsv.addEventListener("click", downloadCsv);
-  els.restartButton.addEventListener("click", restartPilot);
+  els.restartButton.addEventListener("click", restartTask);
   els.raceVideo.addEventListener("pause", handleRacePause);
   els.raceVideo.addEventListener("play", lockVideoChrome);
-  els.raceVideo.addEventListener("loadedmetadata", lockVideoChrome);
   els.raceVideo.addEventListener("timeupdate", handleRaceTimeUpdate);
-  els.raceVideo.addEventListener("contextmenu", (event) => {
-    event.preventDefault();
-  });
-  els.raceVideo.addEventListener("error", () => {
-    els.videoFallback.classList.remove("hidden");
+  els.raceVideo.addEventListener("contextmenu", (event) => event.preventDefault());
+  els.raceVideo.addEventListener("error", () => els.videoFallback.classList.remove("hidden"));
+
+  RATING_SLIDERS.forEach(wireRatingSlider);
+  // Post-race Next stays disabled until all three post-race sliders are touched.
+  [RATING_SLIDERS[1], RATING_SLIDERS[2], RATING_SLIDERS[3]].forEach((cfg) => {
+    els[cfg.slider].addEventListener("input", () => {
+      els.postraceNext.disabled = !postraceComplete();
+    });
   });
 
-  wireSlider(els.confidenceSlider, els.confidenceValue);
-  wireSlider(els.pleasedSlider, els.pleasedValue);
-  wireSlider(els.motivationSlider, els.motivationValue);
-  wireSlider(els.luckSlider, els.luckValue);
+  renderPgsiForm();
+  els.pgsiForm.addEventListener("change", updatePgsiButtonState);
 
   updateHeader();
   lockVideoChrome();

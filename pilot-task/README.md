@@ -1,71 +1,65 @@
-# Pilot Task
+# Study 1 task
 
 ## What this is
 
-This folder contains a lightweight browser prototype of the proposed Prolific greyhound task.
+Browser build of the near-miss greyhound race task (Study 1: 4 conditions, no
+cash-out). Dependency-light — plain HTML/CSS/JS, no build step.
 
-It is designed to test the **task flow**, not to serve as a finalized experiment yet.
+## Flow
 
-Current flow:
+Per race:
 
-1. participant chooses a dog
-2. chosen dog is mapped to a forced trap
-3. participant rates confidence
-4. race video plays
-5. task pauses for a mid-race cash-out choice
-6. final outcome is shown
-7. participant rates pleasure, motivation, and luck
-8. session data can be downloaded as JSON or CSV
+1. choose a dog by name
+2. see which trap it runs from (with its jacket colour)
+3. rate confidence (slider has no central default — must be moved)
+4. watch the real race video
+5. see the outcome (top 3, or "unplaced")
+6. rate pleasure, motivation to continue, and luck
 
-## Important limitation
+Then, once after the last race: the PGSI questionnaire, then JSON/CSV download.
 
-This pilot now uses the internal file:
+## How the conditions work
 
-- `./assets/videos/demo.mp4`
+Each participant does 20 races, 5 of each condition. The condition is set by which
+race is shown and which trap the chosen dog is secretly mapped to:
 
-for all demo trials.
+| Condition | Race kind | Chosen dog's trap | Outcome |
+|---|---|---|---|
+| CW clear win | clear | winner | 1st |
+| NW narrow win | close | winner | 1st |
+| NM near miss | close | runner-up | 2nd |
+| CL clear loss | clear | a back trap | unplaced |
 
-That means:
-
-- the pilot is suitable for testing interface logic and data capture
-- the pilot is **not** yet suitable for real participant data collection
-- the full study still needs a proper stimulus schedule and browser-ready converted race videos
+The schedule is generated fresh per participant: races drawn from the pool, dog
+names drawn from a database (fresh each race), order randomised with light
+constraints (no more than two of a condition in a row; never opens on a loss).
 
 ## Files
 
-- `index.html`: task markup
-- `styles.css`: task styling
-- `trial-config.js`: demo trial definitions and dog metadata
-- `app.js`: task logic and local data export
+- `index.html` — task markup
+- `styles.css` — styling
+- `trial-config.js` — `STUDY` object: settings, race pool (races 1-23), dog names
+- `app.js` — schedule generation, task logic, data export
+- `assets/videos/1.mp4 … 23.mp4` — race clips (gitignored here; the committed copy
+  lives in `docs/assets/videos/` which is what GitHub Pages serves)
 
-## How to run locally
-
-From the project root:
+## Run locally
 
 ```bash
 cd pilot-task
 python3 -m http.server 8000
+# open http://localhost:8000
 ```
 
-Then open:
+## Turning on the cash-out (Studies 3 and 4)
 
-```text
-http://localhost:8000
-```
+Set `cashout: true` in `trial-config.js`. The cash-out machinery (offer, pause at
+~75% of the clip, accept/reject, points) is already wired; it is just gated off
+for Study 1.
 
-Using a local web server is recommended because browsers are stricter about video loading from direct `file://` URLs.
+## Still to do before real data collection
 
-## What to replace next
-
-Before turning this into the real Prolific task, replace the demo setup with:
-
-- converted `.mp4` versions of the chosen race videos
-- one finalized stimulus metadata file
-- one finalized trial schedule
-- comprehension checks and consent/debrief pages if needed
-
-## GitHub readiness
-
-This folder is intentionally dependency-light so it can be moved into its own repository, or kept inside the larger `Greyhound_NM` project, with minimal cleanup.
-
-For click-to-play sharing on GitHub Pages, use the prebuilt deploy copy in `../docs/`.
+- final scale wording (Luke to confirm), then update the slider labels
+- server-side data storage instead of local download
+- consent and debrief pages
+- comprehension checks

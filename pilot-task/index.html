@@ -10,8 +10,8 @@
     <main class="app-shell">
       <header class="topbar">
         <div>
-          <p class="eyebrow">Greyhound Prolific Pilot</p>
-          <h1>Race Choice and Cash-Out Demo</h1>
+          <p class="eyebrow">Greyhound Race Task — Study 1</p>
+          <h1>Near-Miss Race Task</h1>
         </div>
         <div class="status">
           <span id="trial-status">Trial 0 / 0</span>
@@ -21,23 +21,18 @@
 
       <section id="screen-intro" class="screen active">
         <div class="card narrow">
-          <h2>Workflow Pilot</h2>
+          <h2>Welcome</h2>
           <p>
-            This browser prototype tests the full task flow: dog choice, hidden assignment,
-            confidence rating, race playback, mid-race cash-out, outcome feedback, and
-            post-race motivation ratings.
-          </p>
-          <p>
-            The current pilot reuses one demo video and is meant for interface testing, not
-            formal data collection. The full study will need converted web-ready race videos
-            and a finalized stimulus schedule.
+            In each race you will choose a dog, see which trap it runs from, rate how
+            confident you are, then watch a real greyhound race and see how your dog did.
+            After each race you will answer three short questions.
           </p>
           <ul class="plain-list">
-            <li>You will complete 4 short demo trials.</li>
-            <li>One trial includes a practice-style walkthrough of the cash-out flow.</li>
+            <li>You will complete 20 races.</li>
+            <li>Your dog wears a coloured jacket by trap number — follow that jacket.</li>
             <li>Your responses are stored in the browser until you download them at the end.</li>
           </ul>
-          <button id="start-button" class="button primary">Start pilot</button>
+          <button id="start-button" class="button primary">Start</button>
         </div>
       </section>
 
@@ -61,6 +56,7 @@
         <div class="card narrow">
           <p class="eyebrow">Trap Assignment</p>
           <h2 id="assignment-title">Your dog is ready</h2>
+          <div class="jacket-badge" id="assignment-jacket" aria-hidden="true"></div>
           <p id="assignment-copy"></p>
           <button id="assignment-next" class="button primary">Rate confidence</button>
         </div>
@@ -72,11 +68,12 @@
           <h2>How confident are you that your dog will win?</h2>
           <label class="slider-wrap" for="confidence-slider">
             <span>Not at all confident</span>
-            <input id="confidence-slider" type="range" min="0" max="100" step="1" value="50">
+            <input id="confidence-slider" class="untouched" type="range" min="0" max="100" step="1" value="50">
             <span>Very confident</span>
           </label>
-          <p class="value-readout"><span id="confidence-value">50</span>/100</p>
-          <button id="confidence-next" class="button primary">Watch race</button>
+          <p class="value-readout"><span id="confidence-value">–</span>/100</p>
+          <p class="helper-text">Drag the slider to answer.</p>
+          <button id="confidence-next" class="button primary" disabled>Watch race</button>
         </div>
       </section>
 
@@ -167,20 +164,33 @@
           <h2>How did that race feel?</h2>
           <div class="question-block">
             <label for="pleased-slider">How pleased were you with the outcome of this race?</label>
-            <input id="pleased-slider" type="range" min="0" max="100" step="1" value="50">
-            <p class="value-readout"><span id="pleased-value">50</span>/100</p>
+            <input id="pleased-slider" class="untouched" type="range" min="0" max="100" step="1" value="50">
+            <p class="value-readout"><span id="pleased-value">–</span>/100</p>
           </div>
           <div class="question-block">
             <label for="motivation-slider">Right now, how much do you want to play the next race?</label>
-            <input id="motivation-slider" type="range" min="0" max="100" step="1" value="50">
-            <p class="value-readout"><span id="motivation-value">50</span>/100</p>
+            <input id="motivation-slider" class="untouched" type="range" min="0" max="100" step="1" value="50">
+            <p class="value-readout"><span id="motivation-value">–</span>/100</p>
           </div>
           <div class="question-block">
             <label for="luck-slider">How lucky or unlucky do you feel right now?</label>
-            <input id="luck-slider" type="range" min="0" max="100" step="1" value="50">
-            <p class="value-readout"><span id="luck-value">50</span>/100</p>
+            <input id="luck-slider" class="untouched" type="range" min="0" max="100" step="1" value="50">
+            <p class="value-readout"><span id="luck-value">–</span>/100</p>
           </div>
-          <button id="postrace-next" class="button primary">Next</button>
+          <p class="helper-text">Drag each slider to answer.</p>
+          <button id="postrace-next" class="button primary" disabled>Next</button>
+        </div>
+      </section>
+
+      <section id="screen-pgsi" class="screen">
+        <div class="card narrow">
+          <p class="eyebrow">Questionnaire</p>
+          <h2>Problem Gambling Severity Index</h2>
+          <p class="muted">
+            Thinking about the last 12 months, please answer the following questions.
+          </p>
+          <div id="pgsi-form" class="pgsi-form"></div>
+          <button id="pgsi-next" class="button primary" disabled>Finish study</button>
         </div>
       </section>
 
