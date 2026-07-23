@@ -190,6 +190,41 @@ Study 2 needs 12 narrow and is one race short of buildable from 1-23 alone.
   live Pages demo does not have it.
 - `pilot-task/` and `docs/` are duplicate copies kept in sync by hand.
 
+#### Study 1 built and pushed live
+
+- The browser task is now the real 4-condition Study 1, replacing the single-clip
+  demo. Per participant: 20 races, 5 each of CW / NW / NM / CL, drawn from the
+  pool and randomised per participant (no more than two of a condition in a row,
+  never opens on a loss). Fresh dog names each race from a name database. Chosen
+  dog assigned to a trap by condition; jacket colour shown so it can be followed.
+  Clear losses shown as "unplaced". Rating sliders have no central default (must
+  be moved). PGSI at the end. Cash-out is built but gated off (`STUDY.cashout`).
+- Race videos converted to browser MP4 and committed under `docs/assets/videos/`
+  (races 1-23). Dev copy under `pilot-task/assets/videos/` is gitignored.
+- Verified end to end in headless Chrome: 20 trials, correct condition counts and
+  outcomes, 20 distinct races, no console errors.
+- Live at https://omadav.github.io/greyhound_cashout/ (Pages serves main /docs).
+
+#### Cash-out design for Studies 3-4 (second discussion with Luke)
+
+- **Manipulation: offer value scaled to race state.** Real operators lower the
+  cash-out value when your dog is losing. The strong version of the study makes
+  the offer a function of the chosen dog's position at the pause, and tests
+  whether people accept a worse-value offer when trailing (grabbing something to
+  avoid the near miss) than when leading. Maps onto clip shape at the pause:
+  leading = {clear win, hold-on win, fallback NM}; trailing = {overtake win,
+  catch-up NM, clear loss}. This gives cash-out trials matched on visible state at
+  the moment of decision.
+- **Risk aversion as a separately-measured covariate.** A cash-out choice is
+  ambiguous on its own (near-miss framing vs just being risk-averse). Fix this by
+  measuring risk aversion in a *separate* lottery-choice block (sure amount vs
+  gamble), fitting a utility-curvature parameter per participant, then entering
+  that parameter into the cash-out model. Then ask whether race dynamics predict
+  cashing out *over and above* individual risk aversion. Same between x within
+  logic as PGSI. Must be a non-greyhound task or the estimate is circular.
+- This is what Ty Hayes (Warwick, via Luke) is being consulted about — how betting
+  operators actually set cash-out values.
+
 ## Future Sessions
 
 Append future dated entries to the `Session Log` section above so this file becomes a running record of design decisions, coding progress, and open questions.
