@@ -284,6 +284,61 @@ Open follow-ups:
   for the main run.
 - Add a straight-lining detector to the export.
 
+### 2026-07-24
+
+Study 1 deployed and piloted end to end.
+
+#### Deployment
+
+- Self-contained build pushed to Pavlovia (`gitlab.pavlovia.org/omardavidperez/
+  greyhound-cashout`, project id 533864), kept in `pavlovia/` (gitignored from this
+  public repo). Data-saving reuses the proven vanilla-JS wrapper from the
+  in-game-betting-experiment (open session → POST results CSV → close), reads the
+  Prolific URL params, and redirects to the Prolific completion URL on finish.
+- Live on Prolific: £3.50 base + £1 bonus (base ≈ £11.7/hr shown, ≈ £15/hr with
+  bonus; the bonus stays a bonus so in-game winnings feel consequential). URL
+  parameters pass PROLIFIC_PID/STUDY_ID/SESSION_ID; completion via redirect
+  (cc=CKEB0540). `?reps=N` shortens the task for testing only — the real link runs
+  the full 20.
+- PGSI screen heading neutralised ("A few final questions") so the scale name does
+  not prime socially-desirable answering.
+
+#### Pilot result (analysis in `analysis/analyze_pilot.R`, reproducible)
+
+At **n≈43 completers** (auto-excluding straight-liners; 0 attention-check fails,
+0 dropouts):
+
+- **Near-miss effect confirmed:** motivation NM > CL by ~+9 points, paired
+  t ≈ 5, **p < 0.001**; mixed model condition effect F ≈ 89, p < 2e-16.
+- **PGSI moderation:** (NM−CL motivation) × PGSI correlation r ≈ 0.31, p ≈ 0.04;
+  mixed-model condition × PGSI interaction **p < 0.01**. Higher gambling risk →
+  larger near-miss motivation boost.
+- **Validity check passes:** pre-race confidence is flat across conditions (rated
+  before the outcome); pleasure and luck track outcome monotonically.
+- **Trajectory hint (exploratory):** catch-up near misses sustain motivation more
+  than fall-back (catch-up 64 vs fall-back 59 vs CL 49); catch-up vs stable p≈0.04
+  in a mixed model on NM trials. Underpowered (catch-up stimuli scarce) — this is
+  the empirical hook for the Study 2 trajectory design.
+
+Plots use within-subject 95% CIs (Cousineau–Morey) with significance brackets.
+
+#### Analysis / notes committed
+
+- `analysis/analyze_pilot.R` — the R/ggplot pipeline (pull Pavlovia CSVs → clean +
+  quality flags → figures + mixed models + stats.txt). One command reruns it.
+- `analysis/stimulus_notes.md` — description of the clips and the labelling
+  provenance for Luke, incl. the per-race table. Eye-coding matches the 2013 raters
+  on 20/23 (races 3, 20 had no 2013 consensus; race 18 is the only disagreement).
+- Participant data (`pavlovia/data/`, `pilot_analysis/`) is gitignored — this repo
+  is public, so raw responses + Prolific IDs + PGSI stay out of git.
+
+#### Open follow-ups
+
+- Study 2 trajectory design needs more catch-up footage (revisit races 24–38 if
+  their finish line can be identified).
+- Strict NW/NM seat counterbalancing for the main run (currently random per draw).
+- Final scale wording from Luke, then apply.
+
 ## Future Sessions
 
 Append future dated entries to the `Session Log` section above so this file becomes a running record of design decisions, coding progress, and open questions.

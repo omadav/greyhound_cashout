@@ -17,3 +17,8 @@ gap_examples/
 
 # Pavlovia deployment build (pushed to gitlab.pavlovia.org, not GitHub)
 pavlovia/
+
+# participant data & regenerable analysis outputs (public repo — keep raw data out)
+pilot_analysis/
+# participant session downloads (never commit — public repo)
+greyhound-study1-session*.csv
