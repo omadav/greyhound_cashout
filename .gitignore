@@ -14,3 +14,6 @@ pilot-task/assets/videos/
 # throwaway coding aids
 starts_1to23.mp4
 gap_examples/
+
+# Pavlovia deployment build (pushed to gitlab.pavlovia.org, not GitHub)
+pavlovia/
