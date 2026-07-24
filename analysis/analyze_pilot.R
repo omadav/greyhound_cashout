@@ -208,23 +208,26 @@ sc <- pmc |> group_by(cond6) |>
   summarise(m = mean(motivation), se = sd(motivation) / sqrt(n()), .groups = "drop") |>
   left_join(dft |> count(cond6, name = "n_trials"), by = "cond6")
 
-# catch-up vs stable (and fall-back) from a mixed model on NM trials
-mt4 <- lmer(motivation ~ trajectory + (1 | prolificPID),
-            data = dft |> filter(condition == "NM", !is.na(trajectory)) |>
-              mutate(trajectory = factor(trajectory, levels = c("stable", "fall-back", "catch-up"))))
-p_cu <- summary(mt4)$coefficients["trajectorycatch-up", "Pr(>|t|)"]
+# No significance test on the trajectory split: trajectory is a FIXED property of
+# the clip (not an assignment), so catch-up / fall-back / stable are disjoint video
+# sets (3 / 4 / 5 clips). The contrast is confounded with clip identity and cannot
+# generalise beyond those specific races — descriptive only. See stimulus_notes.md.
+n_vids <- c("CW" = "", "NW" = "", "NM: catch-up" = " (3 videos)",
+            "NM: fall-back" = " (4 videos)", "NM: stable" = " (5 videos)", "CL" = "")
+sc <- sc |> mutate(vidlab = n_vids[as.character(cond6)])
 
 cond6_cols <- c("CW" = "#009E73", "NW" = "#56B4E9", "NM: catch-up" = "#E69F00",
                 "NM: fall-back" = "#B25400", "NM: stable" = "#B0982E", "CL" = "#D55E00")
 fig4 <- ggplot(sc, aes(cond6, m, fill = cond6)) +
   geom_col(width = 0.66) +
   geom_errorbar(aes(ymin = m - se, ymax = m + se), width = 0.15) +
-  geom_text(aes(label = paste0(n_trials, " trials"), y = 5), colour = "white", size = 3) +
-  bracket(3, 5, 76, sprintf("catch-up vs stable: %s (LMM)", sig_stars(p_cu)), size = 3.4) +
+  geom_text(aes(label = paste0(n_trials, " trials", vidlab), y = 5), colour = "white", size = 2.8) +
   scale_fill_manual(values = cond6_cols, guide = "none") +
   coord_cartesian(ylim = c(0, 100)) +
-  labs(title = sprintf("Motivation by outcome, near-miss split by trajectory (exploratory, n=%d)", N),
-       subtitle = paste("catch-up = closing at the line; fall-back = led then caught; stable/other = neither"),
+  labs(title = sprintf("Motivation by outcome, near-miss split by trajectory (descriptive, n=%d)", N),
+       subtitle = paste0("catch-up = closing at the line; fall-back = led then caught; stable/other = neither.\n",
+                         "DESCRIPTIVE ONLY: trajectory is confounded with clip identity (3 / 4 / 5 videos), so no\n",
+                         "significance test is shown — the split cannot generalise beyond these specific clips."),
        x = NULL, y = "mean motivation (0-100)") +
   theme_minimal(base_size = 12) +
   theme(plot.title = element_text(face = "bold"),
