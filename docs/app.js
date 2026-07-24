@@ -167,16 +167,26 @@
 
   // ---- schedule ---------------------------------------------------------
 
+  // Races per condition. Defaults to STUDY.repsPerCondition (5 -> 20 races), but a
+  // ?reps=N url param (1-5) shortens it for testing without touching the config.
+  // The real Prolific link has no param and always runs the full 5.
+  function repsPerCondition() {
+    const raw = new URLSearchParams(window.location.search).get("reps");
+    const n = raw ? parseInt(raw, 10) : STUDY.repsPerCondition;
+    return Number.isInteger(n) && n >= 1 && n <= 5 ? n : STUDY.repsPerCondition;
+  }
+
   function buildSchedule() {
     const pools = {
       clear: shuffle(STUDY.races.filter((r) => r.kind === "clear")),
       close: shuffle(STUDY.races.filter((r) => r.kind === "close"))
     };
     const trials = [];
+    const reps = repsPerCondition();
 
     STUDY.allocation.forEach((alloc) => {
       const cond = STUDY.conditions[alloc.condition];
-      for (let i = 0; i < alloc.count; i += 1) {
+      for (let i = 0; i < reps; i += 1) {
         const race = pools[alloc.pool].shift();
         if (!race) {
           throw new Error(`Not enough ${alloc.pool} races for ${alloc.condition}`);
