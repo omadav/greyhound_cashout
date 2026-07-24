@@ -83,7 +83,8 @@
     finishCopy: document.getElementById("finish-copy"),
     downloadJson: document.getElementById("download-json"),
     downloadCsv: document.getElementById("download-csv"),
-    restartButton: document.getElementById("restart-button")
+    restartButton: document.getElementById("restart-button"),
+    returnProlific: document.getElementById("return-prolific")
   };
 
   const PGSI_ITEMS = [
@@ -680,6 +681,9 @@
 
     state.results.push({
       studyId: STUDY.id,
+      prolificPID: (typeof Pavlovia !== "undefined" && Pavlovia.prolificPID) || "",
+      prolificStudyID: (typeof Pavlovia !== "undefined" && Pavlovia.prolificStudyID) || "",
+      prolificSessionID: (typeof Pavlovia !== "undefined" && Pavlovia.prolificSessionID) || "",
       sessionStartedAt: state.startedAt,
       submittedAt: new Date().toISOString(),
       trialNumber: state.currentTrialIndex + 1,
@@ -749,6 +753,7 @@
       `which convert to your cash bonus. PGSI total: ${pgsiTotal} (${pgsiCategory}). ` +
       `Download the session data below for inspection.`;
     showScreen("finish");
+    saveResults();
   }
 
   function handlePgsiContinue() {
@@ -799,14 +804,36 @@
     );
   }
 
-  function downloadCsv() {
-    if (!state.results.length) return;
+  function buildCsvString() {
+    if (!state.results.length) return null;
     const keys = Object.keys(state.results[0]);
-    const rows = [
+    return [
       keys.join(","),
       ...state.results.map((row) => keys.map((key) => csvEscape(row[key])).join(","))
-    ];
-    downloadFile("greyhound-study1-session.csv", rows.join("\n"), "text/csv;charset=utf-8");
+    ].join("\n");
+  }
+
+  function downloadCsv() {
+    const csv = buildCsvString();
+    if (csv) downloadFile("greyhound-study1-session.csv", csv, "text/csv;charset=utf-8");
+  }
+
+  // When running on Pavlovia, upload the CSV to the server, close the session, and
+  // offer the Prolific completion redirect. Off Pavlovia (GitHub Pages debug), this
+  // is a no-op and the manual download buttons remain.
+  async function saveResults() {
+    if (typeof Pavlovia === "undefined" || !Pavlovia.isActive) return;
+    const csv = buildCsvString();
+    if (!csv) return;
+    const pid = Pavlovia.prolificPID || "anon";
+    const ok = await Pavlovia.saveData(`greyhound_${pid}_${Date.now()}.csv`, csv);
+    if (ok) {
+      await Pavlovia.finish();
+      els.finishCopy.textContent += " Your data has been saved.";
+      if (els.returnProlific && Pavlovia.completionURL) {
+        els.returnProlific.classList.remove("hidden");
+      }
+    }
   }
 
   function startSession() {
@@ -874,6 +901,19 @@
 
   renderPgsiForm();
   els.pgsiForm.addEventListener("change", updatePgsiButtonState);
+
+  if (els.returnProlific) {
+    els.returnProlific.addEventListener("click", () => {
+      if (typeof Pavlovia !== "undefined") Pavlovia.redirectToProlific();
+    });
+  }
+
+  // Open the Pavlovia session on load. init() reads the Prolific URL params first,
+  // then only opens a server session if a projectId is set and we are on Pavlovia
+  // (no-op otherwise). Fire-and-forget: the session is ready long before finishing.
+  if (typeof Pavlovia !== "undefined" && STUDY.pavlovia) {
+    Pavlovia.init(STUDY.pavlovia);
+  }
 
   updateHeader();
   lockVideoChrome();

@@ -24,6 +24,11 @@ const STUDY = {
   // Payment (set on Prolific, not here): £2.00 completion fee + up to £2.00 bonus.
   // Every participant wins 10 races -> 100 credits, so the bonus is a flat £2 for all
   // (100 credits x £0.02). Effective ~£10-12/hr for a 20-25 min session.
+  // Pavlovia deployment config — only used when pavlovia.js is loaded (the pavlovia/
+  // build). projectId is the numeric Pavlovia/GitLab experiment id; completionURL is
+  // the Prolific "completed" redirect. Left null on the GitHub Pages debug copy, where
+  // the task falls back to local CSV/JSON download.
+  pavlovia: { projectId: null, completionURL: "" },
   cashout: false,
   baseWinPoints: 10,
   cashoutOffers: [3, 5, 7],
