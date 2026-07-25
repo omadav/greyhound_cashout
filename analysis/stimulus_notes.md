@@ -177,6 +177,31 @@ also still need copying into `docs/assets/videos/` and the Pavlovia build.
 Adding races mid-run would change the stimulus pool underneath the 44 participants
 already collected, so the expanded pool belongs to Study 2, not to Study 1.
 
+## `Races_noboard/` — the uniform stimulus set (2026-07-25)
+
+Races 1–23 end on the trackside result board; races 24–38 do not. Mixing them in one
+session would be visibly inconsistent, and the board also constrains what the task can
+display (participants could read the real 1st/2nd/3rd off it).
+
+`Races_noboard/` fixes that: **every clip now ends at the track, with no board.**
+
+- races 1–23 — trimmed at the frame the board cut appears, minus a 0.2 s safety margin
+- races 24–38 — copied unchanged (no board in the source)
+- race 26 — omitted entirely (interference)
+
+37 clips, 19.7–24.5 s each. Cut points are recorded in `video_trim_log.csv` so the set
+is reproducible from `Races/`. The directory itself is gitignored, like `Races/`.
+
+The board start was found by taking the final frame as a reference and walking backwards
+until the picture changed sharply (the board is static, so board frames are near-identical
+to the last frame). A fixed difference threshold failed on race 5, where the camera settles
+onto the board over ~0.7 s; using the *largest* jump instead fixed it. Every cut was then
+checked by eye, frame before versus frame after.
+
+**Not yet deployed.** Swapping these into `docs/assets/videos/` would change Study 1's
+stimuli underneath the 44 participants already collected. Study 1 should keep the board
+versions; the trimmed set is for Study 2.
+
 ## Per-race table
 
 `kind`: clear/close by eye. `2013`: derived from the original raters

@@ -1,0 +1,39 @@
+race_id,source_dur,board_starts_sec,trimmed_dur,action,note
+1,24.02,21.92,21.72,trimmed,result board removed
+2,27.49,22.49,22.32,trimmed,result board removed
+3,22.62,21.72,21.52,trimmed,result board removed
+4,23.12,21.82,21.62,trimmed,result board removed
+5,23.09,21.09,20.92,trimmed,result board removed
+6,21.96,21.16,20.99,trimmed,result board removed
+7,27.46,23.66,23.49,trimmed,result board removed
+8,23.39,21.39,21.22,trimmed,result board removed
+9,23.56,21.16,20.99,trimmed,result board removed
+10,24.59,23.19,23.02,trimmed,result board removed
+11,26.63,24.63,24.46,trimmed,result board removed
+12,22.56,21.36,21.19,trimmed,result board removed
+13,22.96,21.06,20.89,trimmed,result board removed
+14,22.19,20.79,20.62,trimmed,result board removed
+15,22.49,20.19,20.02,trimmed,result board removed
+16,24.19,21.09,20.92,trimmed,result board removed
+17,24.59,21.79,21.62,trimmed,result board removed
+18,22.66,20.86,20.69,trimmed,result board removed
+19,23.16,21.76,21.59,trimmed,result board removed
+20,21.35,20.25,20.05,trimmed,result board removed
+21,21.76,20.66,20.49,trimmed,result board removed
+22,21.65,20.45,20.25,trimmed,result board removed
+23,22.29,20.99,20.82,trimmed,result board removed
+24,20.59,,20.59,copied,no result board in source
+25,21.19,,21.19,copied,no result board in source
+26,21.69,,,EXCLUDED,interference (bump)
+27,23.06,,23.06,copied,no result board in source
+28,20.89,,20.89,copied,no result board in source
+29,22.15,,22.15,copied,no result board in source
+30,19.69,,19.69,copied,no result board in source
+31,20.65,,20.65,copied,no result board in source
+32,19.65,,19.65,copied,no result board in source
+33,21.15,,21.15,copied,no result board in source
+34,21.35,,21.35,copied,no result board in source
+35,21.05,,21.05,copied,no result board in source
+36,20.42,,20.42,copied,no result board in source
+37,21.69,,21.69,copied,no result board in source
+38,21.42,,21.42,copied,no result board in source

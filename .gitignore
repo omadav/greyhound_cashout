@@ -8,6 +8,9 @@ Sophie data/
 Races/
 KateChampion/NM Catch up 3 320 19.36 321 edit.mp4
 Races_avi/
+# derived stimulus set: result board trimmed off, all clips end at the track.
+# Regenerate from Races/ using the cut points in video_trim_log.csv.
+Races_noboard/
 
 # dev-only video copy (docs/ copy is the one Pages serves)
 pilot-task/assets/videos/
