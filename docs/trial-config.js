@@ -89,20 +89,42 @@ const STUDY = {
     { id: 23, video: "23.mp4", kind: "clear", nRunners: 6, missing: [], winner: 3, runnerUp: 5, third: 1 }
   ],
 
-  // Dog names are built by combining a kennel prefix with a word, greyhound-registry
-  // style (e.g. "Ballymac Rocket"). The app makes every prefix x word combination,
-  // shuffles, and deals names WITHOUT replacement across the whole session, so no
-  // participant ever sees the same dog name twice (avoids learning effects).
+  // Dog names are built as "<kennel prefix> <word>", greyhound-registry style.
+  // A session needs up to 6 x 20 = 120 names. The app deals each PREFIX at most
+  // once per session (sampled without replacement), so no two dogs ever look like
+  // littermates ("Skywalker Rebel" / "Skywalker Bullet"), which participants
+  // otherwise read as family resemblance. Words may recur but never within the
+  // same race card. Names are never repeated across the session (learning effects).
   namePrefixes: [
     "Ballymac", "Droopys", "Coolavanny", "Newinn", "Kilbride", "Rathcoole",
     "Clonbrien", "Skywalker", "Ballyanne", "Sidarian", "Tullymurry", "Whiteforest",
-    "Bockos", "Portmageehy", "Lemon", "Swift", "Good", "Romeo", "Signet", "Jaytee"
+    "Bockos", "Portmageehy", "Lemon", "Swift", "Good", "Romeo", "Signet", "Jaytee",
+    "Aero", "Alpine", "Amber", "Anvil", "Arden", "Ashdown", "Aurora", "Avalon",
+    "Barnfield", "Beacon", "Bexley", "Birchwood", "Blackrock", "Boulder", "Bramble",
+    "Brandon", "Briarwood", "Brookside", "Cairn", "Caldera", "Camden", "Carrick",
+    "Cascade", "Cedar", "Chelston", "Clifden", "Cobalt", "Copperfield", "Cranmore",
+    "Crestwood", "Dalton", "Danbury", "Darrow", "Deerpark", "Delmore", "Denby",
+    "Dovecote", "Dunmore", "Eastgate", "Eldon", "Elmhurst", "Everton", "Fairlight",
+    "Falconer", "Fenwick", "Fernhill", "Flintlock", "Foxglove", "Galleon", "Garnet",
+    "Glenmore", "Granton", "Greystone", "Halcyon", "Hallmark", "Hartley", "Havenwood",
+    "Hazelmere", "Highfield", "Hollybank", "Ironside", "Ivybridge", "Kelston",
+    "Kenmare", "Kestrel", "Langford", "Larkspur", "Latham", "Ledbury", "Linfield",
+    "Longcroft", "Lyndhurst", "Marlowe", "Mayfair", "Meadowbank", "Melrose",
+    "Merrion", "Millbrook", "Monarch", "Moorland", "Netherby", "Northgate", "Oakhill",
+    "Oldcastle", "Orwell", "Pembroke", "Penrose", "Quarryman", "Ravensworth",
+    "Redmond", "Ridgeway", "Rosslare", "Rowanwood", "Saltmarsh", "Sandown",
+    "Selby", "Sheringham", "Silverdale", "Stanfield", "Stonebridge", "Sunniside",
+    "Talbot", "Thornbury", "Tideswell", "Ullswater", "Vanguard", "Wexford",
+    "Whitfield", "Willowbrook", "Windermere", "Wyndham", "Yardley", "Zennor"
   ],
   nameWords: [
     "Rocket", "Bullet", "Comet", "Blaze", "Storm", "Flyer", "Arrow", "Dash",
     "Bolt", "Chief", "Ranger", "Rebel", "Gold", "Ace", "King", "Star",
     "Dancer", "Hero", "Spirit", "Thunder", "Champ", "Fury", "Jet", "Magic",
-    "Legend", "Wonder", "Prince", "Rascal", "Turbo", "Vision"
+    "Legend", "Wonder", "Prince", "Rascal", "Turbo", "Vision", "Breeze", "Cruiser",
+    "Dazzler", "Echo", "Falcon", "Gambit", "Harrier", "Impulse", "Jester", "Knight",
+    "Lancer", "Marvel", "Nomad", "Onyx", "Pilot", "Quest", "Ripple", "Sprinter",
+    "Tempest", "Vortex", "Whisper", "Zephyr"
   ],
 
   // Purely decorative form details shown on the choice card. They carry no

@@ -6,6 +6,7 @@
     confidence: document.getElementById("screen-confidence"),
     attention: document.getElementById("screen-attention"),
     race: document.getElementById("screen-race"),
+    outcomeCheck: document.getElementById("screen-outcome-check"),
     result: document.getElementById("screen-result"),
     postrace: document.getElementById("screen-postrace"),
     pgsi: document.getElementById("screen-pgsi"),
@@ -46,6 +47,8 @@
     confidenceSlider: document.getElementById("confidence-slider"),
     confidenceValue: document.getElementById("confidence-value"),
     confidenceNext: document.getElementById("confidence-next"),
+    outcomeCheckCopy: document.getElementById("outcome-check-copy"),
+    outcomeCheckOptions: document.getElementById("outcome-check-options"),
     attentionLabel: document.getElementById("attention-label"),
     attentionSlider: document.getElementById("attention-slider"),
     attentionValue: document.getElementById("attention-value"),
@@ -123,6 +126,7 @@
   let confidenceRT = 0;
   let postraceShownAt = 0;
   let attnShownAt = 0;
+  let outcomeCheckShownAt = 0;
 
   // ---- helpers ----------------------------------------------------------
 
@@ -156,6 +160,9 @@
   function showScreen(name) {
     Object.values(screens).forEach((screen) => screen.classList.remove("active"));
     screens[name].classList.add("active");
+    // always start a screen at the top: the race video otherwise sits below the
+    // fold and participants had to scroll once the race had already started.
+    window.scrollTo({ top: 0, behavior: "instant" });
   }
 
   function updateHeader() {
@@ -215,12 +222,18 @@
 
   // Two attention checks, one placed at random in races 3-10 and one in races 11-18,
   // so they are spread out, never first or last, and fall on different races per person.
+  // Two further checks ask where the dog actually finished, immediately after the
+  // race and BEFORE the result screen (so the answer cannot be read off it). These
+  // test whether the participant watched the race, not just read the instructions.
   function assignAttentionChecks(ordered) {
     const pick = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
     [pick(2, 9), pick(10, 17)].forEach((i) => {
-      if (ordered[i]) {
-        ordered[i].attention = { target: randOf(ATTENTION_TARGETS) };
-      }
+      if (ordered[i]) ordered[i].attention = { target: randOf(ATTENTION_TARGETS) };
+    });
+    // outcome checks on different races from the slider checks where possible
+    [pick(1, 8), pick(9, 18)].forEach((i) => {
+      if (ordered[i] && !ordered[i].attention) ordered[i].outcomeCheck = true;
+      else if (ordered[i + 1] && !ordered[i + 1].attention) ordered[i + 1].outcomeCheck = true;
     });
     return ordered;
   }
@@ -252,19 +265,37 @@
     return arr[Math.floor(Math.random() * arr.length)];
   }
 
-  // Every prefix x word combination, shuffled. Names are dealt without replacement
-  // across the whole session so no dog name is ever seen twice by a participant.
+  // One name per prefix per session: shuffle the prefixes and pair each with a
+  // shuffled word. A session needs <= 120 names and there are more prefixes than
+  // that, so no participant ever sees two dogs sharing a kennel prefix (which
+  // reads as littermates). Words recycle, but drawDogNames keeps them distinct
+  // within a race card. No full name repeats across the session.
   function buildNamePool() {
-    const combos = [];
-    STUDY.namePrefixes.forEach((p) => STUDY.nameWords.forEach((w) => combos.push(`${p} ${w}`)));
-    return shuffle(combos);
+    const prefixes = shuffle(STUDY.namePrefixes);
+    let words = [];
+    return prefixes.map((p) => {
+      if (!words.length) words = shuffle(STUDY.nameWords);
+      return `${p} ${words.pop()}`;
+    });
   }
 
   function drawDogNames(count) {
     if (state.namePool.length < count) {
-      state.namePool = state.namePool.concat(buildNamePool()); // safety refill; should never trigger
+      state.namePool = state.namePool.concat(buildNamePool()); // safety refill
     }
-    return state.namePool.splice(0, count);
+    // avoid two dogs on the same card sharing the second word
+    const picked = [];
+    const used = new Set();
+    for (let i = 0; i < state.namePool.length && picked.length < count; i += 1) {
+      const w = state.namePool[i].split(" ")[1];
+      if (!used.has(w)) {
+        used.add(w);
+        picked.push(state.namePool.splice(i, 1)[0]);
+        i -= 1;
+      }
+    }
+    while (picked.length < count) picked.push(state.namePool.shift()); // fallback
+    return picked;
   }
 
   // Decorative form details. Random and identically distributed across conditions,
@@ -659,7 +690,9 @@
     if (pos === 1) return "1st";
     if (pos === 2) return "2nd";
     if (pos === 3) return "3rd";
-    return "Unplaced";
+    // Only first place pays here. Real racing has place bets on 2nd/3rd, so
+    // "unplaced" reads as a betting term and confuses the outcome (Luke, 2026-07).
+    return "Did not win";
   }
 
   function pointsForTrial(trial, pos) {
@@ -717,6 +750,10 @@
       attentionResponse: trial.attention ? state.pendingAttention.response : "",
       attentionPass: trial.attention ? state.pendingAttention.pass : "",
       attentionRT_ms: trial.attention ? state.pendingAttention.rt : "",
+      outcomeCheck: false,
+      outcomeCheckResponse: "",
+      outcomeCheckPass: "",
+      outcomeCheckRT_ms: "",
       cashoutEnabled: STUDY.cashout,
       cashoutOffer: STUDY.cashout ? trial.cashoutOffer : "",
       cashoutChoice: STUDY.cashout ? (state.cashoutChoice === "pending" ? "reject" : state.cashoutChoice) : "n/a",
@@ -724,7 +761,7 @@
     });
 
     const won = pos === 1;
-    els.resultTitle.textContent = won ? "Your dog won the race" : "Race complete";
+    els.resultTitle.textContent = won ? "Your dog won the race" : "Your dog did not win";
     els.resultCopy.textContent =
       `${chosenName} finished ${finishLabel}. Top 3: ${topThree.join(" | ")}.`;
     els.resultDog.textContent = chosenName;
@@ -732,6 +769,23 @@
     els.resultPlace.textContent = finishLabel;
     els.resultPoints.textContent = pointsWon > 0 ? `+${pointsWon} ${STUDY.creditLabel}` : `0 ${STUDY.creditLabel}`;
 
+    // On outcome-check races, ask where the dog finished BEFORE revealing the result.
+    if (trial.outcomeCheck) {
+      els.outcomeCheckCopy.textContent = `You were following ${chosenName} in Trap ${trial.assignedTrap}.`;
+      outcomeCheckShownAt = Date.now();
+      showScreen("outcomeCheck");
+      return;
+    }
+    showScreen("result");
+  }
+
+  function handleOutcomeCheck(answer) {
+    const record = currentTrialRecord();
+    const actual = chosenFinishPosition(state.currentTrial);
+    record.outcomeCheck = true;
+    record.outcomeCheckResponse = answer === 99 ? "further back" : answer;
+    record.outcomeCheckPass = answer === actual;
+    record.outcomeCheckRT_ms = Date.now() - outcomeCheckShownAt;
     showScreen("result");
   }
 
@@ -881,6 +935,9 @@
   els.assignmentNext.addEventListener("click", handleAssignmentContinue);
   els.confidenceNext.addEventListener("click", handleConfidenceContinue);
   els.attentionNext.addEventListener("click", handleAttentionContinue);
+  Array.from(els.outcomeCheckOptions.querySelectorAll("button")).forEach((b) => {
+    b.addEventListener("click", () => handleOutcomeCheck(Number(b.dataset.answer)));
+  });
   els.cashoutAccept.addEventListener("click", () => handleCashout("accept"));
   els.cashoutReject.addEventListener("click", () => handleCashout("reject"));
   els.resultNext.addEventListener("click", () => {

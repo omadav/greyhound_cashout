@@ -284,10 +284,16 @@ input[type="range"].untouched { opacity: 0.5; filter: grayscale(0.5); }
   border-radius: 12px;
   border: 1px solid var(--line);
   background: #050806;
-  min-height: 360px;
+  min-height: 280px;
 }
-#race-video, .video-fallback { width: 100%; min-height: 360px; }
-#race-video { display: block; pointer-events: none; }
+/* Keep the whole clip inside the viewport so nobody has to scroll mid-race.
+   The clips are low-res, so we cap rather than stretch them. */
+#race-video, .video-fallback {
+  width: 100%;
+  min-height: 280px;
+  max-height: calc(100vh - 300px);
+}
+#race-video { display: block; pointer-events: none; object-fit: contain; }
 
 #race-video::-webkit-media-controls,
 #race-video::-webkit-media-controls-enclosure,
@@ -389,4 +395,28 @@ input[type="range"].untouched { opacity: 0.5; filter: grayscale(0.5); }
   .dog-grid, .result-grid, .pgsi-options { grid-template-columns: 1fr; }
   .card { padding: 18px; }
   .card-head { flex-direction: column; align-items: flex-start; }
+}
+
+/* post-race sliders with explicit verbal anchors at each end */
+.anchored-slider {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+}
+.anchored-slider span { font-size: 0.8rem; color: var(--muted); white-space: nowrap; }
+
+/* "where did your dog finish" attention check */
+.outcome-options {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 20px;
+}
+.outcome-options .button { width: 100%; }
+
+@media (max-width: 620px) {
+  .anchored-slider { grid-template-columns: 1fr; gap: 4px; }
+  .anchored-slider span { white-space: normal; }
+  .outcome-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

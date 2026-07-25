@@ -33,6 +33,7 @@
           <ul class="plain-list">
             <li>Pick a dog from the card, then see which trap it runs from.</li>
             <li>Your dog wears a coloured jacket by trap number — follow that jacket.</li>
+            <li>Watch each race closely: sometimes we will ask you where your dog finished.</li>
             <li>After each race, tell us how it felt.</li>
           </ul>
           <button id="start-button" class="button primary">Enter the track</button>
@@ -148,6 +149,20 @@
         </div>
       </section>
 
+      <section id="screen-outcome-check" class="screen">
+        <div class="card narrow">
+          <p class="eyebrow">Quick question</p>
+          <h2>Where did your dog finish in that race?</h2>
+          <p class="muted" id="outcome-check-copy"></p>
+          <div class="outcome-options" id="outcome-check-options">
+            <button class="button ghost" data-answer="1">1st</button>
+            <button class="button ghost" data-answer="2">2nd</button>
+            <button class="button ghost" data-answer="3">3rd</button>
+            <button class="button ghost" data-answer="99">Further back</button>
+          </div>
+        </div>
+      </section>
+
       <section id="screen-result" class="screen">
         <div class="card narrow">
           <p class="eyebrow">Outcome</p>
@@ -181,17 +196,29 @@
           <h2>How did that race feel?</h2>
           <div class="question-block">
             <label for="pleased-slider">How pleased were you with the outcome of this race?</label>
-            <input id="pleased-slider" class="untouched" type="range" min="0" max="100" step="1" value="50">
+            <div class="anchored-slider">
+              <span>Not at all pleased</span>
+              <input id="pleased-slider" class="untouched" type="range" min="0" max="100" step="1" value="50">
+              <span>Very pleased</span>
+            </div>
             <p class="value-readout"><span id="pleased-value">–</span>/100</p>
           </div>
           <div class="question-block">
             <label for="motivation-slider">Right now, how much do you want to play the next race?</label>
-            <input id="motivation-slider" class="untouched" type="range" min="0" max="100" step="1" value="50">
+            <div class="anchored-slider">
+              <span>Not at all</span>
+              <input id="motivation-slider" class="untouched" type="range" min="0" max="100" step="1" value="50">
+              <span>Very much</span>
+            </div>
             <p class="value-readout"><span id="motivation-value">–</span>/100</p>
           </div>
           <div class="question-block">
-            <label for="luck-slider">How lucky or unlucky do you feel right now?</label>
-            <input id="luck-slider" class="untouched" type="range" min="0" max="100" step="1" value="50">
+            <label for="luck-slider">How lucky did you feel in that race?</label>
+            <div class="anchored-slider">
+              <span>Not at all lucky</span>
+              <input id="luck-slider" class="untouched" type="range" min="0" max="100" step="1" value="50">
+              <span>Very lucky</span>
+            </div>
             <p class="value-readout"><span id="luck-value">–</span>/100</p>
           </div>
           <p class="helper-text">Drag each slider to answer.</p>
