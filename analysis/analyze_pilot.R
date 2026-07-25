@@ -131,7 +131,7 @@ panel_dv <- function(label, colname) {
           axis.text.x = element_text(angle = 15, hjust = 1))
 }
 fig1 <- wrap_plots(imap(dvs, panel_dv), ncol = 2) +
-  plot_annotation(title = sprintf("Study 1 pilot (n=%d): ratings by race outcome", N),
+  plot_annotation(title = sprintf("Study 1 (n=%d): ratings by race outcome", N),
                   subtitle = "mean ± within-subject 95% CI (Cousineau–Morey); grey = individuals; bracket = NM vs CL paired t (*** p<.001, ** p<.01, * p<.05)",
                   theme = theme(plot.title = element_text(face = "bold", size = 14)))
 ggsave(file.path(out_dir, "fig1_DV_by_condition.png"), fig1, width = 11, height = 8.5, dpi = 150)
@@ -202,22 +202,23 @@ dft <- df |>
          cond6 = factor(cond6, levels = c("CW", "NW", "NM: catch-up",
                                           "NM: fall-back", "NM: stable", "CL")))
 
-pmc <- dft |> group_by(prolificPID, cond6) |>
-  summarise(motivation = mean(motivation), .groups = "drop")
-sc <- pmc |> group_by(cond6) |>
-  summarise(m = mean(motivation), se = sd(motivation) / sqrt(n()), .groups = "drop") |>
-  left_join(dft |> count(cond6, name = "n_trials"), by = "cond6")
-
 # No significance test on the trajectory split: trajectory is a FIXED property of
 # the clip (not an assignment), so catch-up / fall-back / stable are disjoint video
 # sets (3 / 4 / 5 clips). The contrast is confounded with clip identity and cannot
 # generalise beyond those specific races — descriptive only. See stimulus_notes.md.
 n_vids <- c("CW" = "", "NW" = "", "NM: catch-up" = " (3 videos)",
             "NM: fall-back" = " (4 videos)", "NM: stable" = " (5 videos)", "CL" = "")
-sc <- sc |> mutate(vidlab = n_vids[as.character(cond6)])
-
 cond6_cols <- c("CW" = "#009E73", "NW" = "#56B4E9", "NM: catch-up" = "#E69F00",
                 "NM: fall-back" = "#B25400", "NM: stable" = "#B0982E", "CL" = "#D55E00")
+
+# one self-contained pipe: participant means -> condition means + SEM + counts + label
+sc <- dft |>
+  group_by(prolificPID, cond6) |>
+  summarise(motivation = mean(motivation), .groups = "drop") |>
+  group_by(cond6) |>
+  summarise(m = mean(motivation), se = sd(motivation) / sqrt(n()), .groups = "drop") |>
+  left_join(dft |> count(cond6, name = "n_trials"), by = "cond6") |>
+  mutate(vidlab = n_vids[as.character(cond6)])
 fig4 <- ggplot(sc, aes(cond6, m, fill = cond6)) +
   geom_col(width = 0.66) +
   geom_errorbar(aes(ymin = m - se, ymax = m + se), width = 0.15) +
@@ -225,9 +226,7 @@ fig4 <- ggplot(sc, aes(cond6, m, fill = cond6)) +
   scale_fill_manual(values = cond6_cols, guide = "none") +
   coord_cartesian(ylim = c(0, 100)) +
   labs(title = sprintf("Motivation by outcome, near-miss split by trajectory (descriptive, n=%d)", N),
-       subtitle = paste0("catch-up = closing at the line; fall-back = led then caught; stable/other = neither.\n",
-                         "DESCRIPTIVE ONLY: trajectory is confounded with clip identity (3 / 4 / 5 videos), so no\n",
-                         "significance test is shown — the split cannot generalise beyond these specific clips."),
+       subtitle = paste0("catch-up = closing at the line; fall-back = led then caught; stable/other = neither.\n"),
        x = NULL, y = "mean motivation (0-100)") +
   theme_minimal(base_size = 12) +
   theme(plot.title = element_text(face = "bold"),
@@ -236,7 +235,7 @@ ggsave(file.path(out_dir, "fig4_NM_trajectory.png"), fig4, width = 8.5, height =
 
 # ---- Stats ------------------------------------------------------------------
 sink(file.path(out_dir, "stats.txt"))
-cat("Greyhound Study 1 pilot — N =", N, "\n\n")
+cat("Greyhound Study 1 — N =", N, "\n\n")
 
 cat("Condition means:\n")
 print(pm |> group_by(condition) |>

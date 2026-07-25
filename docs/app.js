@@ -761,7 +761,7 @@
     });
 
     const won = pos === 1;
-    els.resultTitle.textContent = won ? "Your dog won the race" : "Your dog did not win";
+    els.resultTitle.textContent = won ? "Your dog won the race" : "Race complete";
     els.resultCopy.textContent =
       `${chosenName} finished ${finishLabel}. Top 3: ${topThree.join(" | ")}.`;
     els.resultDog.textContent = chosenName;
@@ -809,13 +809,11 @@
   function showFinish() {
     updateHeader();
     const totalTrials = state.results.length;
-    const pgsiResponses = getPgsiResponses();
-    const pgsiTotal = pgsiResponses.reduce((sum, value) => sum + value, 0);
-    const pgsiCategory = getPgsiCategory(pgsiTotal);
+    // Deliberately no PGSI score or band shown: participants should not receive
+    // unsolicited feedback on a screening questionnaire. Both are still recorded.
     els.finishCopy.textContent =
       `You completed ${totalTrials} races and won ${state.points} ${STUDY.creditLabel}, ` +
-      `which convert to your cash bonus. PGSI total: ${pgsiTotal} (${pgsiCategory}). ` +
-      `Download the session data below for inspection.`;
+      `which convert to your cash bonus. Thank you for taking part.`;
     showScreen("finish");
     saveResults();
   }
