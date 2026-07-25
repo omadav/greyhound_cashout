@@ -76,6 +76,31 @@ caught or was closing. It cannot be reassigned across participants the way CW /
 NW / NM / CL can. Trap assignment sets *which condition* a participant gets, not
 which trajectory.
 
+**Judge it on the home straight, not the whole race** (Omar, 2026-07-25). What
+matters psychologically is the expectation the participant is holding as the race
+resolves. A dog that was passed on the back straight and then trailed home has not
+delivered a near miss of the fall-back kind in any meaningful sense — the outcome
+was settled well before the line. Likewise an early surge that fades is not a
+catch-up. Only the final section builds or destroys the expectation of winning.
+
+This is likely the source of the Kate/Yin disagreements: Kate appears to code the
+race as a whole (so an early catch-up counts as catch-up), Yin codes the finish.
+Races 24 and 36 are both cases where an early pass made the race look like one type
+while the home straight showed another. Omar's coding follows the home straight.
+
+**Body overlap as the visual yardstick.** Omar judges closeness by whether the dogs'
+bodies overlap at the line, not by the recorded time gap (which repeatedly fails to
+track the visual impression — race 16 is 0.42s yet reads close, race 30 is 0.14s yet
+reads clear). A catch-up where the runner-up draws level enough to overlap the
+leader is stronger than one where it closes but stays clear; race 33 is the milder
+kind ("6 comes closer but not quite close enough to overlap the leader's body").
+Worth recording per clip, as it may grade the size of the near-miss effect.
+
+**Interference is a separate flag.** Race 26 contains a bump. Being baulked is an
+attributional event (bad luck, unfairness) and is psychologically distinct from a
+near miss; such races should probably be excluded from both pools, or at least
+coded so the assumption can be checked.
+
 ### The two 2013 sources, and which one to use
 
 There are two separate 2013 documents and they use **opposite perspectives**.
