@@ -60,11 +60,54 @@ assignment — NW and NM are the same footage seen from the two lead dogs.
 
 ## Trajectory sub-coding (exploratory)
 
-For the fall-back vs catch-up question, the close clips carry a finer label —
-**fall-back** (led, caught at the line), **catch-up** (closing, fell just short),
-or **stable** (close throughout). Coded from the 2013 event-type notes plus a
-partial re-view. Catch-up is scarce (~3 clean races), so the trajectory split is
-exploratory and is the main motivation for sourcing more footage in a follow-up.
+### The coding rule (Omar, 2026-07-25) — always from the LOSING dog's point of view
+
+The trajectory describes what the **runner-up** did, i.e. the dog the participant
+is assigned to on a near-miss trial. It is never described from the winner's side.
+
+| label | what the losing dog did |
+|---|---|
+| **fall-back** | was ahead, then got caught before the line |
+| **catch-up** | was closing on the leader, did not quite get there |
+| **stable** | finished close, but the gap stayed roughly constant |
+
+This is a fixed property of the clip: in any one race the runner-up either was
+caught or was closing. It cannot be reassigned across participants the way CW /
+NW / NM / CL can. Trap assignment sets *which condition* a participant gets, not
+which trajectory.
+
+### The two 2013 sources, and which one to use
+
+There are two separate 2013 documents and they use **opposite perspectives**.
+Getting these confused is what produced the mislabelling found on 2026-07-25.
+
+1. `KateChampion/RaceComments.docx` — column header reads *"Event type (from
+   perspective of **winning** dog)"*. Its "catch-up" means the WINNER came from
+   behind, i.e. the loser fell back. **This is the mirror of our rule. Do not read
+   it directly.**
+2. `Notes on Races/ratings 2013-09-08.xlsx`, Sheet1, the Yin Wu column — uses
+   *"Near Miss – Overtake finish"* / *"Near Miss – Catch up finish"* / *"near miss
+   – stable"*. This is already **from the near-miss dog's side**, i.e. our rule.
+   `overtake finish` = fall-back, `catch up finish` = catch-up.
+
+The `shape_prior` column in `race_coding_sheet.csv` follows source (2), so it is in
+the right frame. It agrees with Omar's own viewing on 9 of the 12 close races.
+
+### Where Omar and Yin disagree
+
+Omar's viewing is authoritative; Yin is recorded for reference.
+
+| race | Omar | Yin | resolution |
+|---|---|---|---|
+| 3 | catch-up | ambiguous | Omar settles it — winner 3 was being caught by 4 and 5 |
+| 16 | catch-up | stable | Omar + Kate vs Yin — 2 of 3 for catch-up. **Still contested.** |
+| 36 | fall-back | fall-back | agreed after Omar's close viewing (first pass said catch-up) |
+| 5 | fall-back | fall-back | agreed — trap 1 led, caught by 2 and 3 in the home straight |
+| 38 | stable | fall-back | contested |
+
+Every trajectory label used in fig5 is now either Omar's own call (3, 4, 16, 5) or
+Yin's in the correct frame (7, 9, 15, 2, 14, 20, 21, 22). None is the assistant's
+reconstruction, which is what the earlier version of this file wrongly relied on.
 
 ## Pool composition (races 1–23)
 
@@ -76,7 +119,38 @@ exploratory and is the main motivation for sourcing more footage in a follow-up.
 - **Close: stable: 5** (races 2, 14, 20, 21, 22) → NW + stable NM
 
 Catch-up is the scarce type — the bottleneck for a confirmatory trajectory study.
-Races 24–38 are held back (finish line not visible on the clip).
+
+## Races 24–38 — NOT written off (corrected 2026-07-25)
+
+These were previously excluded on the grounds that "the finish line is not visible".
+**That was the wrong test.** What those clips lack is the trackside *result board* at
+the end; the finish line itself is visible, and the board is unnecessary because the
+task announces the outcome on its own result screen. Confirmed by Omar on race 38:
+*"it doesn't have the final display, but the finish line is clear."*
+
+The AVI and MP4 durations match exactly for these races, so nothing was lost in
+conversion — the sources simply end sooner.
+
+Coded so far from this set (Omar, 2026-07-25):
+
+| race | kind | trajectory | finish | vs Yin |
+|---|---|---|---|---|
+| 32 | close | **catch-up** | 2, 6, 4 | agrees |
+| 36 | close | fall-back | 1, 6, 2 | agrees |
+| 37 | clear | — | 1, 3, 5 | resolves a 2013 "disputed" |
+| 38 | close | stable | 6, 1, 2 | Yin says fall-back |
+
+Race 32 matters most: it is a catch-up that Omar and Yin both endorse, so recovering
+this set is the cheapest route out of the catch-up shortage. Races 24, 25, 26, 27,
+30, 31, 33, 34, 35 are still uncoded.
+
+**Blocker:** none of 24–38 can enter the task until each has a runner count and a
+list of vacant traps — `trial-config.js` needs `nRunners` and `missing` to build the
+race card. These are marked `NEEDS-COUNT` in `stimulus_pool.csv`. The video files
+also still need copying into `docs/assets/videos/` and the Pavlovia build.
+
+Adding races mid-run would change the stimulus pool underneath the 44 participants
+already collected, so the expanded pool belongs to Study 2, not to Study 1.
 
 ## Per-race table
 

@@ -233,6 +233,55 @@ fig4 <- ggplot(sc, aes(cond6, m, fill = cond6)) +
         axis.text.x = element_text(angle = 15, hjust = 1))
 ggsave(file.path(out_dir, "fig4_NM_trajectory.png"), fig4, width = 8.5, height = 5.5, dpi = 150)
 
+# ---- Figure 5: within-clip near-miss effect, by trajectory -------------------
+# fig4's weakness is that each bar is a different set of races, so clip identity
+# is confounded with trajectory. Here the SAME clip is scored twice: it is the
+# narrow win for participants who drew the winning trap and the near miss for
+# those who drew the runner-up trap. Differencing NM - NW within a clip cancels
+# whatever makes that particular race exciting, so each race is its own control
+# and the unit of analysis becomes the clip (12 points, not 12 x N trials).
+clip_eff <- dft |>
+  filter(condition %in% c("NW", "NM"), !is.na(trajectory)) |>
+  group_by(raceId, trajectory, condition) |>
+  summarise(across(all_of(names(dvs)), mean), .groups = "drop") |>
+  pivot_longer(all_of(names(dvs)), names_to = "colname", values_to = "val") |>
+  pivot_wider(names_from = condition, values_from = val) |>
+  mutate(delta = NM - NW,
+         trajectory = factor(trajectory, levels = c("catch-up", "fall-back", "stable")),
+         # confidence is rated BEFORE the race, so its NM-NW difference should sit
+         # at zero — a built-in check that trap assignment is not leaking.
+         dv_label = factor(colname, levels = names(dvs), labels = unname(dvs)))
+
+traj_cols <- c("catch-up" = "#E69F00", "fall-back" = "#B25400", "stable" = "#B0982E")
+clip_means <- clip_eff |> group_by(dv_label, trajectory) |>
+  summarise(m = mean(delta), se = sd(delta) / sqrt(n()), k = n(), .groups = "drop")
+
+fig5 <- ggplot(clip_eff, aes(trajectory, delta, colour = trajectory)) +
+  geom_hline(yintercept = 0, linewidth = 0.4, colour = "grey40") +
+  geom_point(size = 2.6, alpha = 0.75,
+             position = position_jitter(width = 0.07, height = 0, seed = 1)) +
+  geom_errorbar(data = clip_means, inherit.aes = FALSE,
+                aes(trajectory, ymin = m - se, ymax = m + se), width = 0.13,
+                linewidth = 0.6) +
+  geom_point(data = clip_means, inherit.aes = FALSE, aes(trajectory, m),
+             shape = 95, size = 12) +
+  geom_text(data = clip_means, inherit.aes = FALSE,
+            aes(trajectory, y = -Inf, label = paste0(k, " clips")),
+            vjust = -0.8, size = 2.9, colour = "grey30") +
+  facet_wrap(~dv_label, scales = "free_y") +
+  scale_y_continuous(expand = expansion(mult = c(0.14, 0.08))) +
+  scale_colour_manual(values = traj_cols, guide = "none") +
+  labs(title = sprintf("Within-clip near-miss effect by trajectory (n=%d participants)", N),
+       subtitle = paste("Each point is one race: mean(near miss) - mean(narrow win) for that same clip,",
+                        "\nso the race is its own control. Below 0 = the near miss cost more than the narrow win.",
+                        "\nBar = mean +/- SEM across clips."),
+       x = NULL, y = "NM - NW (rating points)") +
+  theme_minimal(base_size = 12) +
+  theme(plot.title = element_text(face = "bold"),
+        strip.text = element_text(face = "bold"))
+ggsave(file.path(out_dir, "fig5_within_clip_trajectory.png"), fig5,
+       width = 11, height = 4.6, dpi = 150)
+
 # ---- Stats ------------------------------------------------------------------
 sink(file.path(out_dir, "stats.txt"))
 cat("Greyhound Study 1 — N =", N, "\n\n")
@@ -267,6 +316,26 @@ cat("\nMixed model on NM trials only: motivation ~ trajectory + (1 | participant
 mt <- lmer(motivation ~ trajectory + (1 | prolificPID), data = nm_only)
 print(anova(mt))
 cat("\nFixed effects (stable = reference):\n"); print(summary(mt)$coefficients)
+
+cat("\n\n=== Within-clip near-miss effect, CLIP as unit of analysis (fig5) ===\n")
+cat("Each clip contributes one number: mean(NM) - mean(NW) for that same race.\n")
+for (v in names(dvs)) {
+  ce <- clip_eff |> filter(colname == v)
+  cat("\n--", dvs[[v]], "--\n")
+  print(ce |> select(raceId, trajectory, NW, NM, delta) |>
+          arrange(trajectory, raceId) |> mutate(across(c(NW, NM, delta), \(x) round(x, 1))))
+  print(ce |> group_by(trajectory) |>
+          summarise(k_clips = n(), mean_delta = round(mean(delta), 1),
+                    sd = round(sd(delta), 1), .groups = "drop"))
+  cu <- ce |> filter(trajectory == "catch-up") |> pull(delta)
+  sb <- ce |> filter(trajectory == "stable")   |> pull(delta)
+  if (length(cu) > 1 && length(sb) > 1) {
+    cat("catch-up vs stable (clip-level t-test):\n"); print(t.test(cu, sb, var.equal = TRUE))
+  }
+}
+cat("\nCAVEAT: only", sum(clip_eff$trajectory == "catch-up" & clip_eff$colname == "motivation"),
+    "catch-up clips. Leave-one-out shows the contrast drops below p<.05 if any single\n",
+    "catch-up clip is removed, so it needs more catch-up footage before it is confirmatory.\n")
 sink()
 
 message("saved figs 1-4, stats.txt, combined_pilot_n", N, ".csv")

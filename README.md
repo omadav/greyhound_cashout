@@ -339,6 +339,83 @@ Plots use within-subject 95% CIs (Cousineau–Morey) with significance brackets.
 - Strict NW/NM seat counterbalancing for the main run (currently random per draw).
 - Final scale wording from Luke, then apply.
 
+### 2026-07-25 — trajectory coding rule, fig5, and races 24–38 recovered
+
+#### Task v2 (Luke's email) shipped
+
+Wording ("Unplaced" → "Did not win"), one kennel prefix per session, luck question
+reworded with anchors, video capped to the viewport with scroll-to-top, and a new
+outcome attention check ("where did your dog finish?") asked after the video but
+before the result screen. Kept as a *second* check alongside the slider one, since
+they catch different failures. Live on Pavlovia and GitHub Pages.
+
+**PGSI feedback removed.** The finish screen was printing the participant's PGSI
+total and risk band back at them. PGSI is a screening instrument and should not be
+fed back uninterpreted. `pgsi_total` / `pgsi_category` are still recorded per row.
+
+#### The trajectory coding rule (now written down)
+
+Trajectory is always described **from the losing dog's point of view** — the dog a
+near-miss participant is assigned to:
+
+- **fall-back** — was ahead, got caught
+- **catch-up** — was closing, didn't quite get there
+- **stable** — close finish, gap roughly constant
+
+Two 2013 sources use *opposite* perspectives, which caused a day of confusion:
+`RaceComments.docx` is explicitly "from perspective of winning dog", while the Yin Wu
+column in `ratings 2013-09-08.xlsx` ("Near Miss – Overtake finish" / "Catch up
+finish" / "stable") is already in our frame. `shape_prior` follows the latter.
+See `analysis/stimulus_notes.md`.
+
+#### fig5 — within-clip near-miss effect
+
+New figure. Because the same clip is a narrow win for some participants and a near
+miss for others, subtracting NM − NW *within a clip* cancels everything about that
+race and leaves the near-miss effect alone. Unit of analysis becomes the clip.
+
+- motivation: catch-up −2.2, fall-back −8.9, stable −18.0; catch-up vs stable
+  t = 3.62, **p = 0.011** (clip-level).
+- pre-race confidence sits at ~0 — the built-in check that trap assignment isn't
+  leaking before the race.
+- pleasure and luck show no trajectory effect: this is motivation-specific.
+
+fig4 is superseded. Its bars mixed the near-miss effect with the fact that the three
+trajectory groups are different races that score differently to begin with (their
+narrow-win baselines are 66.6 / 68.4 / 72.4).
+
+**Caveat that stands:** catch-up is 3 clips in the analysed data, leave-one-out drops
+it to p ≈ 0.06, and Omar and Yin disagree on race 16. Exploratory, needs replication.
+
+#### Races 24–38 are usable after all
+
+Previously excluded for "no visible finish line". Wrong test — they lack the trackside
+*result board*, not the finish. The task announces the outcome itself, so the board is
+irrelevant. Omar confirmed on race 38. Newly coded: **32 (catch-up, agreed with Yin)**,
+36 (fall-back), 37 (clear), 38 (stable). Race 32 is the cheapest route out of the
+catch-up shortage.
+
+#### Data integrity check
+
+Cross-checked `trial-config.js` against `stimulus_pool.csv`: **all 23 finishing orders
+match** — nothing participants saw was mislabelled. Four rows (7, 13, 17, 22) had a
+stale `band` derived from the 2013 gap that contradicted Omar's eye label; the task
+always used the eye label, so no data is affected. CSV synced.
+
+#### Open follow-ups
+
+- **Runner count + vacant traps for races 32, 36, 37, 38** (`NEEDS-COUNT` in
+  `stimulus_pool.csv`) — blocks them entering the task. Then copy the videos into
+  `docs/assets/videos/` and the Pavlovia build.
+- Code the remaining unused races: 24, 25, 26, 27, 30, 31, 33, 34, 35.
+- Race 16 (catch-up vs stable) and race 38 (stable vs fall-back) still contested with
+  Yin; a third rater would settle them.
+- Study 2 scheduler: rotate rather than randomise, so each clip serves NW and NM
+  equally often, and each participant gets equal numbers of each trajectory. Current
+  data is badly unbalanced — race 20 is 27 NM vs 11 NW, and 14% of participants saw
+  zero catch-up near misses.
+- Power: ~9 clips per trajectory for a confirmatory test (planning for d = 1.5).
+
 ## Future Sessions
 
 Append future dated entries to the `Session Log` section above so this file becomes a running record of design decisions, coding progress, and open questions.
