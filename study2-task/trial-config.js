@@ -78,21 +78,14 @@ const STUDY = {
    * drops it. A mislabelled clip dilutes its cell and biases toward the null, so
    * including it makes the test harder to pass, not easier.
    */
-  /*
-   * !! BEFORE LAUNCH !!
-   * Races 31, 32 and 35 are marked `unverified: true`. Their runner count and
-   * vacant traps have NOT been checked against the footage — the values below
-   * (6 runners, no vacant trap) are placeholders so the task will run for
-   * testing. If a race actually had 5 runners, the card would offer a dog that
-   * never ran. `assertPoolVerified()` in app.js blocks the real Prolific link
-   * until these are confirmed and the flag removed.
-   */
+  // Runner counts and vacant traps verified against the footage by OP on
+  // 2026-07-26: races 31, 32 and 35 all ran 6 dogs with no vacant trap.
   races: [
     // ---- catch-up: the losing dog was closing and ran out of track ----
     { id: 3,  video: "3.mp4",  kind: "close", trajectory: "catch-up", nRunners: 6, missing: [],  winner: 3, runnerUp: 4, third: 5, raters: "OP (2013 split)", fromStudy1: true },
     { id: 4,  video: "4.mp4",  kind: "close", trajectory: "catch-up", nRunners: 6, missing: [],  winner: 3, runnerUp: 5, third: 2, raters: "unanimous", fromStudy1: true },
     { id: 16, video: "16.mp4", kind: "close", trajectory: "catch-up", nRunners: 5, missing: [2], winner: 6, runnerUp: 3, third: 1, raters: "OP + Kate; Yin says stable", fromStudy1: true, contested: true },
-    { id: 32, video: "32.mp4", kind: "close", trajectory: "catch-up", nRunners: 6, missing: [], unverified: true, winner: 2, runnerUp: 6, third: 4, raters: "unanimous", fromStudy1: false },
+    { id: 32, video: "32.mp4", kind: "close", trajectory: "catch-up", nRunners: 6, missing: [], winner: 2, runnerUp: 6, third: 3, raters: "unanimous", fromStudy1: false },
 
     // ---- fall-back: the losing dog led and was caught ----
     { id: 5,  video: "5.mp4",  kind: "close", trajectory: "fall-back", nRunners: 6, missing: [], winner: 2, runnerUp: 3, third: 1, raters: "unanimous", fromStudy1: true },
@@ -104,8 +97,8 @@ const STUDY = {
     { id: 2,  video: "2.mp4",  kind: "close", trajectory: "stable", nRunners: 5, missing: [4], winner: 3, runnerUp: 2, third: 1, raters: "unanimous", fromStudy1: true },
     { id: 20, video: "20.mp4", kind: "close", trajectory: "stable", nRunners: 6, missing: [],  winner: 1, runnerUp: 4, third: 5, raters: "OP + Yin (2013 split)", fromStudy1: true },
     { id: 21, video: "21.mp4", kind: "close", trajectory: "stable", nRunners: 6, missing: [],  winner: 3, runnerUp: 1, third: 4, raters: "unanimous", fromStudy1: true },
-    { id: 31, video: "31.mp4", kind: "close", trajectory: "stable", nRunners: 6, missing: [], unverified: true, winner: 2, runnerUp: 4, third: 6, raters: "OP (2013 split)", fromStudy1: false },
-    { id: 35, video: "35.mp4", kind: "close", trajectory: "stable", nRunners: 6, missing: [], unverified: true, winner: 1, runnerUp: 2, third: 4, raters: "OP + 2013 majority", fromStudy1: false },
+    { id: 31, video: "31.mp4", kind: "close", trajectory: "stable", nRunners: 6, missing: [], winner: 2, runnerUp: 4, third: 6, raters: "OP (2013 split)", fromStudy1: false },
+    { id: 35, video: "35.mp4", kind: "close", trajectory: "stable", nRunners: 6, missing: [], winner: 1, runnerUp: 2, third: 4, raters: "OP + 2013 majority", fromStudy1: false },
 
     // ---- clear races: supply CW and CL. Daytime only, no interference. ----
     { id: 1,  video: "1.mp4",  kind: "clear", nRunners: 6, missing: [],  winner: 1, runnerUp: 4, third: 2, fromStudy1: true },

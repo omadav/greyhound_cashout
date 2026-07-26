@@ -22,7 +22,9 @@ race_id,video,duration_sec,gap_sec,band,n_runners,traps_available,winner_trap,ru
 21,Races/21.mp4,21.76,0.05,narrow,6,1|2|3|4|5|6,3,1,4,2|5|6,RW|NM|CL
 22,Races/22.mp4,21.65,0.58,close-by-eye,6,1|2|3|4|5|6,3,5,4,1|2|6,RW|NM|CL
 23,Races/23.mp4,22.29,0.16,middle,6,1|2|3|4|5|6,3,5,1,2|4|6,CL
-32,Races/32.mp4,19.65,0.14,narrow,NEEDS-COUNT,NEEDS-COUNT,2,6,4,NEEDS-COUNT,RW|NM|CL
+31,Races/31.mp4,20.65,0.01,narrow,6,1|2|3|4|5|6,2,4,6,1|3|5,RW|NM|CL
+32,Races/32.mp4,19.65,0.14,narrow,6,1|2|3|4|5|6,2,6,3,1|4|5,RW|NM|CL
+35,Races/35.mp4,21.05,0.03,narrow,6,1|2|3|4|5|6,1,2,4,3|5|6,RW|NM|CL
 36,Races/36.mp4,20.42,0.16,narrow,NEEDS-COUNT,NEEDS-COUNT,1,6,2,NEEDS-COUNT,RW|NM|CL
 37,Races/37.mp4,21.69,0.07,clear,NEEDS-COUNT,NEEDS-COUNT,1,3,5,NEEDS-COUNT,CW|CL
 38,Races/38.mp4,21.42,0.07,narrow,NEEDS-COUNT,NEEDS-COUNT,6,1,2,NEEDS-COUNT,RW|NM|CL
