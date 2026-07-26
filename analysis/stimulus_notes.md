@@ -9,10 +9,13 @@ originals are archived untouched.
 
 ## Usable set
 
-We use **races 1–23**. These end on the result board (1st/2nd/3rd traps + race
-time visible), so the finish is verifiable. Races 24–38 cut off *before* the line,
-so they are held back until their finishing order can be identified. `test.avi` is
-the practice clip.
+**Study 1 used races 1–23.** These end on the result board (1st/2nd/3rd traps +
+race time visible), so the finish is verifiable. `test.avi` is the practice clip.
+
+> **Corrected 2026-07-25:** races 24–38 were originally written off here as "cut
+> off before the line". That was wrong — see *Races 24–38* below. They lack the
+> trackside **result board**, not the finish. All 37 usable clips now exist with the
+> board removed in `Races_noboard/`, so the whole archive is available to Study 2.
 
 Standard UK trap jackets (1 red, 2 blue, 3 white, 4 black, 5 orange, 6 black/white
 stripes) let a participant track their assigned dog. Five races ran with a vacant
@@ -233,3 +236,91 @@ races only. Finishing order shown as winner/2nd/3rd trap.
 | 21 | 6 | 3/1/4 | close | close | ✓ | stable |
 | 22 | 5 (no 6) | 3/5/4 | close | close | ✓ | stable |
 | 23 | 6 | 3/5/1 | clear | clear | ✓ | — |
+
+---
+
+# Study 2 stimulus set (locked 2026-07-25)
+
+## The set
+
+13 close clips, all daytime, labels fixed before any data collection.
+
+| trajectory | races | provenance |
+|---|---|---|
+| **catch-up** | 3, 4, 16, **32** | 3 carried over from Study 1, plus race 32 (unanimous 2013 + OP) |
+| **fall-back** | 5, 7, 9, 15 | all Study 1, all unanimous across the three 2013 raters + OP |
+| **stable** | 2, 20, 21, **31, 35** | 3 from Study 1 plus 2 new daytime clips |
+
+Clear races (CW / CL) are drawn from the 16-clip clear pool.
+
+## Why these
+
+**Anchored on Study 1.** Ten of the thirteen were used in Study 1, so the
+exploratory result and the confirmatory test rest on the same footage. Race 32 is
+the one addition to the catch-up cell, and it is the strongest clip in the archive
+for that label: all three 2013 raters and OP independently call it a catch-up.
+
+**Four catch-up clips is the threshold.** A participant cannot see a clip twice, so
+2 NM + 2 NW per trajectory requires at least four clips per cell. Three would have
+forced 2 NM + 1 NW, and Study 1 showed that a single trial per cell is what makes
+the within-participant estimate noisy (dz = 0.28).
+
+**Excluded and why:**
+
+| races | reason |
+|---|---|
+| 14, 22, 24, 25 | night / floodlit. All sat in fall-back and stable, none in catch-up — a lighting confound that extra participants cannot average away. |
+| 38 | OP codes stable, 2013 majority codes fall-back. Genuine contradiction. |
+| 33 | OP codes catch-up but no 2013 rater supports it (split between "complex" and "clear miss"). |
+| 26 | interference (a bump). Being baulked is an attributional event, not a near miss. |
+| 27, 36 | fall-back, kept in reserve; the cell only needs four and these are 2/3 rather than 3/3. |
+
+## Race 16 — declared in advance
+
+Race 16 is the one contested clip in the set. OP and Kate (2013) code it catch-up;
+Yin codes it stable. It is included, and the pre-registration says so.
+
+The reason it is defensible: **if race 16 is mislabelled, it dilutes the catch-up
+cell and drags that mean toward stable, which biases the test toward the null.** A
+possibly-wrong clip makes the study harder to pass, not easier.
+
+What must NOT be claimed is that Study 1's data settles the label. Race 16's
+within-clip delta (−5.3) does sit between the catch-up clips (+0.9, −2.1) and the
+stable ones (−9.8 to −28.0), but inferring the label from the outcome and then
+testing the outcome with that label is circular. The pre-registered sensitivity
+analysis drops race 16 and reports the result both ways.
+
+## What Study 1 actually supports
+
+Under the final labelling rules, applied to Study 1's clips only:
+
+| labelling | catch-up | stable | test |
+|---|---|---|---|
+| as plotted in fig5 (16 = catch-up) | −2.2 (k=3) | −18.0 (k=5) | p = 0.011 |
+| 16 → stable | −0.6 (k=2) | −15.9 (k=6) | p = 0.046 |
+| + drop night races | −0.6 (k=2) | −17.0 (k=3) | p = 0.111 |
+
+The **effect size is stable at roughly 16 rating points** across every labelling;
+what collapses is the number of clips available to test it with. fig5 should
+therefore be reported as exploratory, with the effect size and this sensitivity
+table, and **not** with the p = 0.011, which depends on a clip now flagged as
+contested.
+
+## Design
+
+| | |
+|---|---|
+| per participant | 2 NM + 2 NW in each trajectory = 12 close, + 4 CW + 4 CL = **20 trials** |
+| N | **100** |
+| role assignment | rotation by participant index, not random draw |
+| primary DV | motivation to continue |
+| primary test | within-participant catch-up vs stable on NM trials |
+| secondary | within-clip NM − NW by trajectory (the fig5 analysis) |
+
+N = 100 comes from the within-participant contrast in Study 1 (dz = 0.28, needing
+N ≈ 103 for 80% power). That estimate is pessimistic because most Study 1
+participants had only one catch-up near miss; two per cell should raise dz.
+
+Rotation replaces random assignment because Study 1's random draw produced badly
+uneven per-clip role counts — race 20 was seen 27 times as NM and 11 times as NW,
+and 14% of participants never saw a catch-up near miss at all.

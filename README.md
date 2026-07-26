@@ -419,3 +419,68 @@ always used the eye label, so no data is affected. CSV synced.
 ## Future Sessions
 
 Append future dated entries to the `Session Log` section above so this file becomes a running record of design decisions, coding progress, and open questions.
+
+### 2026-07-25 (cont.) — Study 2 designed and locked
+
+#### What the pilot actually supports
+
+Re-ran fig5's contrast under every defensible labelling. The **effect size is stable
+at ~16 rating points**; what varies is how many clips are left to test it with:
+
+| labelling | catch-up | stable | test |
+|---|---|---|---|
+| as plotted (16 = catch-up) | −2.2 (k=3) | −18.0 (k=5) | p = 0.011 |
+| 16 → stable (2013 majority) | −0.6 (k=2) | −15.9 (k=6) | p = 0.046 |
+| + drop night races | −0.6 (k=2) | −17.0 (k=3) | p = 0.111 |
+
+**Report fig5 as exploratory with the effect size, not the p-value** — p = 0.011
+depends on race 16, which is contested.
+
+#### Correction: clip count is not the limiting factor
+
+Earlier in the session I argued Study 2 needed ~9 clips per trajectory. That was
+wrong. A variance decomposition on the pilot shows the spread of effects across
+clips within a trajectory (SD 3.1 / 5.6 / 7.0) is *smaller* than the measurement
+noise in those estimates (SD ≈ 9) — i.e. **no detectable clip-to-clip variation**.
+Upper 95% bound on the true clip SD is 2.9 points, against a 16-point effect. Even
+with 3 clips the contrast SE floor is 2.4 points.
+
+So more **participants** is the efficient lever, exactly as Omar argued. The power
+table built on the observed between-clip scatter treated sampling noise as real
+variance and is superseded.
+
+What extra participants cannot fix is a **confound**, which is why the four
+floodlit night races are still excluded — they sat only in fall-back and stable.
+
+#### Study 2 stimulus set (locked)
+
+| trajectory | races |
+|---|---|
+| catch-up | 3, 4, 16, **32** |
+| fall-back | 5, 7, 9, 15 |
+| stable | 2, 20, 21, **31, 35** |
+
+Ten of thirteen carry over from Study 1, so pilot and confirmatory test share
+footage. Race 32 is the addition — unanimous catch-up across all three 2013 raters
+plus OP. Four catch-up clips is the threshold for 2 NM + 2 NW per participant,
+since nobody can see a clip twice.
+
+Race 16 is contested (OP + Kate say catch-up, Yin says stable) and is **declared in
+advance**. It is defensible because a mislabelled clip dilutes the catch-up cell and
+biases toward the null — it makes the study harder to pass, not easier. The claim
+that Study 1's data settles the label is circular and is not made.
+
+#### Design
+
+20 trials (12 close: 2 NM + 2 NW per trajectory; 8 clear), **N = 100**, roles
+assigned by **rotation** rather than random draw. Study 1's random draw left race 20
+at 27 NM vs 11 NW and gave 14% of participants no catch-up near miss at all.
+
+N = 100 from the pilot's within-participant contrast (dz = 0.28 → N ≈ 103 at 80%
+power); pessimistic, since most pilot participants had only one catch-up trial.
+
+#### Open
+
+- Runner counts and vacant traps for races 31, 32, 35 before they can enter the task.
+- Videos to copy into the Study 2 build; consider re-encoding at CRF 26 (the trimmed
+  set is 132 MB).
