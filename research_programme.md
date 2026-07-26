@@ -139,3 +139,89 @@ cash-out), and a **counterfactual amplifier** (Study 4).
 
 Confirmatory sampling: the original proposal's ~200 is right for the main effects
 and gives real power for the PGSI moderation and PGSI-band splits.
+
+---
+
+# Follow-ups added 2026-07-26, after Study 2's results
+
+Study 2 (N = 75 of 140 collected, target 185) delivered a **dissociation**:
+
+| | result |
+|---|---|
+| near miss vs clear loss, motivation | **+8.4, p = 1e-8, dz = 0.75** — replicated, strong |
+| trajectory on motivation | **null** — F(2,373) = 0.27, p = .77 |
+| trajectory on pleasure | **catch-up 45.7 vs fall-back 38.9 vs stable 39.7**, F = 8.2, p = .0003 |
+
+So the *shape* of a near miss changes how bad it feels but not how much you want to
+keep playing. Note the shape is not a gradient: catch-up stands apart, while
+fall-back and stable are indistinguishable (p = .63).
+
+Two follow-ups fall directly out of this.
+
+## Study 5 — behavioural persistence instead of self-report
+
+**Why.** Every result so far rests on a slider labelled "how much do you want to play
+the next race?". A reviewer at a good journal will ask whether that predicts what
+people actually do, and right now we cannot answer. It is the weakest link in both
+papers.
+
+**Design.** Keep the task as is, then add a free-play block at the end: participants
+are told the paid part is over and may play as many further races as they like, with
+no additional payment, and can stop whenever they want.
+
+Measures:
+- number of extra races played (the primary behavioural DV)
+- time to quitting
+- whether the last *paid* trial was a near miss, and of which trajectory
+
+**The key test.** Does the motivation slider predict extra races played? If yes, the
+existing self-report results inherit the validity. If no, that is itself worth
+knowing and reframes both papers.
+
+**Second test.** Motivation was flat across trajectory but pleasure was not. Does
+behaviour follow motivation (flat) or pleasure (catch-up higher)? That decides
+whether the dissociation is about measurement or about the constructs.
+
+## Study 6 — problem gamblers
+
+**Why.** PGSI moderation cannot be tested in a general Prolific panel. In Study 2 the
+median PGSI was 1 and 46 of 75 scored below 3, so the moderation tests are
+underpowered by construction, not by sample size:
+
+| test | result |
+|---|---|
+| PGSI x near-miss effect | r = -0.07, p = .56 |
+| PGSI x trajectory (pleasure) | r = 0.14, p = .22 |
+
+The direction is nonetheless sensible. Splitting at PGSI >= 3, the catch-up advantage
+on pleasure is 5.1 points in low scorers and 8.5 in elevated. And in the elevated
+group, **fall-back** dips sharply on both pleasure and luck — a V shape absent in low
+scorers — suggesting riskier gamblers find *being caught* particularly aversive.
+n = 29 in that group, so it is a hint only.
+
+**Design.** Same task, recruited to a target PGSI distribution rather than a general
+panel — Prolific prescreening on gambling frequency, or recruit through gambling
+support and research networks (Luke's and Steve's contacts). Aim for roughly balanced
+cells across PGSI 0-2, 3-7 and 8+.
+
+**Primary test.** Does the trajectory effect on pleasure grow with PGSI, and does the
+fall-back dip specifically? A confirmed interaction would be the clinically
+interesting result: the near miss that hurts most is the one where you led and were
+caught, and it hurts hardest in those most at risk.
+
+**Compare directly to Study 2** as the general-population baseline, so the
+contribution is the moderation rather than another main effect.
+
+## Revised status
+
+| Study | Question | Status |
+|---|---|---|
+| 1 | Near-miss effect | **Done** (n = 44) |
+| 2 | Trajectory | **Running** (n = 75 of 185 target). Motivation null, pleasure positive |
+| 3 | Cash-out as risk-taking | Designed |
+| 4 | Cash-out x near-miss | Sketched |
+| **5** | **Behavioural persistence** | **New** — validates the self-report measure |
+| **6** | **Problem gamblers** | **New** — the PGSI question a general panel cannot answer |
+
+Studies 1 + 2 are one paper. Cash-out (3 + 4) is a second. Study 5 could fold into
+either as an extra experiment; Study 6 is likely its own clinical-facing paper.

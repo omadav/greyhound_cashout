@@ -187,6 +187,73 @@ fig3 <- ggplot(clip, aes(trajectory, delta, colour = trajectory)) +
   theme(plot.title = element_text(face = "bold"), strip.text = element_text(face = "bold"))
 ggsave(file.path(out_dir, "s2_fig3_within_clip.png"), fig3, width = 11, height = 4.6, dpi = 150)
 
+# ---- PGSI figures (same layout as Study 1's fig2 / fig3) --------------------
+pgsi <- df |> group_by(prolificPID) |>
+  summarise(pgsi = first(pgsi_total), .groups = "drop")
+band <- pgsi |> mutate(band = if_else(pgsi >= 3, "elevated (PGSI 3+)", "low (PGSI 0-2)"))
+band_cols <- c("elevated (PGSI 3+)" = "#CC3311", "low (PGSI 0-2)" = "#4477AA")
+n_lo <- sum(band$band == "low (PGSI 0-2)"); n_hi <- sum(band$band == "elevated (PGSI 3+)")
+
+# fig4: does PGSI moderate the near-miss effect? (continuous)
+nm_cl <- pm |> select(prolificPID, condition, motivation) |>
+  pivot_wider(names_from = condition, values_from = motivation) |>
+  mutate(nm_minus_cl = NM - CL) |> left_join(pgsi, by = "prolificPID")
+ct <- cor.test(nm_cl$pgsi, nm_cl$nm_minus_cl)
+fig4 <- ggplot(nm_cl, aes(pgsi, nm_minus_cl)) +
+  geom_hline(yintercept = 0, linetype = "dashed", colour = "grey60") +
+  geom_smooth(method = "lm", se = TRUE, colour = "#CC3311", fill = "#CC331133") +
+  geom_point(size = 3, alpha = 0.8, colour = "#33447A") +
+  labs(title = "Near-miss effect on motivation vs PGSI",
+       subtitle = sprintf("each point = one participant; r = %.2f, p = %.3f (n = %d)",
+                          ct$estimate, ct$p.value, N),
+       x = "PGSI total (0-27)", y = "Near-miss effect (NM - CL motivation)") +
+  theme_minimal(base_size = 12) + theme(plot.title = element_text(face = "bold"))
+ggsave(file.path(out_dir, "s2_fig4_PGSI_moderation.png"), fig4, width = 7, height = 5, dpi = 150)
+
+# fig5: the four conditions, split by PGSI band
+pmb <- pm |> left_join(band, by = "prolificPID")
+panel_band <- function(label, colname) {
+  s <- pmb |> group_by(band) |> group_modify(~ wsci(.x, condition, colname)) |> ungroup()
+  ggplot(s, aes(condition, m, colour = band, group = band)) +
+    geom_line(linewidth = 0.8) +
+    geom_errorbar(aes(ymin = lo, ymax = hi), width = 0.12) +
+    geom_point(size = 2.5) +
+    scale_colour_manual(values = band_cols) +
+    coord_cartesian(ylim = c(0, 100)) +
+    labs(title = label, x = NULL, y = "mean rating (0-100)", colour = NULL) +
+    theme_minimal(base_size = 11) +
+    theme(plot.title = element_text(face = "bold"),
+          axis.text.x = element_text(angle = 15, hjust = 1))
+}
+fig5 <- wrap_plots(imap(dvs, panel_band), ncol = 2, guides = "collect") +
+  plot_annotation(title = sprintf("Study 2: ratings by outcome, split by PGSI band (low n=%d, elevated n=%d)",
+                                  n_lo, n_hi),
+                  theme = theme(plot.title = element_text(face = "bold", size = 14))) &
+  theme(legend.position = "bottom")
+ggsave(file.path(out_dir, "s2_fig5_PGSI_bands.png"), fig5, width = 11, height = 8.5, dpi = 150)
+
+# fig6: the trajectory effect, split by PGSI band (Study 2 only - no Study 1 analogue)
+ptb <- pt |> left_join(band, by = "prolificPID")
+panel_traj_band <- function(label, colname) {
+  s <- ptb |> group_by(band) |> group_modify(~ wsci(.x, trajectory, colname)) |> ungroup()
+  ggplot(s, aes(trajectory, m, colour = band, group = band)) +
+    geom_line(linewidth = 0.8) +
+    geom_errorbar(aes(ymin = lo, ymax = hi), width = 0.12) +
+    geom_point(size = 2.5) +
+    scale_colour_manual(values = band_cols) +
+    coord_cartesian(ylim = c(0, 100)) +
+    labs(title = label, x = NULL, y = "mean rating (0-100)", colour = NULL) +
+    theme_minimal(base_size = 11) +
+    theme(plot.title = element_text(face = "bold"),
+          axis.text.x = element_text(angle = 12, hjust = 1))
+}
+fig6 <- wrap_plots(imap(dvs, panel_traj_band), ncol = 2, guides = "collect") +
+  plot_annotation(title = sprintf("Study 2: NEAR MISS trials by trajectory, split by PGSI (low n=%d, elevated n=%d)",
+                                  n_lo, n_hi),
+                  theme = theme(plot.title = element_text(face = "bold", size = 14))) &
+  theme(legend.position = "bottom")
+ggsave(file.path(out_dir, "s2_fig6_PGSI_x_trajectory.png"), fig6, width = 11, height = 8.5, dpi = 150)
+
 # ---- Stats, in pre-registered order -----------------------------------------
 sink(file.path(out_dir, "study2_stats.txt"))
 cat("Greyhound Study 2 - N =", N, "of", nrow(by_pid), "collected\n")
