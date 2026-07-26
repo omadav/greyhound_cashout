@@ -949,7 +949,7 @@
 
   function downloadJson() {
     downloadFile(
-      "greyhound-study1-session.json",
+      `greyhound-${STUDY.id}-session.json`,
       JSON.stringify(
         { studyTitle: STUDY.title, studyId: STUDY.id, exportedAt: new Date().toISOString(), totalPoints: state.points, trials: state.results },
         null,
@@ -970,7 +970,7 @@
 
   function downloadCsv() {
     const csv = buildCsvString();
-    if (csv) downloadFile("greyhound-study1-session.csv", csv, "text/csv;charset=utf-8");
+    if (csv) downloadFile(`greyhound-${STUDY.id}-session.csv`, csv, "text/csv;charset=utf-8");
   }
 
   // When running on Pavlovia, upload the CSV to the server, close the session, and
@@ -987,6 +987,22 @@
       els.finishCopy.textContent += " Your data has been saved.";
       if (els.returnProlific && Pavlovia.completionURL) {
         els.returnProlific.classList.remove("hidden");
+        // Auto-return after a short pause, with the button as the fallback.
+        // Study 1 only showed the button: anyone who closed the tab without
+        // clicking it finished the task and was never credited on Prolific.
+        let left = 5;
+        const label = els.returnProlific.textContent;
+        const tick = () => {
+          els.returnProlific.textContent = `${label} (${left}s)`;
+          if (left <= 0) {
+            clearInterval(timer);
+            Pavlovia.redirectToProlific();
+            return;
+          }
+          left -= 1;
+        };
+        const timer = setInterval(tick, 1000);
+        tick();
       }
     }
   }
@@ -1071,6 +1087,16 @@
   // (no-op otherwise). Fire-and-forget: the session is ready long before finishing.
   if (typeof Pavlovia !== "undefined" && STUDY.pavlovia) {
     Pavlovia.init(STUDY.pavlovia);
+  }
+
+  // The download buttons and "Play again" are debug affordances. Study 1 left them
+  // visible to real participants, who could have downloaded their own data or run a
+  // second session (none did, but nothing stopped them). Hide them whenever this is
+  // a real run — i.e. Prolific sent us a participant id.
+  if (typeof Pavlovia !== "undefined" && Pavlovia.prolificPID) {
+    [els.downloadJson, els.downloadCsv, els.restartButton].forEach((b) => {
+      if (b) b.classList.add("hidden");
+    });
   }
 
   updateHeader();
