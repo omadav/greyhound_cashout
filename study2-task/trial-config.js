@@ -79,7 +79,12 @@ const STUDY = {
    * including it makes the test harder to pass, not easier.
    */
   // Runner counts and vacant traps verified against the footage by OP on
-  // 2026-07-26: races 31, 32 and 35 all ran 6 dogs with no vacant trap.
+  // 2026-07-26: races 32 and 35 ran 6 dogs with no vacant trap.
+  //
+  // Race 31 was dropped 2026-07-26: the 2013 raters split (stable / complex /
+  // fall-back) and OP's own reading moved three times (catch-up -> uncertain ->
+  // stable). Stable only needs 4 clips, so removing the least certain one costs
+  // nothing and makes every clip in the study sit at an even 50/50 role split.
   races: [
     // ---- catch-up: the losing dog was closing and ran out of track ----
     { id: 3,  video: "3.mp4",  kind: "close", trajectory: "catch-up", nRunners: 6, missing: [],  winner: 3, runnerUp: 4, third: 5, raters: "OP (2013 split)", fromStudy1: true },
@@ -97,7 +102,6 @@ const STUDY = {
     { id: 2,  video: "2.mp4",  kind: "close", trajectory: "stable", nRunners: 5, missing: [4], winner: 3, runnerUp: 2, third: 1, raters: "unanimous", fromStudy1: true },
     { id: 20, video: "20.mp4", kind: "close", trajectory: "stable", nRunners: 6, missing: [],  winner: 1, runnerUp: 4, third: 5, raters: "OP + Yin (2013 split)", fromStudy1: true },
     { id: 21, video: "21.mp4", kind: "close", trajectory: "stable", nRunners: 6, missing: [],  winner: 3, runnerUp: 1, third: 4, raters: "unanimous", fromStudy1: true },
-    { id: 31, video: "31.mp4", kind: "close", trajectory: "stable", nRunners: 6, missing: [], winner: 2, runnerUp: 4, third: 6, raters: "OP (2013 split)", fromStudy1: false },
     { id: 35, video: "35.mp4", kind: "close", trajectory: "stable", nRunners: 6, missing: [], winner: 1, runnerUp: 2, third: 4, raters: "OP + 2013 majority", fromStudy1: false },
 
     // ---- clear races: supply CW and CL. Daytime only, no interference. ----

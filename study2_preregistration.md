@@ -77,14 +77,14 @@ takes the four starting at position *i* mod *k*, the first two as near misses an
 rest as narrow wins. Over a full cycle every clip serves in both roles equally often.
 No participant ever sees a clip twice.
 
-**Stimuli (locked before collection).** 13 close clips, all daytime footage, all
+**Stimuli (locked before collection).** 12 close clips, all daytime footage, all
 ending at the finish line with the trackside result board removed:
 
 | trajectory | races |
 |---|---|
 | catch-up | 3, 4, 16, 32 |
 | fall-back | 5, 7, 9, 15 |
-| stable | 2, 20, 21, 31, 35 |
+| stable | 2, 20, 21, 35 |
 
 Clear races (CW/CL) are drawn from a pool of 11.
 
@@ -109,6 +109,14 @@ two-tailed, α = .05. H1 predicts catch-up > stable.
    (1 | participant)`. Exploratory.
 
 **Manipulation check.** Pre-race confidence must not differ by trajectory.
+
+**Excluded clips, and why (decided before collection).** Race 31 was dropped: the
+2013 raters split three ways on it (stable / complex / fall-back) and OP's own
+reading changed across viewings. Race 38 was dropped because OP's label contradicts
+a 2013 majority. Four floodlit night races were dropped because all sat in the
+fall-back and stable cells and none in catch-up, which would have confounded
+trajectory with lighting. Race 26 was dropped for interference (a dog was baulked),
+which is an attributional event rather than a near miss.
 
 **Sensitivity analysis (committed in advance).** Race 16's trajectory label is
 contested — OP and one 2013 rater code it catch-up, another codes it stable. The

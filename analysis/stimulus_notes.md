@@ -243,19 +243,19 @@ races only. Finishing order shown as winner/2nd/3rd trap.
 
 ## The set
 
-13 close clips, all daytime, labels fixed before any data collection.
+12 close clips, all daytime, labels fixed before any data collection.
 
 | trajectory | races | provenance |
 |---|---|---|
 | **catch-up** | 3, 4, 16, **32** | 3 carried over from Study 1, plus race 32 (unanimous 2013 + OP) |
 | **fall-back** | 5, 7, 9, 15 | all Study 1, all unanimous across the three 2013 raters + OP |
-| **stable** | 2, 20, 21, **31, 35** | 3 from Study 1 plus 2 new daytime clips |
+| **stable** | 2, 20, 21, **35** | 3 from Study 1 plus 1 new daytime clip |
 
 Clear races (CW / CL) are drawn from the 16-clip clear pool.
 
 ## Why these
 
-**Anchored on Study 1.** Ten of the thirteen were used in Study 1, so the
+**Anchored on Study 1.** Ten of the twelve were used in Study 1, so the
 exploratory result and the confirmatory test rest on the same footage. Race 32 is
 the one addition to the catch-up cell, and it is the strongest clip in the archive
 for that label: all three 2013 raters and OP independently call it a catch-up.
@@ -274,6 +274,7 @@ the within-participant estimate noisy (dz = 0.28).
 | 33 | OP codes catch-up but no 2013 rater supports it (split between "complex" and "clear miss"). |
 | 26 | interference (a bump). Being baulked is an attributional event, not a near miss. |
 | 27, 36 | fall-back, kept in reserve; the cell only needs four and these are 2/3 rather than 3/3. |
+| 31 | dropped 2026-07-26. The 2013 raters split three ways (stable / complex / fall-back) and OP's own reading moved across viewings (catch-up, then uncertain, then stable). Stable only needs four clips, so dropping the least certain one costs nothing — and it makes every clip in the study sit at an even 50/50 role split instead of a 40–50 range. |
 
 ## Race 16 — declared in advance
 
@@ -311,6 +312,7 @@ contested.
 | | |
 |---|---|
 | per participant | 2 NM + 2 NW in each trajectory = 12 close, + 4 CW + 4 CL = **20 trials** |
+| clips | 4 catch-up, 4 fall-back, 4 stable, 11 clear |
 | N | **100** |
 | role assignment | rotation by participant index, not random draw |
 | primary DV | motivation to continue |
