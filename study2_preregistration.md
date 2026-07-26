@@ -154,8 +154,10 @@ so the study is adequately powered under the pessimistic estimate.
 - straight-lining: zero variance across trials on any rating scale
 - median trial RT below 2 s
 
-**Payment.** £2.00 completion fee plus a performance bonus of up to £2.00 in
-in-task credits. Every participant wins 8 races, so the bonus is effectively flat.
+**Payment.** £2.00 completion fee plus a £2.00 bonus in in-task credits. Every
+participant wins exactly 10 of the 20 races (4 clear wins + 6 narrow wins) -> 100
+credits at £0.02 each, so the bonus is the same for everyone. It is motivational
+framing, not variable pay.
 
 **No cash-out.** The cash-out mechanic exists in the codebase but is disabled for
 this study.

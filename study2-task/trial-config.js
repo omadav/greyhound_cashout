@@ -31,8 +31,11 @@ const STUDY = {
   tagline: "Live Greyhound Racing",
   creditLabel: "credits",
   startingBalance: 0,
-  // Payment as Study 1: £2.00 completion + up to £2.00 bonus. Every participant
-  // wins 8 races (4 CW + 4 NW) -> 80 credits, a flat £1.60 bonus.
+  // Payment as Study 1: £2.00 completion + £2.00 bonus.
+  // A full session is 4 CW + 6 NW + 6 NM + 4 CL = 20 trials, so every participant
+  // wins 10 races (4 CW + 6 NW) -> 100 credits -> a flat £2.00 at £0.02/credit.
+  // Same as Study 1. NOTE: this does NOT scale from a ?reps=1 test run, where the
+  // clear races drop to 1 each while the close races drop to 1 per trajectory.
   pavlovia: { projectId: null, completionURL: "" },
   cashout: false,
   baseWinPoints: 10,
