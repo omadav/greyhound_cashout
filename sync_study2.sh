@@ -19,18 +19,12 @@ cd "$(dirname "$0")"
 # repo name. pavlovia.js posts to /experiments/<id>/sessions.
 # (Study 1 was 533864 on .../greyhound-cashout — do not reuse it here.)
 GITLAB_REMOTE="https://gitlab.pavlovia.org/omardavidperez/greyhound-cashout-v2.git"
-PROJECT_ID=${STUDY2_PROJECT_ID:-0}
-
-if [ "$PROJECT_ID" = "0" ]; then
-  echo "REFUSING TO SYNC: set STUDY2_PROJECT_ID to the numeric Pavlovia experiment id." >&2
-  echo "Find it on the Pavlovia dashboard for greyhound-cashout-v2." >&2
-  exit 1
-fi
+PROJECT_ID=${STUDY2_PROJECT_ID:-534026}
 
 # Prolific completion URL. THIS IS THE ONE THING THAT MUST BE NEW: every Prolific
 # study issues its own completion code, so Study 1's (cc=CKEB0540) will not credit
 # Study 2 participants. Set it here or pass STUDY2_COMPLETION_URL in the env.
-COMPLETION_URL=${STUDY2_COMPLETION_URL:-""}
+COMPLETION_URL=${STUDY2_COMPLETION_URL:-"https://app.prolific.com/submissions/complete?cc=C1COEXC7"}
 
 if [ -z "$COMPLETION_URL" ]; then
   cat >&2 <<'MSG'
@@ -83,6 +77,10 @@ if [ $ok -eq 1 ]; then
   echo "To deploy:"
   echo "  cd study2-pavlovia"
   echo "  git init && git remote add origin $GITLAB_REMOTE   # first time only"
-  echo "  git add -A && git commit -m 'Study 2 task' && git push -u origin main"
+  echo "  git add -A && git commit -m 'Study 2 task' && git push -u origin master"
+  echo
+  echo "NOTE: Pavlovia pulls refs/heads/MASTER, not main. Pushing to main gives a"
+  echo "      500 error when you set the experiment to Running:"
+  echo "      'configuration specifies to merge with the ref refs/heads/master ...'"
 fi
 exit $((1-ok))
