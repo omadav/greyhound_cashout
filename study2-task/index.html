@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Trackside — Live Greyhound Racing</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark">Trackside</span>
+          <span class="brand-tag">Live Greyhound Racing</span>
+        </div>
+        <div class="status">
+          <span class="status-race" id="trial-status">Race 0 / 0</span>
+          <span class="status-balance">
+            <span class="balance-label">Credits</span>
+            <span class="balance-amount" id="points-status">0</span>
+          </span>
+        </div>
+      </header>
+
+      <section id="screen-intro" class="screen active">
+        <div class="card narrow">
+          <p class="eyebrow">Welcome to the track</p>
+          <h2>Ready to play the dogs?</h2>
+          <p>
+            You'll play 20 races. In each one you study the race card, back a dog to win,
+            and watch the race live. Win and your balance goes up.
+          </p>
+          <ul class="plain-list">
+            <li>Pick a dog from the card, then see which trap it runs from.</li>
+            <li>Your dog wears a coloured jacket by trap number — follow that jacket.</li>
+            <li>Watch each race closely: sometimes we will ask you where your dog finished.</li>
+            <li>After each race, tell us how it felt.</li>
+          </ul>
+          <button id="start-button" class="button primary">Enter the track</button>
+        </div>
+      </section>
+
+      <section id="screen-choice" class="screen">
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <p class="eyebrow" id="condition-chip">Race</p>
+              <h2>Race card</h2>
+            </div>
+            <p class="muted" id="choice-copy">Study the card and back a dog to win.</p>
+          </div>
+          <div id="dog-grid" class="dog-grid"></div>
+          <div class="actions">
+            <button id="choice-next" class="button primary" disabled>Place bet</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="screen-assignment" class="screen">
+        <div class="card narrow">
+          <p class="eyebrow">Bet placed</p>
+          <h2 id="assignment-title">Your dog is ready</h2>
+          <div class="jacket-badge" id="assignment-jacket" aria-hidden="true"></div>
+          <p id="assignment-copy"></p>
+          <button id="assignment-next" class="button primary">Continue</button>
+        </div>
+      </section>
+
+      <section id="screen-confidence" class="screen">
+        <div class="card narrow">
+          <p class="eyebrow">Pre-race rating</p>
+          <h2>How confident are you that your dog will win?</h2>
+          <label class="slider-wrap" for="confidence-slider">
+            <span>Not at all confident</span>
+            <input id="confidence-slider" class="untouched" type="range" min="0" max="100" step="1" value="50">
+            <span>Very confident</span>
+          </label>
+          <p class="value-readout"><span id="confidence-value">–</span>/100</p>
+          <p class="helper-text">Drag the slider to answer.</p>
+          <button id="confidence-next" class="button primary" disabled>Watch race</button>
+        </div>
+      </section>
+
+      <section id="screen-attention" class="screen">
+        <div class="card narrow">
+          <p class="eyebrow">One quick check</p>
+          <h2 id="attention-label">Please move the slider as instructed.</h2>
+          <label class="slider-wrap" for="attention-slider">
+            <span>0</span>
+            <input id="attention-slider" class="untouched" type="range" min="0" max="100" step="1" value="50">
+            <span>100</span>
+          </label>
+          <p class="value-readout"><span id="attention-value">–</span>/100</p>
+          <button id="attention-next" class="button primary" disabled>Continue</button>
+        </div>
+      </section>
+
+      <section id="screen-race" class="screen">
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <p class="eyebrow">Race video</p>
+              <h2 id="race-title">Follow your dog</h2>
+            </div>
+            <p class="muted" id="race-copy"></p>
+          </div>
+          <div class="video-wrap">
+            <video
+              id="race-video"
+              playsinline
+              webkit-playsinline
+              preload="auto"
+              disablepictureinpicture
+              disableremoteplayback
+              controlslist="nodownload nofullscreen noplaybackrate noremoteplayback"
+              tabindex="-1"
+            ></video>
+            <div id="race-intro-panel" class="overlay-panel race-intro-panel hidden">
+              <p class="eyebrow">Starting boxes</p>
+              <h3 id="race-intro-title">Race starts in 3</h3>
+              <div class="signal-lights" aria-hidden="true">
+                <span class="signal-light"></span>
+                <span class="signal-light"></span>
+                <span class="signal-light"></span>
+              </div>
+              <p id="race-intro-copy">Keep your eyes on your trap. The race will begin automatically.</p>
+            </div>
+            <div id="video-fallback" class="video-fallback hidden">
+              <h3>Video unavailable</h3>
+              <p>
+                This pilot expects a browser-compatible video file. If this appears, the task
+                flow is still working but the clip could not be played in your browser.
+              </p>
+            </div>
+          </div>
+          <div id="cashout-panel" class="overlay-panel hidden">
+            <p class="eyebrow">Cash-out offer</p>
+            <h3 id="cashout-title">Cash out now?</h3>
+            <p id="cashout-copy"></p>
+            <p id="cashout-timer" class="cashout-timer"></p>
+            <div class="button-row">
+              <button id="cashout-accept" class="button secondary">Cash out now</button>
+              <button id="cashout-reject" class="button primary">Keep betting</button>
+            </div>
+          </div>
+          <p id="race-helper" class="helper-text">
+            The race will pause automatically if a cash-out offer appears.
+          </p>
+        </div>
+      </section>
+
+      <section id="screen-outcome-check" class="screen">
+        <div class="card narrow">
+          <p class="eyebrow">Quick question</p>
+          <h2>Where did your dog finish in that race?</h2>
+          <p class="muted" id="outcome-check-copy"></p>
+          <div class="outcome-options" id="outcome-check-options">
+            <button class="button ghost" data-answer="1">1st</button>
+            <button class="button ghost" data-answer="2">2nd</button>
+            <button class="button ghost" data-answer="3">3rd</button>
+            <button class="button ghost" data-answer="99">Further back</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="screen-result" class="screen">
+        <div class="card narrow">
+          <p class="eyebrow">Outcome</p>
+          <h2 id="result-title">Race complete</h2>
+          <p id="result-copy"></p>
+          <div class="result-grid">
+            <div>
+              <span class="result-label">Dog</span>
+              <strong id="result-dog"></strong>
+            </div>
+            <div>
+              <span class="result-label">Trap</span>
+              <strong id="result-trap"></strong>
+            </div>
+            <div>
+              <span class="result-label">Finish</span>
+              <strong id="result-place"></strong>
+            </div>
+            <div>
+              <span class="result-label">Returns</span>
+              <strong id="result-points"></strong>
+            </div>
+          </div>
+          <button id="result-next" class="button primary">Continue</button>
+        </div>
+      </section>
+
+      <section id="screen-postrace" class="screen">
+        <div class="card narrow">
+          <p class="eyebrow">Post-race ratings</p>
+          <h2>How did that race feel?</h2>
+          <div class="question-block">
+            <label for="pleased-slider">How pleased were you with the outcome of this race?</label>
+            <div class="anchored-slider">
+              <span>Not at all pleased</span>
+              <input id="pleased-slider" class="untouched" type="range" min="0" max="100" step="1" value="50">
+              <span>Very pleased</span>
+            </div>
+            <p class="value-readout"><span id="pleased-value">–</span>/100</p>
+          </div>
+          <div class="question-block">
+            <label for="motivation-slider">Right now, how much do you want to play the next race?</label>
+            <div class="anchored-slider">
+              <span>Not at all</span>
+              <input id="motivation-slider" class="untouched" type="range" min="0" max="100" step="1" value="50">
+              <span>Very much</span>
+            </div>
+            <p class="value-readout"><span id="motivation-value">–</span>/100</p>
+          </div>
+          <div class="question-block">
+            <label for="luck-slider">How lucky did you feel in that race?</label>
+            <div class="anchored-slider">
+              <span>Not at all lucky</span>
+              <input id="luck-slider" class="untouched" type="range" min="0" max="100" step="1" value="50">
+              <span>Very lucky</span>
+            </div>
+            <p class="value-readout"><span id="luck-value">–</span>/100</p>
+          </div>
+          <p class="helper-text">Drag each slider to answer.</p>
+          <button id="postrace-next" class="button primary" disabled>Next</button>
+        </div>
+      </section>
+
+      <section id="screen-pgsi" class="screen">
+        <div class="card narrow">
+          <p class="eyebrow">Almost done</p>
+          <h2>A few final questions</h2>
+          <p class="muted">
+            Thinking about the last 12 months, please answer the following questions.
+          </p>
+          <div id="pgsi-form" class="pgsi-form"></div>
+          <button id="pgsi-next" class="button primary" disabled>Finish study</button>
+        </div>
+      </section>
+
+      <section id="screen-finish" class="screen">
+        <div class="card narrow">
+          <p class="eyebrow">That's the last race</p>
+          <h2>Session summary</h2>
+          <p id="finish-copy"></p>
+          <div class="button-row">
+            <button id="return-prolific" class="button primary hidden">Return to Prolific to complete</button>
+          </div>
+          <div class="button-row">
+            <button id="download-json" class="button secondary">Download JSON</button>
+            <button id="download-csv" class="button secondary">Download CSV</button>
+          </div>
+          <div class="button-row">
+            <button id="restart-button" class="button ghost">Play again</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="./trial-config.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
