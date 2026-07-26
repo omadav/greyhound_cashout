@@ -36,3 +36,7 @@ study2-pavlovia/
 # Study 2 participant data + regenerable outputs (public repo)
 study2-pavlovia/
 study2_analysis/
+
+# compiled report (regenerate: Rscript -e 'rmarkdown::render("analysis/greyhound_report.Rmd")')
+analysis/greyhound_report.html
+analysis/greyhound_report_files/

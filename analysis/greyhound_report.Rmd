@@ -1,0 +1,412 @@
+---
+title: "Near misses in a dynamic gambling task"
+subtitle: "Studies 1 and 2 — analysis report"
+author: "Omar D. Perez, Luke Clark, Steve Sharman, Mike Aitken"
+date: "`r format(Sys.Date(), '%d %B %Y')`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    number_sections: true
+    code_folding: hide
+    theme: flatly
+    fig_width: 10
+    fig_height: 6
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                      fig.align = "center", dpi = 110)
+suppressPackageStartupMessages({
+  library(tidyverse); library(lme4); library(lmerTest); library(patchwork); library(knitr)
+})
+# run from the project root
+if (basename(getwd()) == "analysis") knitr::opts_knit$set(root.dir = "..")
+```
+
+```{r helpers}
+cond_levels <- c("CW", "NW", "NM", "CL")
+cond_labs   <- c(CW = "clear win", NW = "narrow win", NM = "near miss", CL = "clear loss")
+traj_levels <- c("catch-up", "fall-back", "stable")
+cond_cols   <- c(CW = "#009E73", NW = "#56B4E9", NM = "#E69F00", CL = "#D55E00")
+traj_cols   <- c("catch-up" = "#E69F00", "fall-back" = "#B25400", "stable" = "#B0982E")
+dvs <- c(confidence = "Pre-race confidence", pleased = "Pleasure",
+         motivation = "Motivation to continue", luck = "Luck")
+
+# Cousineau-Morey within-subject CIs
+wsci <- function(dat, group, colname, conf = 0.95) {
+  g <- rlang::ensym(group)
+  M <- dplyr::n_distinct(dat[[rlang::as_string(g)]]); gm <- mean(dat[[colname]])
+  dat |> group_by(prolificPID) |>
+    mutate(subj = mean(.data[[colname]]), yn = .data[[colname]] - subj + gm) |>
+    ungroup() |> group_by(!!g) |>
+    summarise(m = mean(.data[[colname]]), sdn = sd(yn), nn = n(), .groups = "drop") |>
+    mutate(sem = sdn / sqrt(nn) * sqrt(M / (M - 1)),
+           ci = qt(1 - (1 - conf) / 2, nn - 1) * sem, lo = m - ci, hi = m + ci)
+}
+
+# tidy a paired t-test into one row
+tt_row <- function(a, b, label) {
+  # note: the result object must NOT be called `t` — tibble() lets later columns
+  # refer to earlier ones, so a column named `t` would shadow it mid-call.
+  res <- t.test(a, b, paired = TRUE)
+  tibble(contrast = label, diff = mean(a - b), t = unname(res$statistic),
+         df = unname(res$parameter), p = res$p.value, dz = mean(a - b) / sd(a - b))
+}
+fmt <- function(tab) tab |>
+  mutate(across(c(diff, t, dz), \(x) round(x, 2)),
+         p = ifelse(p < .0001, "<.0001", sprintf("%.4f", p))) |> kable()
+```
+
+# What this is
+
+Two experiments asking whether **near misses** — almost winning — keep people
+gambling, using real greyhound race footage rather than a slot machine.
+
+Participants back a dog, watch the race, and find out where it finished. What they
+don't know is that the trap they are assigned to determines the outcome. **The same
+clip is therefore a narrow win for some participants and a near miss for others**,
+which means every race acts as its own control.
+
+| condition | clip | assigned trap | they see |
+|---|---|---|---|
+| **CW** clear win | clear race | winner | finishes 1st |
+| **NW** narrow win | close race | winner | finishes 1st |
+| **NM** near miss | close race | runner-up | finishes 2nd |
+| **CL** clear loss | clear race | a back trap | did not win |
+
+**Study 1** (exploratory) tested the basic near-miss effect. **Study 2**
+(pre-registered) replicated it and asked a further question: does the *shape* of the
+near miss matter?
+
+Trajectory is judged from the **losing dog's** point of view, on the final part of
+the race:
+
+- **catch-up** — it was gaining on the leader but the race ended first
+- **fall-back** — it was in front and was passed before the line
+- **stable** — it finished close but the gap never changed
+
+> **The two studies are never pooled.** Different samples, and different stimuli —
+> Study 1's clips end on the trackside result board, Study 2's end at the finish line.
+
+---
+
+```{r load-s1}
+s1_files <- list.files("pavlovia/data", "csv$", full.names = TRUE)
+s1_files <- s1_files[!grepl("anon", s1_files)]
+s1_raw <- s1_files |>
+  map(\(f) read_csv(f, show_col_types = FALSE, guess_max = 100)) |>
+  list_rbind() |> filter(!is.na(condition))
+
+s1_bypid <- s1_raw |> group_by(prolificPID) |>
+  summarise(n_trials = n(),
+            att_n = sum(attentionCheck == TRUE, na.rm = TRUE),
+            att_p = sum(attentionCheck == TRUE & attentionPass == TRUE, na.rm = TRUE),
+            straight = any(c(n_distinct(motivation) == 1, n_distinct(pleased) == 1,
+                             n_distinct(luck) == 1, n_distinct(confidence) == 1)),
+            .groups = "drop") |>
+  mutate(exclude = n_trials != 20 | att_p < att_n | straight)
+s1 <- s1_raw |> filter(prolificPID %in% (s1_bypid |> filter(!exclude) |> pull(prolificPID))) |>
+  mutate(condition = factor(condition, levels = cond_levels))
+N1 <- n_distinct(s1$prolificPID)
+s1_pm <- s1 |> group_by(prolificPID, condition) |>
+  summarise(across(all_of(names(dvs)), mean), .groups = "drop")
+```
+
+# Study 1 — the near-miss effect
+
+**N = `r N1`** of `r nrow(s1_bypid)` collected. Exclusions: incomplete
+`r sum(s1_bypid$n_trials != 20)`, failed attention check
+`r sum(s1_bypid$att_p < s1_bypid$att_n)`, straight-lined `r sum(s1_bypid$straight)`.
+
+20 trials per participant, 5 of each condition. Ratings are 0–100 sliders; confidence
+is taken **before** the race, the other three after.
+
+## Ratings by outcome
+
+```{r s1-fig1, fig.height=7}
+p1 <- imap(dvs, function(label, col) {
+  s <- wsci(s1_pm, condition, col)
+  ggplot(s, aes(condition, m, fill = condition)) +
+    geom_col(width = .66) + geom_errorbar(aes(ymin = lo, ymax = hi), width = .15) +
+    scale_fill_manual(values = cond_cols, guide = "none") +
+    scale_x_discrete(labels = cond_labs) + coord_cartesian(ylim = c(0, 100)) +
+    labs(title = label, x = NULL, y = NULL) + theme_minimal(base_size = 11) +
+    theme(axis.text.x = element_text(angle = 15, hjust = 1))
+})
+wrap_plots(p1, ncol = 2) +
+  plot_annotation(title = sprintf("Study 1 (n=%d): mean +/- within-subject 95%% CI", N1),
+                  theme = theme(plot.title = element_text(face = "bold")))
+```
+
+```{r s1-means}
+s1_pm |> select(-prolificPID) |> group_by(condition) |>
+  summarise(across(everything(), \(x) round(mean(x), 1))) |> kable()
+```
+
+## The key contrast
+
+Both a near miss and a clear loss are losses. The question is whether *almost*
+winning keeps people playing more than clearly losing.
+
+```{r s1-h1}
+w1 <- s1_pm |> select(prolificPID, condition, motivation) |>
+  pivot_wider(names_from = condition, values_from = motivation)
+bind_rows(
+  tt_row(w1$NM, w1$CL, "near miss vs clear loss"),
+  tt_row(w1$NW, w1$NM, "narrow win vs near miss"),
+  tt_row(w1$CW, w1$NW, "clear win vs narrow win")
+) |> fmt()
+```
+
+Confidence, rated before the outcome is known, should be flat — and is. That is the
+check that trap assignment is not leaking.
+
+---
+
+```{r load-s2}
+s2_files <- list.files("study2-pavlovia/data", "csv$", full.names = TRUE)
+s2_files <- s2_files[!grepl("OMARTEST|anon", s2_files)]
+s2_raw <- s2_files |>
+  map(\(f) read_csv(f, show_col_types = FALSE, guess_max = 100,
+                    col_types = cols(outcomeCheckResponse = col_character(),
+                                     attentionResponse = col_character()))) |>
+  list_rbind() |> filter(!is.na(condition))
+stopifnot(all(s2_raw$studyId == "study2"))
+
+s2_bypid <- s2_raw |> group_by(prolificPID) |>
+  summarise(n_trials = n(),
+            att_n = sum(attentionCheck == TRUE, na.rm = TRUE),
+            att_p = sum(attentionCheck == TRUE & attentionPass == TRUE, na.rm = TRUE),
+            out_n = sum(outcomeCheck == TRUE, na.rm = TRUE),
+            out_p = sum(outcomeCheck == TRUE & outcomeCheckPass == TRUE, na.rm = TRUE),
+            straight = any(c(n_distinct(motivation) == 1, n_distinct(pleased) == 1,
+                             n_distinct(luck) == 1, n_distinct(confidence) == 1)),
+            med_rt = median(postraceRT_ms, na.rm = TRUE), .groups = "drop") |>
+  mutate(exclude = n_trials != 20 | att_p < att_n | out_p < out_n | straight | med_rt < 2000)
+s2 <- s2_raw |> filter(prolificPID %in% (s2_bypid |> filter(!exclude) |> pull(prolificPID))) |>
+  mutate(condition = factor(condition, levels = cond_levels),
+         trajectory = factor(na_if(trajectory, ""), levels = traj_levels),
+         raceId = as.integer(raceId))
+N2 <- n_distinct(s2$prolificPID)
+s2_pm <- s2 |> group_by(prolificPID, condition) |>
+  summarise(across(all_of(names(dvs)), mean), .groups = "drop")
+s2_pt <- s2 |> filter(condition == "NM") |> group_by(prolificPID, trajectory) |>
+  summarise(across(all_of(names(dvs)), mean), .groups = "drop")
+s2_nm <- s2 |> filter(condition == "NM", !is.na(trajectory))
+```
+
+# Study 2 — does the shape of the near miss matter?
+
+Pre-registered on AsPredicted. **N = `r N2`** of `r nrow(s2_bypid)` collected.
+
+## Design
+
+12 close clips, 4 per trajectory, plus 11 clear races. Each participant sees **2 near
+misses and 2 narrow wins of every trajectory**, so the trajectory comparison is fully
+within subject.
+
+Roles rotate on a participant index rather than being drawn at random, so across the
+sample every clip serves as narrow win and as near miss equally often. Nobody sees a
+clip twice.
+
+```{r s2-counterbalance}
+s2 |> filter(condition %in% c("NW", "NM")) |>
+  count(raceId, trajectory, condition) |>
+  pivot_wider(names_from = condition, values_from = n, values_fill = 0) |>
+  arrange(trajectory, raceId) |> kable(caption = "Times each clip served in each role")
+```
+
+## Exclusions
+
+Study 2 added an **outcome check**: on two races, participants are asked where their
+dog finished, immediately after the video and before the result screen, so the answer
+cannot be read off it. It is much stricter than the slider check used in Study 1.
+
+```{r s2-excl}
+tibble(reason = c("incomplete", "failed slider check", "failed outcome check",
+                  "straight-lined", "median RT < 2 s", "TOTAL EXCLUDED", "ANALYSED"),
+       n = c(sum(s2_bypid$n_trials != 20), sum(s2_bypid$att_p < s2_bypid$att_n),
+             sum(s2_bypid$out_p < s2_bypid$out_n), sum(s2_bypid$straight),
+             sum(s2_bypid$med_rt < 2000), sum(s2_bypid$exclude), N2)) |> kable()
+```
+
+## H1 — the near-miss effect replicates
+
+```{r s2-fig1, fig.height=7}
+p2 <- imap(dvs, function(label, col) {
+  s <- wsci(s2_pm, condition, col)
+  ggplot(s, aes(condition, m, fill = condition)) +
+    geom_col(width = .66) + geom_errorbar(aes(ymin = lo, ymax = hi), width = .15) +
+    scale_fill_manual(values = cond_cols, guide = "none") +
+    scale_x_discrete(labels = cond_labs) + coord_cartesian(ylim = c(0, 100)) +
+    labs(title = label, x = NULL, y = NULL) + theme_minimal(base_size = 11) +
+    theme(axis.text.x = element_text(angle = 15, hjust = 1))
+})
+wrap_plots(p2, ncol = 2) +
+  plot_annotation(title = sprintf("Study 2 (n=%d): mean +/- within-subject 95%% CI", N2),
+                  theme = theme(plot.title = element_text(face = "bold")))
+```
+
+```{r s2-h1}
+w2 <- s2_pm |> select(prolificPID, condition, motivation) |>
+  pivot_wider(names_from = condition, values_from = motivation)
+tt_row(w2$NM, w2$CL, "near miss vs clear loss (motivation)") |> fmt()
+```
+
+## H2 — trajectory
+
+```{r s2-fig2, fig.height=7}
+p3 <- imap(dvs, function(label, col) {
+  s <- wsci(s2_pt, trajectory, col)
+  ggplot(s, aes(trajectory, m, fill = trajectory)) +
+    geom_col(width = .6) + geom_errorbar(aes(ymin = lo, ymax = hi), width = .14) +
+    scale_fill_manual(values = traj_cols, guide = "none") +
+    coord_cartesian(ylim = c(0, 100)) +
+    labs(title = label, x = NULL, y = NULL) + theme_minimal(base_size = 11) +
+    theme(axis.text.x = element_text(angle = 12, hjust = 1))
+})
+wrap_plots(p3, ncol = 2) +
+  plot_annotation(title = sprintf("Study 2 (n=%d): NEAR MISS trials only, by trajectory", N2),
+                  theme = theme(plot.title = element_text(face = "bold")))
+```
+
+```{r s2-traj-tests}
+map_dfr(names(dvs), function(v) {
+  ww <- s2_pt |> select(prolificPID, trajectory, all_of(v)) |>
+    pivot_wider(names_from = trajectory, values_from = all_of(v))
+  a <- anova(lmer(as.formula(paste(v, "~ trajectory + (1|prolificPID)")), data = s2_nm))
+  bind_rows(
+    tt_row(ww$`catch-up`, ww$`fall-back`, "catch-up vs fall-back"),
+    tt_row(ww$`catch-up`, ww$stable,      "catch-up vs stable"),
+    tt_row(ww$`fall-back`, ww$stable,     "fall-back vs stable")
+  ) |> mutate(DV = dvs[[v]], anova_p = a$`Pr(>F)`, .before = 1)
+}) |> mutate(across(c(diff, t, dz), \(x) round(x, 2)),
+             p = ifelse(p < .0001, "<.0001", sprintf("%.4f", p)),
+             anova_p = ifelse(anova_p < .0001, "<.0001", sprintf("%.4f", anova_p))) |> kable()
+```
+
+**The result.** Motivation is flat across trajectory. Pleasure is not: a **catch-up**
+near miss feels distinctly less bad than either of the others, and fall-back and
+stable are indistinguishable from each other. So the shape of a near miss changes how
+it *feels* without changing how much people want to carry on — affect and drive come
+apart.
+
+Confidence stays flat, as it must.
+
+## Within-clip view
+
+Because the same clip is a narrow win for some participants and a near miss for
+others, subtracting one from the other **within a clip** removes everything about that
+particular race.
+
+```{r s2-fig3, fig.height=5}
+clip <- s2 |> filter(condition %in% c("NW", "NM"), !is.na(trajectory)) |>
+  group_by(raceId, trajectory, condition) |>
+  summarise(across(all_of(names(dvs)), mean), .groups = "drop") |>
+  pivot_longer(all_of(names(dvs)), names_to = "col", values_to = "val") |>
+  pivot_wider(names_from = condition, values_from = val) |>
+  mutate(delta = NM - NW,
+         dv = factor(col, levels = names(dvs), labels = unname(dvs)))
+cm <- clip |> group_by(dv, trajectory) |>
+  summarise(m = mean(delta), se = sd(delta) / sqrt(n()), .groups = "drop")
+ggplot(clip, aes(trajectory, delta, colour = trajectory)) +
+  geom_hline(yintercept = 0, colour = "grey40") +
+  geom_point(size = 2.6, alpha = .75, position = position_jitter(width = .07, seed = 1)) +
+  geom_errorbar(data = cm, inherit.aes = FALSE,
+                aes(trajectory, ymin = m - se, ymax = m + se), width = .13) +
+  geom_point(data = cm, inherit.aes = FALSE, aes(trajectory, m), shape = 95, size = 12) +
+  facet_wrap(~dv, scales = "free_y") +
+  scale_colour_manual(values = traj_cols, guide = "none") +
+  labs(title = "Within-clip: near miss minus narrow win, same footage",
+       subtitle = "each point is one race; below zero = the near miss cost more",
+       x = NULL, y = "NM - NW (rating points)") +
+  theme_minimal(base_size = 11) + theme(plot.title = element_text(face = "bold"))
+```
+
+## PGSI (exploratory)
+
+Pre-registered as exploratory. Half the sample scores zero on the PGSI, so a general
+Prolific panel has limited ability to test moderation.
+
+```{r s2-pgsi-dist}
+pg <- s2 |> group_by(prolificPID) |> summarise(pgsi = first(pgsi_total), .groups = "drop") |>
+  mutate(band = if_else(pgsi >= 3, "elevated (PGSI 3+)", "low (PGSI 0-2)"))
+table(cut(pg$pgsi, c(-1, 0, 2, 7, 27), labels = c("0", "1-2", "3-7", "8+"))) |>
+  as.data.frame() |> setNames(c("PGSI band", "n")) |> kable()
+```
+
+```{r s2-pgsi-fig, fig.height=7}
+ptb <- s2_pt |> left_join(pg, by = "prolificPID")
+band_cols <- c("elevated (PGSI 3+)" = "#CC3311", "low (PGSI 0-2)" = "#4477AA")
+p4 <- imap(dvs, function(label, col) {
+  s <- ptb |> group_by(band) |> group_modify(~ wsci(.x, trajectory, col)) |> ungroup()
+  ggplot(s, aes(trajectory, m, colour = band, group = band)) +
+    geom_line(linewidth = .8) + geom_errorbar(aes(ymin = lo, ymax = hi), width = .12) +
+    geom_point(size = 2.5) + scale_colour_manual(values = band_cols) +
+    coord_cartesian(ylim = c(0, 100)) +
+    labs(title = label, x = NULL, y = NULL, colour = NULL) +
+    theme_minimal(base_size = 11) + theme(axis.text.x = element_text(angle = 12, hjust = 1))
+})
+wrap_plots(p4, ncol = 2, guides = "collect") +
+  plot_annotation(title = "Near-miss trials by trajectory, split by PGSI",
+                  theme = theme(plot.title = element_text(face = "bold"))) &
+  theme(legend.position = "bottom")
+```
+
+```{r s2-pgsi-tests}
+pp <- s2_nm |> left_join(pg, by = "prolificPID") |>
+  group_by(prolificPID, band, pgsi, trajectory) |>
+  summarise(pleased = mean(pleased), .groups = "drop") |>
+  pivot_wider(names_from = trajectory, values_from = pleased)
+names(pp)[4:6] <- c("cu", "fb", "st"); pp <- pp |> mutate(cu_fb = cu - fb)
+map_dfr(unique(pp$band), function(b) {
+  s <- pp |> filter(band == b)
+  tt_row(s$cu, s$fb, paste0("catch-up vs fall-back — ", b)) |> mutate(n = nrow(s), .after = 1)
+}) |> fmt()
+```
+
+```{r s2-pgsi-interaction}
+tibble(
+  specification = c("median split (PGSI 3+ vs 0-2)", "continuous PGSI",
+                    "log(1+PGSI)", "Spearman rank"),
+  p = c(t.test(cu_fb ~ band, data = pp)$p.value,
+        anova(lmer(pleased ~ trajectory * scale(pgsi) + (1|prolificPID),
+                   data = s2_nm |> left_join(pg, by = "prolificPID")))["trajectory:scale(pgsi)", "Pr(>F)"],
+        anova(lmer(pleased ~ trajectory * scale(log1p(pgsi)) + (1|prolificPID),
+                   data = s2_nm |> left_join(pg, by = "prolificPID")))["trajectory:scale(log1p(pgsi))", "Pr(>F)"],
+        cor.test(pp$pgsi, pp$cu_fb, method = "spearman", exact = FALSE)$p.value)
+) |> mutate(p = sprintf("%.3f", p)) |>
+  kable(caption = "Interaction p depends on how PGSI is modelled — treat as suggestive only")
+```
+
+The catch-up advantage is about three times larger in the elevated group, but the
+interaction is significant on a median split and not as a linear term. **It depends on
+the analytic choice, so it is a hypothesis for a future study rather than a result.**
+
+---
+
+# Summary
+
+| | Study 1 | Study 2 |
+|---|---|---|
+| N analysed | `r N1` | `r N2` |
+| pre-registered | no | yes |
+| outcome check | no | yes |
+| near-miss effect (NM vs CL, motivation) | `r sprintf("+%.1f, p = %.1g", mean(w1$NM - w1$CL), t.test(w1$NM, w1$CL, paired = TRUE)$p.value)` | `r sprintf("+%.1f, p = %.1g", mean(w2$NM - w2$CL), t.test(w2$NM, w2$CL, paired = TRUE)$p.value)` |
+| trajectory on motivation | — | null |
+| trajectory on pleasure | — | catch-up > both others |
+
+**What we can say.** Near misses keep people playing more than clear losses, in a
+naturalistic dynamic task, replicated and pre-registered. The shape of the near miss
+does not change that — but it does change how bad the loss feels, with a catch-up
+near miss the least unpleasant of the three.
+
+**What we cannot say yet.** Whether self-reported motivation predicts actual
+persistence, and whether the pleasure effect is stronger in problem gamblers. Both
+need studies designed for the purpose.
+
+```{r session}
+sessionInfo()
+```
