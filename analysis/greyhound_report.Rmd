@@ -1,7 +1,6 @@
 ---
 title: "Near misses in a dynamic gambling task"
-subtitle: "Studies 1 and 2 — analysis report"
-author: "Omar D. Perez, Luke Clark, Steve Sharman, Mike Aitken"
+subtitle: "Studies 1 and 2 — results"
 date: "`r format(Sys.Date(), '%d %B %Y')`"
 output:
   html_document:
@@ -59,36 +58,17 @@ fmt <- function(tab) tab |>
          p = ifelse(p < .0001, "<.0001", sprintf("%.4f", p))) |> kable()
 ```
 
-# What this is
+# Note on scope
 
-Two experiments asking whether **near misses** — almost winning — keep people
-gambling, using real greyhound race footage rather than a slot machine.
-
-Participants back a dog, watch the race, and find out where it finished. What they
-don't know is that the trap they are assigned to determines the outcome. **The same
-clip is therefore a narrow win for some participants and a near miss for others**,
-which means every race acts as its own control.
-
-| condition | clip | assigned trap | they see |
-|---|---|---|---|
-| **CW** clear win | clear race | winner | finishes 1st |
-| **NW** narrow win | close race | winner | finishes 1st |
-| **NM** near miss | close race | runner-up | finishes 2nd |
-| **CL** clear loss | clear race | a back trap | did not win |
-
-**Study 1** (exploratory) tested the basic near-miss effect. **Study 2**
-(pre-registered) replicated it and asked a further question: does the *shape* of the
-near miss matter?
-
-Trajectory is judged from the **losing dog's** point of view, on the final part of
-the race:
-
-- **catch-up** — it was gaining on the leader but the race ended first
-- **fall-back** — it was in front and was passed before the line
-- **stable** — it finished close but the gap never changed
+Trajectory is coded from the **losing dog's** point of view, on the final part of the
+race: **catch-up** (gaining but ran out of track), **fall-back** (in front, passed
+before the line), **stable** (close, gap never changed).
 
 > **The two studies are never pooled.** Different samples, and different stimuli —
 > Study 1's clips end on the trackside result board, Study 2's end at the finish line.
+
+Ratings are 0–100 sliders. Confidence is taken **before** the race, so it serves as
+the check that trap assignment is not leaking; the other three are taken after.
 
 ---
 
@@ -120,8 +100,7 @@ s1_pm <- s1 |> group_by(prolificPID, condition) |>
 `r sum(s1_bypid$n_trials != 20)`, failed attention check
 `r sum(s1_bypid$att_p < s1_bypid$att_n)`, straight-lined `r sum(s1_bypid$straight)`.
 
-20 trials per participant, 5 of each condition. Ratings are 0–100 sliders; confidence
-is taken **before** the race, the other three after.
+20 trials per participant, 5 of each condition.
 
 ```{r s1-traj}
 # Study 1's own trajectory mapping. NOTE this is the exploratory set used at the
@@ -159,10 +138,7 @@ s1_pm |> select(-prolificPID) |> group_by(condition) |>
   summarise(across(everything(), \(x) round(mean(x), 1))) |> kable()
 ```
 
-## The key contrast
-
-Both a near miss and a clear loss are losses. The question is whether *almost*
-winning keeps people playing more than clearly losing.
+## Key contrasts
 
 ```{r s1-h1}
 w1 <- s1_pm |> select(prolificPID, condition, motivation) |>
@@ -215,15 +191,13 @@ s2_nm <- s2 |> filter(condition == "NM", !is.na(trajectory))
 
 Pre-registered on AsPredicted. **N = `r N2`** of `r nrow(s2_bypid)` collected.
 
-## Design
+## Counterbalancing
 
 12 close clips, 4 per trajectory, plus 11 clear races. Each participant sees **2 near
 misses and 2 narrow wins of every trajectory**, so the trajectory comparison is fully
-within subject.
-
-Roles rotate on a participant index rather than being drawn at random, so across the
-sample every clip serves as narrow win and as near miss equally often. Nobody sees a
-clip twice.
+within subject. Roles rotate on a participant index rather than being drawn at
+random, so across the sample every clip serves in both roles equally often, and
+nobody sees a clip twice.
 
 ```{r s2-counterbalance}
 s2 |> filter(condition %in% c("NW", "NM")) |>
@@ -235,8 +209,8 @@ s2 |> filter(condition %in% c("NW", "NM")) |>
 ## Exclusions
 
 Study 2 added an **outcome check**: on two races, participants are asked where their
-dog finished, immediately after the video and before the result screen, so the answer
-cannot be read off it. It is much stricter than the slider check used in Study 1.
+dog finished, straight after the video and before the result screen so it cannot be
+read off. Much stricter than the slider check used in Study 1.
 
 ```{r s2-excl}
 tibble(reason = c("incomplete", "failed slider check", "failed outcome check",
@@ -341,17 +315,11 @@ ggplot(clip, aes(trajectory, delta, colour = trajectory)) +
 
 ## The winner's side of the same clips
 
-Trajectory is a property of the clip, so it shapes the **narrow win** too — as the
-mirror image of the near miss:
+The same clip seen from the winner's trap. A fall-back clip means the winner came
+from behind; a catch-up clip means the winner led and was nearly caught.
 
-| clip | the near-miss participant | the narrow-win participant |
-|---|---|---|
-| **catch-up** | was gaining, ran out of track | led, and was almost caught |
-| **fall-back** | was in front, got passed | came from behind and passed |
-| **stable** | close, gap never changed | close, gap never changed |
-
-Pre-registered as an exploratory prediction: does winning after coming from behind
-beat winning while being chased?
+Pre-registered as an exploratory prediction: does coming from behind to win beat
+holding on?
 
 ```{r nw-plot-fn}
 nw_panels <- function(dat, N, title) {
