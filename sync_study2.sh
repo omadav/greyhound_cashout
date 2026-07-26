@@ -13,10 +13,19 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-# Pavlovia experiment id. Reuses the Study 1 project by default — pavlovia.js is
-# generic and only ever reads this number. Change it if you create a separate
-# Pavlovia project for Study 2.
-PROJECT_ID=${STUDY2_PROJECT_ID:-533864}
+# Study 2 has its own Pavlovia project:
+#   https://gitlab.pavlovia.org/omardavidperez/greyhound-cashout-v2
+# PROJECT_ID is the NUMERIC experiment id from the Pavlovia dashboard, not the
+# repo name. pavlovia.js posts to /experiments/<id>/sessions.
+# (Study 1 was 533864 on .../greyhound-cashout — do not reuse it here.)
+GITLAB_REMOTE="https://gitlab.pavlovia.org/omardavidperez/greyhound-cashout-v2.git"
+PROJECT_ID=${STUDY2_PROJECT_ID:-0}
+
+if [ "$PROJECT_ID" = "0" ]; then
+  echo "REFUSING TO SYNC: set STUDY2_PROJECT_ID to the numeric Pavlovia experiment id." >&2
+  echo "Find it on the Pavlovia dashboard for greyhound-cashout-v2." >&2
+  exit 1
+fi
 
 # Prolific completion URL. THIS IS THE ONE THING THAT MUST BE NEW: every Prolific
 # study issues its own completion code, so Study 1's (cc=CKEB0540) will not credit
@@ -68,5 +77,12 @@ grep -q 'pavlovia.js' study2-docs/index.html && { echo "FAIL: debug copy must NO
 [ -f study2-pavlovia/pavlovia.js ] || { echo "FAIL: pavlovia.js wrapper missing from the build"; ok=0; }
 grep -q 'unverified: true' study2-pavlovia/trial-config.js && { echo "FAIL: pool still has unverified races"; ok=0; }
 
-[ $ok -eq 1 ] && echo "sync OK: study2-docs/ (debug) and study2-pavlovia/ (production) updated, projectId=$PROJECT_ID"
+if [ $ok -eq 1 ]; then
+  echo "sync OK: study2-docs/ (debug) and study2-pavlovia/ (production) updated, projectId=$PROJECT_ID"
+  echo
+  echo "To deploy:"
+  echo "  cd study2-pavlovia"
+  echo "  git init && git remote add origin $GITLAB_REMOTE   # first time only"
+  echo "  git add -A && git commit -m 'Study 2 task' && git push -u origin main"
+fi
 exit $((1-ok))
