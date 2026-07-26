@@ -62,9 +62,14 @@ by_pid <- raw |>
   mutate(
     incomplete  = n_trials != 20,
     failed_att  = att_pass < att_n,
-    failed_out  = out_pass < out_n,
+    failed_out  = out_pass < out_n,          # PRE-REGISTERED: any outcome check wrong
+    failed_out2 = out_pass == 0 & out_n > 0, # RELAXED: only if BOTH wrong
     too_fast    = med_rt < 2000,
-    exclude     = incomplete | failed_att | failed_out | straight | too_fast
+    exclude     = incomplete | failed_att | failed_out  | straight | too_fast,
+    # Robustness set, decided AFTER seeing the data and reported as such: one
+    # wrong answer in 20 races is arguably harsh, so this drops only participants
+    # who got BOTH outcome checks wrong. Never the primary analysis.
+    exclude_rel = incomplete | failed_att | failed_out2 | straight | too_fast
   )
 
 message(sprintf(
@@ -227,6 +232,32 @@ pt16 <- df |> filter(condition == "NM", !is.na(trajectory), raceId != 16) |>
   summarise(motivation = mean(motivation), .groups = "drop") |>
   pivot_wider(names_from = trajectory, values_from = motivation)
 print(t.test(pt16$`catch-up`, pt16$stable, paired = TRUE))
+
+cat("\n\n===========================================================\n")
+cat("ROBUSTNESS (NOT pre-registered, decided after seeing the data)\n")
+cat("Relaxed outcome-check rule: exclude only if BOTH checks were wrong,\n")
+cat("rather than the pre-registered 'any check wrong'.\n")
+cat("===========================================================\n")
+keep_rel <- by_pid |> filter(!exclude_rel) |> pull(prolificPID)
+dr <- raw |> filter(prolificPID %in% keep_rel) |>
+  mutate(condition = factor(condition, levels = cond_levels),
+         trajectory = factor(na_if(trajectory, ""), levels = traj_levels))
+cat(sprintf("\nN = %d (vs %d pre-registered)\n", length(keep_rel), N))
+
+ptr <- dr |> filter(condition == "NM") |> group_by(prolificPID, trajectory) |>
+  summarise(motivation = mean(motivation), .groups = "drop") |>
+  pivot_wider(names_from = trajectory, values_from = motivation)
+cat("\ntrajectory means (motivation):\n")
+print(dr |> filter(condition == "NM") |> group_by(trajectory) |>
+        summarise(motivation = round(mean(motivation), 1), .groups = "drop"))
+cat("\ncatch-up vs stable:\n"); print(t.test(ptr$`catch-up`, ptr$stable, paired = TRUE))
+cat(sprintf("dz = %.3f\n", mean(ptr$`catch-up` - ptr$stable) / sd(ptr$`catch-up` - ptr$stable)))
+
+pmr <- dr |> group_by(prolificPID, condition) |>
+  summarise(motivation = mean(motivation), .groups = "drop") |>
+  pivot_wider(names_from = condition, values_from = motivation)
+cat("\nH1 near miss vs clear loss under the relaxed rule:\n")
+print(t.test(pmr$NM, pmr$CL, paired = TRUE))
 
 cat("\n=== Manipulation check: pre-race confidence must NOT differ ===\n")
 print(t.test(h2$`catch-up`, h2$stable, paired = TRUE)$p.value)
