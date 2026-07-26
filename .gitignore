@@ -32,3 +32,7 @@ study2-task/assets/videos/
 # Study 2 deployment builds (regenerate with ./sync_study2.sh)
 study2-docs/
 study2-pavlovia/
+
+# Study 2 participant data + regenerable outputs (public repo)
+study2-pavlovia/
+study2_analysis/
