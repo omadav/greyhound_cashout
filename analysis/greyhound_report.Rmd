@@ -123,6 +123,20 @@ s1_pm <- s1 |> group_by(prolificPID, condition) |>
 20 trials per participant, 5 of each condition. Ratings are 0–100 sliders; confidence
 is taken **before** the race, the other three after.
 
+```{r s1-traj}
+# Study 1's own trajectory mapping. NOTE this is the exploratory set used at the
+# time, and it differs from Study 2's locked set: it includes the floodlit night
+# races (14, 22) and race 20, and it puts race 16 in catch-up. Kept as-is so the
+# Study 1 panel shows what was actually looked at, not a retrofit.
+s1_traj <- tibble::tribble(~raceId, ~trajectory,
+   3, "catch-up",   4, "catch-up",  16, "catch-up",
+   5, "fall-back",  7, "fall-back",  9, "fall-back", 15, "fall-back",
+   2, "stable",    14, "stable",    20, "stable",    21, "stable", 22, "stable")
+s1 <- s1 |> mutate(raceId = as.integer(raceId)) |>
+  left_join(s1_traj, by = "raceId") |>
+  mutate(trajectory = factor(trajectory, levels = traj_levels))
+```
+
 ## Ratings by outcome
 
 ```{r s1-fig1, fig.height=7}
@@ -323,6 +337,113 @@ ggplot(clip, aes(trajectory, delta, colour = trajectory)) +
        subtitle = "each point is one race; below zero = the near miss cost more",
        x = NULL, y = "NM - NW (rating points)") +
   theme_minimal(base_size = 11) + theme(plot.title = element_text(face = "bold"))
+```
+
+## The winner's side of the same clips
+
+Trajectory is a property of the clip, so it shapes the **narrow win** too — as the
+mirror image of the near miss:
+
+| clip | the near-miss participant | the narrow-win participant |
+|---|---|---|
+| **catch-up** | was gaining, ran out of track | led, and was almost caught |
+| **fall-back** | was in front, got passed | came from behind and passed |
+| **stable** | close, gap never changed | close, gap never changed |
+
+Pre-registered as an exploratory prediction: does winning after coming from behind
+beat winning while being chased?
+
+```{r nw-plot-fn}
+nw_panels <- function(dat, N, title) {
+  pw <- dat |> filter(condition == "NW", !is.na(trajectory)) |>
+    group_by(prolificPID, trajectory) |>
+    summarise(across(all_of(names(dvs)), mean), .groups = "drop")
+  ps <- imap(dvs, function(label, col) {
+    s <- wsci(pw, trajectory, col)
+    ggplot(s, aes(trajectory, m, fill = trajectory)) +
+      geom_col(width = .6) + geom_errorbar(aes(ymin = lo, ymax = hi), width = .14) +
+      scale_fill_manual(values = traj_cols, guide = "none") +
+      coord_cartesian(ylim = c(0, 100)) +
+      labs(title = label, x = NULL, y = NULL) + theme_minimal(base_size = 11) +
+      theme(axis.text.x = element_text(angle = 12, hjust = 1))
+  })
+  wrap_plots(ps, ncol = 2) +
+    plot_annotation(title = sprintf("%s (n=%d): NARROW WIN trials only, by clip trajectory", title, N),
+                    theme = theme(plot.title = element_text(face = "bold")))
+}
+```
+
+```{r s2-nw-fig, fig.height=7}
+nw_panels(s2, N2, "Study 2")
+```
+
+```{r s2-nw-tests}
+s2_pw <- s2 |> filter(condition == "NW", !is.na(trajectory)) |>
+  group_by(prolificPID, trajectory) |>
+  summarise(across(all_of(names(dvs)), mean), .groups = "drop")
+s2_nwtr <- s2 |> filter(condition == "NW", !is.na(trajectory))
+map_dfr(names(dvs), function(v) {
+  ww <- s2_pw |> select(prolificPID, trajectory, all_of(v)) |>
+    pivot_wider(names_from = trajectory, values_from = all_of(v))
+  a <- anova(lmer(as.formula(paste(v, "~ trajectory + (1|prolificPID)")), data = s2_nwtr))
+  bind_rows(
+    tt_row(ww$`fall-back`, ww$`catch-up`, "came from behind vs held on"),
+    tt_row(ww$`fall-back`, ww$stable,     "came from behind vs never in doubt"),
+    tt_row(ww$`catch-up`,  ww$stable,     "held on vs never in doubt")
+  ) |> mutate(DV = dvs[[v]], anova_p = a$`Pr(>F)`, .before = 1)
+}) |> mutate(across(c(diff, t, dz), \(x) round(x, 2)),
+             p = ifelse(p < .0001, "<.0001", sprintf("%.4f", p)),
+             anova_p = ifelse(anova_p < .0001, "<.0001", sprintf("%.4f", anova_p))) |> kable()
+```
+
+**Pleasure is at ceiling** — 91.4, 92.0, 91.5 out of 100. Every win feels great, so
+there is no room to detect a difference. Read the flat pleasure panel as a ceiling
+effect, not as evidence of no difference.
+
+**Luck** does move: both dramatic wins feel luckier than a comfortable one. **And the
+pre-registered prediction holds on motivation** — coming from behind to win beats
+holding on.
+
+### The asymmetry
+
+```{r asym}
+tibble(
+  role = c("loser (near miss)", "winner (narrow win)"),
+  `affected by trajectory` = c("pleasure", "luck, motivation"),
+  `not affected` = c("motivation", "pleasure (at ceiling)")
+) |> kable()
+```
+
+Losing: the shape changes how bad it feels but not whether you carry on.
+Winning: the shape changes how lucky you felt and whether you carry on, but not how
+good it feels — because winning always feels good.
+
+### Study 1, same split
+
+Shown for comparison only. Study 1 was exploratory, its trajectory labels were partly
+reconstructed after the fact, and its stimulus set includes clips later dropped from
+Study 2 (the floodlit races, and race 16 whose label is contested).
+
+```{r s1-nw-fig, fig.height=7}
+nw_panels(s1, N1, "Study 1")
+```
+
+```{r s1-nm-nw-compare}
+bind_rows(
+  s1 |> filter(condition %in% c("NM", "NW"), !is.na(trajectory)) |>
+    group_by(prolificPID, condition, trajectory) |>
+    summarise(across(all_of(names(dvs)), mean), .groups = "drop") |>
+    group_by(condition, trajectory) |>
+    summarise(across(all_of(names(dvs)), \(x) round(mean(x), 1)), .groups = "drop") |>
+    mutate(study = "Study 1", .before = 1),
+  s2 |> filter(condition %in% c("NM", "NW"), !is.na(trajectory)) |>
+    group_by(prolificPID, condition, trajectory) |>
+    summarise(across(all_of(names(dvs)), mean), .groups = "drop") |>
+    group_by(condition, trajectory) |>
+    summarise(across(all_of(names(dvs)), \(x) round(mean(x), 1)), .groups = "drop") |>
+    mutate(study = "Study 2", .before = 1)
+) |> arrange(condition, trajectory, study) |>
+  kable(caption = "Both studies, both roles, by trajectory")
 ```
 
 ## PGSI (exploratory)
