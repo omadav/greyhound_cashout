@@ -28,3 +28,7 @@ greyhound-study1-session*.csv
 
 # Study 2 video copy (81MB; regenerate from Races_noboard/)
 study2-task/assets/videos/
+
+# Study 2 deployment builds (regenerate with ./sync_study2.sh)
+study2-docs/
+study2-pavlovia/
