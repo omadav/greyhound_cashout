@@ -484,3 +484,96 @@ power); pessimistic, since most pilot participants had only one catch-up trial.
 - Runner counts and vacant traps for races 31, 32, 35 before they can enter the task.
 - Videos to copy into the Study 2 build; consider re-encoding at CRF 26 (the trimmed
   set is 132 MB).
+
+### 2026-07-27 — Study 2 collected and analysed
+
+**Study 2 is done. 179 collected, 102 analysed** (pre-registered target was 100 after
+exclusions). Deployed on its own Pavlovia project, `greyhound-cashout-v2`
+(experiment 534026), separate from Study 1 so neither the code nor the data mix.
+
+#### Results
+
+**H1 replicates cleanly and large.** Near miss vs clear loss on motivation:
+**+10.1 points, t(101) = 8.49, p = 1.9e-13, dz = 0.84.** Both are losses, so this is
+the near-miss effect, not a win/lose difference. Condition means: CW 78.3, NW 77.1,
+NM 59.4, CL 49.3. Pre-race confidence flat at 45.8–47.4, so trap assignment is not
+leaking.
+
+**H2 splits by dependent variable — a dissociation.**
+
+| DV | catch-up | fall-back | stable | omnibus |
+|---|---|---|---|---|
+| **pleasure** | **47.1** | 41.2 | 41.9 | **F(2,508) = 9.21, p = .0001** |
+| motivation | 59.2 | 59.0 | 59.9 | p = .85 |
+| luck | 32.9 | 30.3 | 32.2 | p = .18 |
+| confidence | 47.6 | 48.1 | 46.6 | p = .60 |
+
+The planned contrasts: catch-up vs fall-back **p = .0004, dz = 0.36**; catch-up vs
+stable **p = .0003, dz = 0.37**; both survive Holm across the six planned contrasts.
+fall-back and stable are indistinguishable (p = .62), so it is **not** a gradient —
+catch-up stands alone.
+
+So the shape of a near miss changes how bad it feels, but not how much people want to
+carry on. Affect and drive come apart.
+
+**The winner's side of the same clips.** Luck moves (F = 7.45, **p = .0007**): both
+dramatic wins feel luckier than a comfortable one. The box-6 prediction is supported —
+coming from behind to win beats holding on, +2.8, p = .017, dz = 0.24 — though it is
+pre-specified *exploratory*, small, and would not survive a blanket correction.
+Pleasure is at **ceiling** (91.4 / 92.0 / 91.5), so no conclusion is possible there.
+
+**PGSI, exploratory.** The pleasure effect is about three times larger above the
+standard PGSI cutoff of 3: catch-up minus fall-back is **+10.4 (p = .0007)** in the
+elevated group versus **+3.6 (p = .07)** in the rest. The interaction is p = .049 on
+that split but **p = .22 with PGSI continuous**, so it depends on the specification.
+47% of the sample scores exactly zero on the PGSI, which is why a general panel cannot
+test this properly. Suggestive, not a result.
+
+#### Statistical approach
+
+One mixed model per DV, `DV ~ trajectory + (1 | participant)`. The two contrasts named
+in the pre-registration are tested directly — planned contrasts do not need a
+significant omnibus first, which is the point of naming them in advance. Contrasts
+that were *not* planned (fall-back vs stable, and two of the narrow-win comparisons)
+are gated on the omnibus instead, using Fisher's protected LSD, which is exact for
+three groups. Nothing therefore needs a blanket correction, and Holm across the
+planned family is reported anyway.
+
+#### Exclusions
+
+40% excluded (77 of 179), driven by the new outcome check (60 failures). Every result
+holds under four different exclusion rules, including a lenient one that keeps anyone
+who got at least one outcome check right — and the effect *shrinks* as the rule
+loosens, which is what you expect if it is real and being diluted by inattention.
+
+**Excluded participants were paid.** Failing an attention check excludes from analysis,
+not from payment.
+
+#### Deliverables
+
+- `analysis/analyze_study2.R` — the Study 2 pipeline, deliberately separate from
+  `analyze_pilot.R`. The two studies must never be pooled: different samples, and
+  Study 1's clips end on the result board while Study 2's end at the finish line.
+- `analysis/greyhound_report.Rmd` → `greyhound_report.html` — one self-contained
+  report covering both studies. Reads the raw CSVs directly, so the numbers cannot
+  drift from the scripts. Regenerate with
+  `Rscript -e 'rmarkdown::render("analysis/greyhound_report.Rmd")'`.
+- `study2_preregistration.md` — filed on AsPredicted before collection.
+
+#### Corrections made along the way
+
+- **Clip count was never the limiting factor.** A variance decomposition showed no
+  detectable clip-to-clip variation within a trajectory; the earlier "9 clips per
+  trajectory" figure treated sampling noise as real item variance and was withdrawn.
+  Participants were the lever, as Omar argued.
+- **The PGSI split is not a median split.** It is the published cutoff of 3; the
+  sample median is 1. The distinction matters — a fixed diagnostic threshold is
+  decided independently of the data, a median split is not.
+- **The board cropping runs the other way** from how it is easy to describe: races
+  24–38 have no result board, so the board was cropped off races 1–23 to match them.
+
+#### Open
+
+- Push the remaining follow-ups: behavioural persistence (Study 5) and a
+  problem-gambler sample (Study 6), both specified in `research_programme.md`.
+- Cash-out studies (3 and 4) are the second paper.

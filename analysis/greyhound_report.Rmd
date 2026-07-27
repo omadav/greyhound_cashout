@@ -53,9 +53,17 @@ tt_row <- function(a, b, label) {
   tibble(contrast = label, diff = mean(a - b), t = unname(res$statistic),
          df = unname(res$parameter), p = res$p.value, dz = mean(a - b) / sd(a - b))
 }
-fmt <- function(tab) tab |>
-  mutate(across(c(diff, t, dz), \(x) round(x, 2)),
-         p = ifelse(p < .0001, "<.0001", sprintf("%.4f", p))) |> kable()
+# Bold a whole row when p < .05. kable needs escape = FALSE to honour the markup.
+bold_if <- function(x, hit) ifelse(hit, paste0("**", x, "**"), as.character(x))
+
+fmt <- function(tab) {
+  hit <- tab$p < .05
+  tab |>
+    mutate(across(c(diff, t, dz), \(x) round(x, 2)),
+           p = ifelse(p < .0001, "<.0001", sprintf("%.4f", p))) |>
+    mutate(across(everything(), \(col) bold_if(col, hit))) |>
+    kable(escape = FALSE)
+}
 
 # ---------------------------------------------------------------------------
 # Trajectory tests.
@@ -101,7 +109,14 @@ traj_table <- function(trial_data, pairs) {
            dz = ifelse(status == "post-hoc, omnibus failed", NA_real_, round(dz, 2)),
            across(c(omnibus_F, diff), \(x) round(x, 2)),
            omnibus_p = ifelse(omnibus_p < .0001, "<.0001", sprintf("%.4f", omnibus_p))) |>
-    select(DV, omnibus_F, omnibus_p, contrast, status, diff, dz, p, holm)
+    select(DV, omnibus_F, omnibus_p, contrast, status, diff, dz, p, holm) |>
+    # bold the rows that are both licensed and significant
+    (\(d) {
+      hit <- d$p != "— not licensed —" &
+             suppressWarnings(ifelse(d$p == "<.0001", 0, as.numeric(d$p))) < .05
+      hit[is.na(hit)] <- FALSE
+      d |> mutate(across(everything(), \(col) bold_if(col, hit)))
+    })()
 }
 ```
 
@@ -165,6 +180,20 @@ s1_traj <- tibble::tribble(~raceId, ~trajectory,
 s1 <- s1 |> mutate(raceId = as.integer(raceId)) |>
   left_join(s1_traj, by = "raceId") |>
   mutate(trajectory = factor(trajectory, levels = traj_levels))
+```
+
+## Which clip served which role
+
+Study 1 drew the trap assignment at random, so the number of times a clip served as
+a near miss versus a narrow win came out uneven. Study 2 replaced this with a
+rotation (see below), which removes the problem by construction.
+
+```{r s1-clips}
+s1 |> filter(condition %in% c("NW", "NM")) |>
+  count(raceId, trajectory, condition) |>
+  pivot_wider(names_from = condition, values_from = n, values_fill = 0) |>
+  mutate(imbalance = abs(NM - NW)) |> arrange(desc(imbalance)) |>
+  kable(caption = "Study 1: times each close clip served in each role (random assignment)")
 ```
 
 ## Ratings by outcome
@@ -254,7 +283,8 @@ nobody sees a clip twice.
 s2 |> filter(condition %in% c("NW", "NM")) |>
   count(raceId, trajectory, condition) |>
   pivot_wider(names_from = condition, values_from = n, values_fill = 0) |>
-  arrange(trajectory, raceId) |> kable(caption = "Times each clip served in each role")
+  mutate(imbalance = abs(NM - NW)) |> arrange(trajectory, raceId) |>
+  kable(caption = "Study 2: times each clip served in each role (rotation)")
 ```
 
 ## Exclusions
@@ -314,16 +344,13 @@ wrap_plots(p3, ncol = 2) +
 **catch-up vs stable** and **catch-up vs fall-back** were named as planned contrasts
 in the pre-registration, so they are tested directly — a planned contrast does not
 need a significant omnibus first. `holm` is Holm across the six planned contrasts
-(2 contrasts x 3 DVs); it is shown for completeness, not because planned contrasts
-conventionally require it.
-
-**fall-back vs stable** was not planned. It is gated on the omnibus.
+(2 contrasts x 3 DVs).
 
 ```{r s2-traj-tests}
 traj_table(s2_nm, list(
   list("catch-up",  "fall-back", "catch-up vs fall-back", TRUE),
   list("catch-up",  "stable",    "catch-up vs stable",    TRUE),
-  list("fall-back", "stable",    "fall-back vs stable",   FALSE))) |> kable()
+  list("fall-back", "stable",    "fall-back vs stable",   FALSE))) |> kable(escape = FALSE)
 ```
 
 **The result.** Motivation is flat across trajectory. Pleasure is not: a **catch-up**
@@ -405,7 +432,7 @@ s2_nwtr <- s2 |> filter(condition == "NW", !is.na(trajectory))
 traj_table(s2_nwtr, list(
   list("fall-back", "catch-up", "came from behind vs held on",        TRUE),
   list("fall-back", "stable",   "came from behind vs never in doubt", FALSE),
-  list("catch-up",  "stable",   "held on vs never in doubt",          FALSE))) |> kable()
+  list("catch-up",  "stable",   "held on vs never in doubt",          FALSE))) |> kable(escape = FALSE)
 ```
 
 **Pleasure is at ceiling** — 91.4, 92.0, 91.5 out of 100. Every win feels great, so
@@ -511,7 +538,7 @@ map_dfr(unique(pp$band), function(b) {
 
 ```{r s2-pgsi-interaction}
 tibble(
-  specification = c("median split (PGSI 3+ vs 0-2)", "continuous PGSI",
+  specification = c("PGSI 3+ vs 0-2 (standard cutoff)", "continuous PGSI",
                     "log(1+PGSI)", "Spearman rank"),
   p = c(t.test(cu_fb ~ band, data = pp)$p.value,
         anova(lmer(pleased ~ trajectory * scale(pgsi) + (1|prolificPID),
@@ -523,9 +550,10 @@ tibble(
   kable(caption = "Interaction p depends on how PGSI is modelled — treat as suggestive only")
 ```
 
-The catch-up advantage is about three times larger in the elevated group, but the
-interaction is significant on a median split and not as a linear term. **It depends on
-the analytic choice, so it is a hypothesis for a future study rather than a result.**
+TThe catch-up advantage is about three times larger in the elevated group. The
+interaction reaches significance when the sample is split at the standard PGSI
+cutoff of 3 (moderate risk or above), but not when PGSI is entered as a continuous
+term.
 
 ---
 
