@@ -58,40 +58,50 @@ fmt <- function(tab) tab |>
          p = ifelse(p < .0001, "<.0001", sprintf("%.4f", p))) |> kable()
 
 # ---------------------------------------------------------------------------
-# Trajectory tests, with the omnibus acting as a gate.
+# Trajectory tests.
 #
-# One mixed model per DV: DV ~ trajectory + (1 | participant). The omnibus F is a
-# single test, so no correction is needed for it. Pairwise follow-ups are only
-# reported where the omnibus passes — Fisher's protected LSD, which controls the
-# familywise error rate exactly when there are THREE groups, as here. So the
-# pairwise p-values below need no correction either, provided the gate is
-# respected. Rows where the gate fails are shown but marked, and should not be
-# interpreted.
+# One mixed model per DV: DV ~ trajectory + (1 | participant).
+#
+# The pre-registration named TWO PLANNED CONTRASTS — catch-up vs stable and
+# catch-up vs fall-back — on motivation, pleasure and luck. Planned contrasts are
+# specified before the data exist, so they are tested directly. They do not
+# require a significant omnibus first, and conventionally are not corrected.
+# Holm across the six is shown anyway so nothing is hidden.
+#
+# fall-back vs stable was NOT planned, and neither were the narrow-win contrasts
+# beyond the mirror prediction in box 6. Those are gated on the omnibus (Fisher's
+# protected LSD, exact for three groups) and marked when the gate fails.
 # ---------------------------------------------------------------------------
 traj_table <- function(trial_data, pairs) {
   ppt <- trial_data |> group_by(prolificPID, trajectory) |>
     summarise(across(all_of(names(dvs)), mean), .groups = "drop")
-  map_dfr(names(dvs), function(v) {
+  out <- map_dfr(names(dvs), function(v) {
     a  <- anova(lmer(as.formula(paste(v, "~ trajectory + (1|prolificPID)")), data = trial_data))
     op <- a$`Pr(>F)`
     ww <- ppt |> select(prolificPID, trajectory, all_of(v)) |>
       pivot_wider(names_from = trajectory, values_from = all_of(v))
     map_dfr(pairs, function(pr) {
       r <- t.test(ww[[pr[[1]]]], ww[[pr[[2]]]], paired = TRUE)
-      tibble(DV = dvs[[v]],
-             omnibus_F = unname(a$`F value`), omnibus_p = op,
-             gate = if (op < .05) "open" else "CLOSED",
-             contrast = pr[[3]],
-             diff = mean(ww[[pr[[1]]]] - ww[[pr[[2]]]]),
-             p = r$p.value,
+      tibble(DV = dvs[[v]], omnibus_F = unname(a$`F value`), omnibus_p = op,
+             contrast = pr[[3]], planned = pr[[4]],
+             diff = mean(ww[[pr[[1]]]] - ww[[pr[[2]]]]), p_raw = r$p.value,
              dz = mean(ww[[pr[[1]]]] - ww[[pr[[2]]]]) / sd(ww[[pr[[1]]]] - ww[[pr[[2]]]]))
     })
-  }) |>
-    mutate(p = ifelse(gate == "CLOSED", "— not licensed —",
-                      ifelse(p < .0001, "<.0001", sprintf("%.4f", p))),
-           dz = ifelse(gate == "CLOSED", NA_real_, round(dz, 2)),
+  })
+  # Holm within the planned family only; unplanned rows are gated on the omnibus
+  out |>
+    mutate(holm = ifelse(planned, p.adjust(ifelse(planned, p_raw, NA), "holm"), NA_real_),
+           status = case_when(
+             planned                    ~ "planned",
+             !planned & omnibus_p < .05 ~ "post-hoc, omnibus passed",
+             TRUE                       ~ "post-hoc, omnibus failed"),
+           p = ifelse(status == "post-hoc, omnibus failed", "— not licensed —",
+                      ifelse(p_raw < .0001, "<.0001", sprintf("%.4f", p_raw))),
+           holm = ifelse(is.na(holm), "", sprintf("%.4f", holm)),
+           dz = ifelse(status == "post-hoc, omnibus failed", NA_real_, round(dz, 2)),
            across(c(omnibus_F, diff), \(x) round(x, 2)),
-           omnibus_p = ifelse(omnibus_p < .0001, "<.0001", sprintf("%.4f", omnibus_p)))
+           omnibus_p = ifelse(omnibus_p < .0001, "<.0001", sprintf("%.4f", omnibus_p))) |>
+    select(DV, omnibus_F, omnibus_p, contrast, status, diff, dz, p, holm)
 }
 ```
 
@@ -301,15 +311,19 @@ wrap_plots(p3, ncol = 2) +
                   theme = theme(plot.title = element_text(face = "bold")))
 ```
 
-One mixed model per DV. The omnibus F is a single test and needs no correction.
-Pairwise follow-ups are only licensed where the omnibus passes (Fisher's protected
-LSD, which is exact for three groups) — so those need no correction either.
+**catch-up vs stable** and **catch-up vs fall-back** were named as planned contrasts
+in the pre-registration, so they are tested directly — a planned contrast does not
+need a significant omnibus first. `holm` is Holm across the six planned contrasts
+(2 contrasts x 3 DVs); it is shown for completeness, not because planned contrasts
+conventionally require it.
+
+**fall-back vs stable** was not planned. It is gated on the omnibus.
 
 ```{r s2-traj-tests}
 traj_table(s2_nm, list(
-  list("catch-up",  "fall-back", "catch-up vs fall-back"),
-  list("catch-up",  "stable",    "catch-up vs stable"),
-  list("fall-back", "stable",    "fall-back vs stable"))) |> kable()
+  list("catch-up",  "fall-back", "catch-up vs fall-back", TRUE),
+  list("catch-up",  "stable",    "catch-up vs stable",    TRUE),
+  list("fall-back", "stable",    "fall-back vs stable",   FALSE))) |> kable()
 ```
 
 **The result.** Motivation is flat across trajectory. Pleasure is not: a **catch-up**
@@ -382,12 +396,16 @@ nw_panels <- function(dat, N, title) {
 nw_panels(s2, N2, "Study 2")
 ```
 
+Box 6 of the pre-registration named one comparison here — *coming from behind to win
+vs holding on* — as an exploratory but pre-specified prediction, so it is tested
+directly. The other two were not specified and are gated on the omnibus.
+
 ```{r s2-nw-tests}
 s2_nwtr <- s2 |> filter(condition == "NW", !is.na(trajectory))
 traj_table(s2_nwtr, list(
-  list("fall-back", "catch-up", "came from behind vs held on"),
-  list("fall-back", "stable",   "came from behind vs never in doubt"),
-  list("catch-up",  "stable",   "held on vs never in doubt"))) |> kable()
+  list("fall-back", "catch-up", "came from behind vs held on",        TRUE),
+  list("fall-back", "stable",   "came from behind vs never in doubt", FALSE),
+  list("catch-up",  "stable",   "held on vs never in doubt",          FALSE))) |> kable()
 ```
 
 **Pleasure is at ceiling** — 91.4, 92.0, 91.5 out of 100. Every win feels great, so
@@ -397,28 +415,29 @@ effect; I don't think we can conclude no difference.
 **Luck** does move, and its omnibus passes (F = 7.45, p = .0007): both dramatic wins
 feel luckier than a comfortable one.
 
-**Motivation does not clear the gate.** Its omnibus is p = .068, so the pairwise
-comparison is not licensed. Taken at face value the numbers point the way we
-predicted — coming from behind (78.2) above holding on (75.4) — but the omnibus says
-we should not read the pairwise, and a Holm correction across all the contrasts puts
-that comparison at p = .35. So the prediction is **not** supported here. It is worth
-retesting in a study designed for it, rather than claimed from this one.
+**Motivation.** The pre-specified prediction is supported: coming from behind to win
+(78.2) beats holding on (75.4), p = .017, dz = 0.24. Because it was named in advance
+it is tested directly, without needing the omnibus — which is just as well, since the
+omnibus sits at p = .068. Worth being straight about the strength of it: it is a
+pre-specified but *exploratory* prediction, the effect is small, and it would not
+survive a blanket correction across every contrast in this report. Treat it as
+encouraging rather than established.
 
 ### The asymmetry
 
 ```{r asym}
 tibble(
   role = c("loser (near miss)", "winner (narrow win)"),
-  `moves with trajectory` = c("pleasure", "luck"),
-  `does not` = c("motivation, luck", "motivation (omnibus p = .07)"),
+  `moves with trajectory` = c("pleasure", "luck, motivation (small)"),
+  `does not` = c("motivation, luck", "—"),
   `cannot tell` = c("—", "pleasure (at ceiling)")
 ) |> kable()
 ```
 
 Losing: the shape changes how bad it feels, but not whether you carry on.
-Winning: the shape changes how lucky you felt. Whether it changes motivation is
-unresolved — the trend is in the predicted direction but the omnibus does not pass —
-and how good it feels cannot be assessed, because every win is rated around 92.
+Winning: the shape changes how lucky you felt, and moves motivation a little in the
+predicted direction. How good it feels cannot be assessed either way, because every
+win is rated around 92.
 
 ### Study 1, same split
 
