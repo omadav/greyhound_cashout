@@ -56,19 +56,60 @@ tt_row <- function(a, b, label) {
 fmt <- function(tab) tab |>
   mutate(across(c(diff, t, dz), \(x) round(x, 2)),
          p = ifelse(p < .0001, "<.0001", sprintf("%.4f", p))) |> kable()
+
+# ---------------------------------------------------------------------------
+# Trajectory tests, with the omnibus acting as a gate.
+#
+# One mixed model per DV: DV ~ trajectory + (1 | participant). The omnibus F is a
+# single test, so no correction is needed for it. Pairwise follow-ups are only
+# reported where the omnibus passes — Fisher's protected LSD, which controls the
+# familywise error rate exactly when there are THREE groups, as here. So the
+# pairwise p-values below need no correction either, provided the gate is
+# respected. Rows where the gate fails are shown but marked, and should not be
+# interpreted.
+# ---------------------------------------------------------------------------
+traj_table <- function(trial_data, pairs) {
+  ppt <- trial_data |> group_by(prolificPID, trajectory) |>
+    summarise(across(all_of(names(dvs)), mean), .groups = "drop")
+  map_dfr(names(dvs), function(v) {
+    a  <- anova(lmer(as.formula(paste(v, "~ trajectory + (1|prolificPID)")), data = trial_data))
+    op <- a$`Pr(>F)`
+    ww <- ppt |> select(prolificPID, trajectory, all_of(v)) |>
+      pivot_wider(names_from = trajectory, values_from = all_of(v))
+    map_dfr(pairs, function(pr) {
+      r <- t.test(ww[[pr[[1]]]], ww[[pr[[2]]]], paired = TRUE)
+      tibble(DV = dvs[[v]],
+             omnibus_F = unname(a$`F value`), omnibus_p = op,
+             gate = if (op < .05) "open" else "CLOSED",
+             contrast = pr[[3]],
+             diff = mean(ww[[pr[[1]]]] - ww[[pr[[2]]]]),
+             p = r$p.value,
+             dz = mean(ww[[pr[[1]]]] - ww[[pr[[2]]]]) / sd(ww[[pr[[1]]]] - ww[[pr[[2]]]]))
+    })
+  }) |>
+    mutate(p = ifelse(gate == "CLOSED", "— not licensed —",
+                      ifelse(p < .0001, "<.0001", sprintf("%.4f", p))),
+           dz = ifelse(gate == "CLOSED", NA_real_, round(dz, 2)),
+           across(c(omnibus_F, diff), \(x) round(x, 2)),
+           omnibus_p = ifelse(omnibus_p < .0001, "<.0001", sprintf("%.4f", omnibus_p)))
+}
 ```
 
-# Note on scope
+# Notes
 
-Trajectory is coded from the **losing dog's** point of view, on the final part of the
-race: **catch-up** (gaining but ran out of track), **fall-back** (in front, passed
-before the line), **stable** (close, gap never changed).
+* Study 1: Effect of near misses in a dynamic gambling task. 
+ 
+* Study 2: Does the shape of the near miss matter? Does the shape of the narrow win matter?
 
-> **The two studies are never pooled.** Different samples, and different stimuli —
-> Study 1's clips end on the trackside result board, Study 2's end at the finish line.
+In both studies, I also collected the PGSI, just to see whether the near-miss effect is stronger in problem gamblers. Luke already warned in advance that a general Prolific panel has limited ability to test moderation, and indeed half the sample scores zero on the PGSI. So treat the PGSI results as exploratory.
 
-Ratings are 0–100 sliders. Confidence is taken **before** the race, so it serves as
-the check that trap assignment is not leaking; the other three are taken after.
+Trajectory is coded from the **losing dog's** point of view, on the final part of the race: **catch-up** (gaining but ran out of track), **fall-back** (in front, passed before the line), **stable** (close, gap never changed).
+
+Study 1's clips end on the trackside result board, Study 2's end at the finish line (I cropped the ones that showed the board because it could be a confounder). This is because Study's 1 clips were taken from a set which had the result board in view, and Study 2's clips included clips where the board was not visible. The trajectory coding is unaffected by this difference.
+
+Ratings are 0–100 sliders. Confidence is taken **before** the race, so it serves as the check that trap assignment is not leaking; the other three are taken after.
+
+For Study 2 (which I preregistered in aspredicted.org), I incorporated all of Luke's comments: 1. Outcome check two times in the experiment. 2. Outcome message is "Your dog did not win", rather than "unplaced". 3. The dog's names are never repeated across races. 4. The luck rating reads now “how lucky did you feel”.  
 
 ---
 
@@ -151,7 +192,7 @@ bind_rows(
 ```
 
 Confidence, rated before the outcome is known, should be flat — and is. That is the
-check that trap assignment is not leaking.
+check that trap assignment is not leaking across races.
 
 ---
 
@@ -195,7 +236,7 @@ Pre-registered on AsPredicted. **N = `r N2`** of `r nrow(s2_bypid)` collected.
 
 12 close clips, 4 per trajectory, plus 11 clear races. Each participant sees **2 near
 misses and 2 narrow wins of every trajectory**, so the trajectory comparison is fully
-within subject. Roles rotate on a participant index rather than being drawn at
+within subject. Roles rotate on a participant basis rather than being drawn at
 random, so across the sample every clip serves in both roles equally often, and
 nobody sees a clip twice.
 
@@ -210,7 +251,7 @@ s2 |> filter(condition %in% c("NW", "NM")) |>
 
 Study 2 added an **outcome check**: on two races, participants are asked where their
 dog finished, straight after the video and before the result screen so it cannot be
-read off. Much stricter than the slider check used in Study 1.
+read off. Much stricter than the slider check used in Study 1. This led to a significant portion of exclusions, but the remaining sample is still large enough to detect the near-miss effect. Plus it was preregistered to reach $N=100$.
 
 ```{r s2-excl}
 tibble(reason = c("incomplete", "failed slider check", "failed outcome check",
@@ -260,19 +301,15 @@ wrap_plots(p3, ncol = 2) +
                   theme = theme(plot.title = element_text(face = "bold")))
 ```
 
+One mixed model per DV. The omnibus F is a single test and needs no correction.
+Pairwise follow-ups are only licensed where the omnibus passes (Fisher's protected
+LSD, which is exact for three groups) — so those need no correction either.
+
 ```{r s2-traj-tests}
-map_dfr(names(dvs), function(v) {
-  ww <- s2_pt |> select(prolificPID, trajectory, all_of(v)) |>
-    pivot_wider(names_from = trajectory, values_from = all_of(v))
-  a <- anova(lmer(as.formula(paste(v, "~ trajectory + (1|prolificPID)")), data = s2_nm))
-  bind_rows(
-    tt_row(ww$`catch-up`, ww$`fall-back`, "catch-up vs fall-back"),
-    tt_row(ww$`catch-up`, ww$stable,      "catch-up vs stable"),
-    tt_row(ww$`fall-back`, ww$stable,     "fall-back vs stable")
-  ) |> mutate(DV = dvs[[v]], anova_p = a$`Pr(>F)`, .before = 1)
-}) |> mutate(across(c(diff, t, dz), \(x) round(x, 2)),
-             p = ifelse(p < .0001, "<.0001", sprintf("%.4f", p)),
-             anova_p = ifelse(anova_p < .0001, "<.0001", sprintf("%.4f", anova_p))) |> kable()
+traj_table(s2_nm, list(
+  list("catch-up",  "fall-back", "catch-up vs fall-back"),
+  list("catch-up",  "stable",    "catch-up vs stable"),
+  list("fall-back", "stable",    "fall-back vs stable"))) |> kable()
 ```
 
 **The result.** Motivation is flat across trajectory. Pleasure is not: a **catch-up**
@@ -318,7 +355,7 @@ ggplot(clip, aes(trajectory, delta, colour = trajectory)) +
 The same clip seen from the winner's trap. A fall-back clip means the winner came
 from behind; a catch-up clip means the winner led and was nearly caught.
 
-Pre-registered as an exploratory prediction: does coming from behind to win beat
+Pre-registered as another research question: does coming from behind to win beat
 holding on?
 
 ```{r nw-plot-fn}
@@ -346,51 +383,48 @@ nw_panels(s2, N2, "Study 2")
 ```
 
 ```{r s2-nw-tests}
-s2_pw <- s2 |> filter(condition == "NW", !is.na(trajectory)) |>
-  group_by(prolificPID, trajectory) |>
-  summarise(across(all_of(names(dvs)), mean), .groups = "drop")
 s2_nwtr <- s2 |> filter(condition == "NW", !is.na(trajectory))
-map_dfr(names(dvs), function(v) {
-  ww <- s2_pw |> select(prolificPID, trajectory, all_of(v)) |>
-    pivot_wider(names_from = trajectory, values_from = all_of(v))
-  a <- anova(lmer(as.formula(paste(v, "~ trajectory + (1|prolificPID)")), data = s2_nwtr))
-  bind_rows(
-    tt_row(ww$`fall-back`, ww$`catch-up`, "came from behind vs held on"),
-    tt_row(ww$`fall-back`, ww$stable,     "came from behind vs never in doubt"),
-    tt_row(ww$`catch-up`,  ww$stable,     "held on vs never in doubt")
-  ) |> mutate(DV = dvs[[v]], anova_p = a$`Pr(>F)`, .before = 1)
-}) |> mutate(across(c(diff, t, dz), \(x) round(x, 2)),
-             p = ifelse(p < .0001, "<.0001", sprintf("%.4f", p)),
-             anova_p = ifelse(anova_p < .0001, "<.0001", sprintf("%.4f", anova_p))) |> kable()
+traj_table(s2_nwtr, list(
+  list("fall-back", "catch-up", "came from behind vs held on"),
+  list("fall-back", "stable",   "came from behind vs never in doubt"),
+  list("catch-up",  "stable",   "held on vs never in doubt"))) |> kable()
 ```
 
 **Pleasure is at ceiling** — 91.4, 92.0, 91.5 out of 100. Every win feels great, so
 there is no room to detect a difference. Read the flat pleasure panel as a ceiling
-effect, not as evidence of no difference.
+effect; I don't think we can conclude no difference.
 
-**Luck** does move: both dramatic wins feel luckier than a comfortable one. **And the
-pre-registered prediction holds on motivation** — coming from behind to win beats
-holding on.
+**Luck** does move, and its omnibus passes (F = 7.45, p = .0007): both dramatic wins
+feel luckier than a comfortable one.
+
+**Motivation does not clear the gate.** Its omnibus is p = .068, so the pairwise
+comparison is not licensed. Taken at face value the numbers point the way we
+predicted — coming from behind (78.2) above holding on (75.4) — but the omnibus says
+we should not read the pairwise, and a Holm correction across all the contrasts puts
+that comparison at p = .35. So the prediction is **not** supported here. It is worth
+retesting in a study designed for it, rather than claimed from this one.
 
 ### The asymmetry
 
 ```{r asym}
 tibble(
   role = c("loser (near miss)", "winner (narrow win)"),
-  `affected by trajectory` = c("pleasure", "luck, motivation"),
-  `not affected` = c("motivation", "pleasure (at ceiling)")
+  `moves with trajectory` = c("pleasure", "luck"),
+  `does not` = c("motivation, luck", "motivation (omnibus p = .07)"),
+  `cannot tell` = c("—", "pleasure (at ceiling)")
 ) |> kable()
 ```
 
-Losing: the shape changes how bad it feels but not whether you carry on.
-Winning: the shape changes how lucky you felt and whether you carry on, but not how
-good it feels — because winning always feels good.
+Losing: the shape changes how bad it feels, but not whether you carry on.
+Winning: the shape changes how lucky you felt. Whether it changes motivation is
+unresolved — the trend is in the predicted direction but the omnibus does not pass —
+and how good it feels cannot be assessed, because every win is rated around 92.
 
 ### Study 1, same split
 
-Shown for comparison only. Study 1 was exploratory, its trajectory labels were partly
+Shown for comparison only. Study 1 was exploratory in this regard, its trajectory labels were partly
 reconstructed after the fact, and its stimulus set includes clips later dropped from
-Study 2 (the floodlit races, and race 16 whose label is contested).
+Study 2.
 
 ```{r s1-nw-fig, fig.height=7}
 nw_panels(s1, N1, "Study 1")
@@ -417,7 +451,7 @@ bind_rows(
 ## PGSI (exploratory)
 
 Pre-registered as exploratory. Half the sample scores zero on the PGSI, so a general
-Prolific panel has limited ability to test moderation.
+Prolific panel has limited ability to test moderation (as noted by Luke before running the task on Prolific).
 
 ```{r s2-pgsi-dist}
 pg <- s2 |> group_by(prolificPID) |> summarise(pgsi = first(pgsi_total), .groups = "drop") |>
@@ -494,7 +528,9 @@ near miss the least unpleasant of the three.
 
 **What we cannot say yet.** Whether self-reported motivation predicts actual
 persistence, and whether the pleasure effect is stronger in problem gamblers. Both
-need studies designed for the purpose.
+need studies designed for the purpose. 
+
+**Possible follow-ups.** 1. A study that measures actual persistence, not just self-reported motivation. 2. A study that recruits a sample of problem gamblers to test whether the near-miss effect is stronger in that population. 3. The cashout manipulation study. Here we can ask a) whether the NM effect is affected by the cashout decision (or the possibility of it), and b) whether the trajectory modulates that effect. Additionally, we can c) manipulate the amount of cashout depending on the trajectory, to see whether, for example, catching up leads to less cashouts or lower probability of accepting a given cashout amount, etc. 
 
 ```{r session}
 sessionInfo()
