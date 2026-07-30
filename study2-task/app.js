@@ -976,8 +976,17 @@
   // When running on Pavlovia, upload the CSV to the server, close the session, and
   // offer the Prolific completion redirect. Off Pavlovia (GitHub Pages debug), this
   // is a no-op and the manual download buttons remain.
+  //
+  // NOTE: this checks isOnPavlovia(), not Pavlovia.isActive. isActive is set once
+  // at page load when the session opens; a single dropped request there (e.g. a
+  // blip on the intro screen) left it false for the rest of the session, so 20
+  // minutes later saveData() bailed instantly with no retry and no error shown -
+  // the participant saw a normal "thank you" screen and lost all their data. This
+  // happened in production (Study 2, 2026-07-27). Pavlovia.saveData() now retries
+  // and lazily re-opens a session if needed, so we let it try rather than
+  // pre-judging from the stale flag.
   async function saveResults() {
-    if (typeof Pavlovia === "undefined" || !Pavlovia.isActive) return;
+    if (typeof Pavlovia === "undefined" || !Pavlovia.isOnPavlovia()) return;
     const csv = buildCsvString();
     if (!csv) return;
     const pid = Pavlovia.prolificPID || "anon";
@@ -1003,6 +1012,22 @@
         };
         const timer = setInterval(tick, 1000);
         tick();
+      }
+    } else {
+      // Do not let the participant believe everything is fine when we could not
+      // save their data. Give them a local copy and tell them what to do, instead
+      // of the silent "thank you" screen that caused a real rejected-payment
+      // complaint. They can still return to Prolific manually - that is tracked
+      // independently of whether our save succeeded - but we do not auto-redirect
+      // here, so they have time to read this and download their data first.
+      els.finishCopy.textContent =
+        "We could not automatically save your responses due to a connection problem " +
+        "on our end - this is not something you did wrong. Please click \"Download CSV\" " +
+        "below and send us the file via a message on Prolific, then use the button below " +
+        "to return and complete the study as normal.";
+      [els.downloadJson, els.downloadCsv].forEach((b) => { if (b) b.classList.remove("hidden"); });
+      if (els.returnProlific && Pavlovia.completionURL) {
+        els.returnProlific.classList.remove("hidden");
       }
     }
   }
