@@ -339,6 +339,25 @@ for (v in c("pleased", "luck")) {
   cat("\n--", dvs[[v]], "--\n"); print(t.test(w$`catch-up`, w$stable, paired = TRUE))
 }
 
+cat("\n=== condition x trajectory interaction (does the NW->NM gap itself vary by trajectory?) ===\n")
+cat("Crossed random effects (participant + clip). Stronger test than the 12-clip plot\n")
+cat("or the NM-only comparison above, since it uses every trial.\n\n")
+for (v in c("confidence", "pleased", "motivation", "luck")) {
+  dd <- df |> filter(condition %in% c("NW", "NM"), !is.na(trajectory)) |>
+    mutate(condition = factor(condition, levels = c("NW", "NM")))
+  a <- anova(lmer(as.formula(paste(v, "~ condition * trajectory + (1|prolificPID) + (1|raceId)")), data = dd))
+  cat(sprintf("%-12s interaction F=%.2f p=%.4f\n", dvs[[v]],
+              a["condition:trajectory", "F value"], a["condition:trajectory", "Pr(>F)"]))
+}
+cat("\nOnly pleasure and luck show an interaction, and they are not the same finding:\n")
+cat("  pleasure: driven entirely by the loser's side (NM omnibus p=.0001; NW p=.59, flat)\n")
+cat("            -> confirms H2 directly: the win/loss GAP on pleasure is itself smaller\n")
+cat("               for catch-up than fall-back/stable, not just the NM level alone.\n")
+cat("  luck:     driven entirely by the winner's side (NW omnibus p=.0006; NM p=.18, flat)\n")
+cat("            -> this is the already-reported dramatic-win luck effect, confirmed as a\n")
+cat("               real interaction rather than a coincidence, but it says nothing new\n")
+cat("               about near misses: the loser's side never moves.\n")
+
 cat("\n=== Within-clip deltas (motivation) ===\n")
 print(clip |> filter(colname == "motivation") |>
         select(raceId, trajectory, NW, NM, delta) |>

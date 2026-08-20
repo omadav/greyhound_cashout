@@ -391,6 +391,67 @@ ggplot(clip, aes(trajectory, delta, colour = trajectory)) +
   theme_minimal(base_size = 11) + theme(plot.title = element_text(face = "bold"))
 ```
 
+### Does the within-clip gap itself depend on trajectory?
+
+The plot above is descriptive (12 clips). The direct test is whether the drop from
+narrow win to near miss — the **condition × trajectory interaction** — differs by
+trajectory, modelled properly with both participant and clip as random effects. This
+is a stronger test than either the 12-clip summary above or the raw near-miss-only
+comparison in H2, because it uses every trial and treats the clip, not just the
+participant, as a source of random variation.
+
+```{r s2-interaction}
+inter <- map_dfr(names(dvs), function(v) {
+  dd <- s2 |> filter(condition %in% c("NW", "NM"), !is.na(trajectory)) |>
+    mutate(condition = factor(condition, levels = c("NW", "NM")))
+  frm <- as.formula(paste(v, "~ condition * trajectory + (1|prolificPID) + (1|raceId)"))
+  a <- anova(lmer(frm, data = dd))
+  tibble(DV = dvs[[v]],
+         `interaction F` = round(unname(a["condition:trajectory", "F value"]), 2),
+         `interaction p` = a["condition:trajectory", "Pr(>F)"])
+})
+inter |> mutate(`interaction p` = ifelse(`interaction p` < .0001, "<.0001",
+                                         sprintf("%.4f", `interaction p`))) |>
+  kable(caption = "condition x trajectory interaction, crossed random effects (participant + clip)")
+```
+
+Two DVs show an interaction: **pleasure** (p = .022) and **luck** (p = .036).
+Decomposing each into its two halves — both already reported elsewhere in this
+document — shows they are not the same finding twice:
+
+```{r s2-interaction-decomp}
+decomp <- map_dfr(names(dvs), function(v) {
+  nw <- s2 |> filter(condition == "NW", !is.na(trajectory))
+  nm <- s2 |> filter(condition == "NM", !is.na(trajectory))
+  a_nw <- anova(lmer(as.formula(paste(v, "~ trajectory + (1|prolificPID)")), data = nw))
+  a_nm <- anova(lmer(as.formula(paste(v, "~ trajectory + (1|prolificPID)")), data = nm))
+  tibble(DV = dvs[[v]],
+         `winner side (NW), p` = a_nw$`Pr(>F)`,
+         `loser side (NM), p`  = a_nm$`Pr(>F)`)
+})
+decomp |> mutate(across(where(is.numeric), \(x) ifelse(x < .0001, "<.0001", sprintf("%.4f", x)))) |>
+  kable(caption = "Same trajectory omnibus, run separately on each side of the manipulation")
+```
+
+**Pleasure's interaction is driven entirely by the loser's side** (NM: p = .0001;
+NW: p = .59, flat). This is the strongest confirmation yet of the headline H2
+result: it is not just that catch-up near misses are rated more pleasant on their
+own — the *gap* between winning and losing that clip is itself significantly smaller
+for catch-up than for fall-back or stable, and nothing comparable happens on the
+winner's side. That is exactly the asymmetry the pleasure finding claims, now shown
+directly rather than inferred from two separate one-sided tests.
+
+**Luck's interaction runs the other way** (NW: p = .0006; NM: p = .18, flat). This is
+the already-reported winner-side finding — both dramatic wins feel luckier than a
+comfortable one — confirmed as a genuine interaction rather than a same-direction
+coincidence. It says nothing new about how a near miss feels: the loser's side never
+moves.
+
+So the two interactions are not the same discovery twice. **Pleasure's trajectory
+effect lives entirely on the losing side; luck's lives entirely on the winning
+side.** Motivation and confidence show no interaction on either side, consistent
+with everything reported above.
+
 ## The winner's side of the same clips
 
 The same clip seen from the winner's trap. A fall-back clip means the winner came
