@@ -37,6 +37,16 @@ study2-pavlovia/
 study2-pavlovia/
 study2_analysis/
 
+# Study 3 video copy (regenerate from Races_noboard/ or copy from study2-task/)
+study3-task/assets/videos/
+
+# Study 3 deployment builds (regenerate with ./sync_study3.sh)
+study3-docs/
+study3-pavlovia/
+
+# Study 3 participant data + regenerable outputs (public repo)
+study3_analysis/
+
 # compiled report (regenerate: Rscript -e 'rmarkdown::render("analysis/greyhound_report.Rmd")')
 analysis/greyhound_report.html
 analysis/greyhound_report_files/
