@@ -1,5 +1,7 @@
 (function () {
   const screens = {
+    consent: document.getElementById("screen-consent"),
+    declined: document.getElementById("screen-declined"),
     intro: document.getElementById("screen-intro"),
     choice: document.getElementById("screen-choice"),
     assignment: document.getElementById("screen-assignment"),
@@ -29,6 +31,7 @@
     cashoutChoice: "n/a",
     balance: 0,
     pendingBet: null, // {stakePct, amount, balanceBefore} - set on the bet screen, settled when the race ends
+    consentGivenAt: null, // ISO timestamp, set when the participant clicks "I agree to take part"
     results: [],
     startedAt: null,
     videoEndedHandler: null,
@@ -38,6 +41,8 @@
   const els = {
     trialStatus: document.getElementById("trial-status"),
     pointsStatus: document.getElementById("points-status"),
+    consentAgree: document.getElementById("consent-agree"),
+    consentDecline: document.getElementById("consent-decline"),
     startButton: document.getElementById("start-button"),
     choiceNext: document.getElementById("choice-next"),
     dogGrid: document.getElementById("dog-grid"),
@@ -873,6 +878,7 @@
       submittedAt: new Date().toISOString(),
       trialNumber: state.currentTrialIndex + 1,
       participantIndex: state.participantIndex,   // drives the counterbalancing rotation
+      consentGivenAt: state.consentGivenAt,
       condition: trial.condition,
       trajectory: trial.trajectory || "",         // catch-up / fall-back / stable; blank on clear races
       contestedLabel: trial.contestedLabel === true, // race 16 only; pre-registered sensitivity analysis
@@ -1125,6 +1131,14 @@
 
   // ---- wiring -----------------------------------------------------------
 
+  els.consentAgree.addEventListener("click", () => {
+    state.consentGivenAt = new Date().toISOString();
+    showScreen("intro");
+  });
+  els.consentDecline.addEventListener("click", () => {
+    // No session opened, no trial data recorded, nothing sent to the server.
+    showScreen("declined");
+  });
   els.startButton.addEventListener("click", () => {
     startSession();
     prepareTrial();

@@ -415,6 +415,10 @@ input[type="range"].untouched { opacity: 0.5; filter: grayscale(0.5); }
 }
 .outcome-options .button { width: 100%; }
 
+/* informed consent (Study 3) */
+.consent-heading { font-weight: 700; margin-bottom: 2px; }
+.consent-heading + p { margin-top: 0; }
+
 /* bet-size choice (Study 3) */
 .bet-options {
   display: grid;
