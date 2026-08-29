@@ -25,6 +25,7 @@ pavlovia/
 pilot_analysis/
 # participant session downloads (never commit — public repo)
 greyhound-study*-session*.csv
+exclude_v1_v2_pids.txt
 
 # Study 2 video copy (81MB; regenerate from Races_noboard/)
 study2-task/assets/videos/
