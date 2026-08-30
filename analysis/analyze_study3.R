@@ -112,14 +112,26 @@ nm_cl <- pm |> select(prolificPID, condition, confidence, pleased, motivation, l
 nm_cl_summary <- nm_cl |> group_by(dv) |>
   summarise(NM = round(mean(NM), 1), CL = round(mean(CL), 1), diff = round(mean(diff), 1), .groups = "drop")
 
+# ---- self-report, NM trials only, split by trajectory (same as Study 2's H2) --
+traj_self_report <- df |> filter(condition == "NM", !is.na(trajectory)) |>
+  group_by(trajectory) |>
+  summarise(across(c(confidence, pleased, motivation, luck), \(x) round(mean(x), 1)),
+            n_trials = n(), .groups = "drop")
+
 # ---- behavioural: bet size on trial t+1, by what happened on trial t -----
 # Lag-1 by construction, one row per trial after the first within each participant.
 lag1 <- df |> arrange(prolificPID, trialNumber) |>
   group_by(prolificPID) |>
-  mutate(prev_condition = lag(condition)) |>
+  mutate(prev_condition = lag(condition), prev_trajectory = lag(trajectory)) |>
   ungroup() |>
   filter(!is.na(prev_condition))
-write_csv(lag1 |> select(prolificPID, trialNumber, prev_condition, betStakePct, balanceBefore),
+
+# bet size on trial t+1, split by the TRAJECTORY of the near miss on trial t
+traj_bet <- lag1 |> filter(prev_condition == "NM", !is.na(prev_trajectory)) |>
+  group_by(prev_trajectory) |>
+  summarise(mean_next_stake_pct = round(100 * mean(betStakePct), 1), n = n(), .groups = "drop")
+write_csv(lag1 |> select(prolificPID, trialNumber, prev_condition, prev_trajectory,
+                         betStakePct, balanceBefore),
           file.path(out_dir, sprintf("study3_lag1_n%d.csv", N)))
 
 lag1_summary <- lag1 |> group_by(prev_condition) |>
@@ -150,10 +162,16 @@ cat("\nsessions hitting the floor (>=1 trial):\n"); print(as.data.frame(floor_su
 cat("\n\n=== Self-report NM vs CL (classic near-miss effect, same DVs as Study 1/2) ===\n")
 print(as.data.frame(nm_cl_summary))
 
+cat("\n\n=== Self-report, NM trials only, split by trajectory (descriptive) ===\n")
+print(as.data.frame(traj_self_report))
+
 cat("\n\n=== Behavioural: mean bet stake on trial t+1, by condition on trial t ===\n")
 print(as.data.frame(lag1_summary))
 cat("\nNM vs CL specifically, paired by participant (descriptive - no test, N too small):\n")
 print(nm_cl_bet |> summarise(NM = round(mean(NM), 3), CL = round(mean(CL), 3), diff = round(mean(diff), 3)) |> as.data.frame())
+
+cat("\n\n=== Behavioural: bet stake on trial t+1, split by trajectory of the NM on trial t ===\n")
+print(as.data.frame(traj_bet))
 
 cat("\n\nNOTE: no significance tests are run in this script. This is an unregistered\n")
 cat("pilot - the point is to look at stake usage and effect DIRECTION before writing\n")
