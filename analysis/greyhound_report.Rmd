@@ -791,14 +791,19 @@ a near-miss effect on behaviour. Study 4 replaces the 5 buttons with a continuou
 | trajectory on motivation | — | null |
 | trajectory on pleasure | — | catch-up > both others |
 
-**What we can say.** Near misses keep people playing more than clear losses, in a
-naturalistic dynamic task, replicated and pre-registered. The shape of the near miss
-does not change that — but it does change how bad the loss feels, with a catch-up
-near miss the least unpleasant of the three.
+**What we can say.** Near misses make people *say* they want to keep playing more
+than a clear loss does, in a naturalistic dynamic task, replicated and pre-registered.
+The shape of the near miss does not change that — but it does change how bad the loss
+feels, with a catch-up near miss the least unpleasant of the three. This is a rating,
+not a choice — nobody in Study 1 or 2 could act on it either way, so it says nothing
+about actual behaviour yet.
 
-**What we cannot say yet.** Whether self-reported motivation predicts actual
-persistence, and whether the pleasure effect is stronger in problem gamblers. Both
-need studies designed for the purpose. 
+**What we cannot say yet.** Whether that self-reported motivation predicts actual
+persistence or bet size, and whether the pleasure effect is stronger in problem
+gamblers. Study 3 was the first attempt at the persistence question with a real
+choice (bet size) instead of a rating — see the Study 3 section above; it didn't have
+enough range in the bet measure to answer it. Both still need studies designed for
+the purpose.
 
 **Possible follow-ups.** 1. Study 3 is the "measures actual persistence" follow-up —
 bet size as a behavioural DV instead of self-reported motivation. Self-report
