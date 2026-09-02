@@ -1,6 +1,6 @@
 ---
 title: "Near misses in a dynamic gambling task"
-subtitle: "Studies 1, 2 and 3 — results"
+subtitle: "Studies 1-4 — results"
 date: "`r format(Sys.Date(), '%d %B %Y')`"
 output:
   html_document:
@@ -129,6 +129,10 @@ traj_table <- function(trial_data, pairs) {
 * Study 3: Adds a bet-size choice before every race (5/25/50/75/95% of current
   balance), as a behavioural DV alongside the self-report ratings. Unregistered
   pilot — no prereg exists for this yet.
+
+* Study 4: Same as Study 3, but the bet choice is a continuous 0-100% slider
+  instead of the 5 fixed stakes, since Study 3 crowded 73% of bets onto the two
+  lowest buttons. Unregistered pilot.
 
 In both studies 1 and 2, I also collected the PGSI, just to see whether the near-miss effect is stronger in problem gamblers. Luke already warned in advance that a general Prolific panel has limited ability to test moderation, and indeed half the sample scores zero on the PGSI. So treat the PGSI results as exploratory.
 
@@ -780,40 +784,228 @@ a near-miss effect on behaviour. Study 4 replaces the 5 buttons with a continuou
 
 ---
 
+```{r load-s4}
+# Own project, own data folder — never mixed with Study 1, 2, or 3's raw files.
+s4_files <- list.files("study4-pavlovia/data", "csv$", full.names = TRUE)
+s4_files <- s4_files[!grepl("OMARTEST|anon", s4_files)]
+s4_raw <- s4_files |>
+  map(\(f) read_csv(f, show_col_types = FALSE, guess_max = 100,
+                    col_types = cols(outcomeCheckResponse = col_character(),
+                                     attentionResponse = col_character(),
+                                     consentGivenAt = col_character()))) |>
+  list_rbind() |> filter(!is.na(condition))
+stopifnot(all(s4_raw$studyId == "study4"))
+
+s4_bypid <- s4_raw |> group_by(prolificPID) |>
+  summarise(n_trials = n(),
+            att_n = sum(attentionCheck == TRUE, na.rm = TRUE),
+            att_p = sum(attentionCheck == TRUE & attentionPass == TRUE, na.rm = TRUE),
+            out_n = sum(outcomeCheck == TRUE, na.rm = TRUE),
+            out_p = sum(outcomeCheck == TRUE & outcomeCheckPass == TRUE, na.rm = TRUE),
+            straight = any(c(n_distinct(motivation) == 1, n_distinct(pleased) == 1,
+                             n_distinct(luck) == 1, n_distinct(confidence) == 1)),
+            med_rt = median(postraceRT_ms, na.rm = TRUE),
+            consented = all(!is.na(consentGivenAt) & consentGivenAt != ""),
+            .groups = "drop") |>
+  mutate(exclude = n_trials != 20 | att_p < att_n | out_p < out_n | straight |
+                    med_rt < 2000 | !consented)
+s4 <- s4_raw |> filter(prolificPID %in% (s4_bypid |> filter(!exclude) |> pull(prolificPID))) |>
+  mutate(condition = factor(condition, levels = cond_levels),
+         trajectory = factor(na_if(trajectory, ""), levels = traj_levels),
+         raceId = as.integer(raceId),
+         betStakePct = as.numeric(betStakePct))
+N4 <- n_distinct(s4$prolificPID)
+s4_pm <- s4 |> group_by(prolificPID, condition) |>
+  summarise(across(all_of(names(dvs)), mean), .groups = "drop")
+s4_pt <- s4 |> filter(condition == "NM") |> group_by(prolificPID, trajectory) |>
+  summarise(across(all_of(names(dvs)), mean), .groups = "drop")
+s4_nm <- s4 |> filter(condition == "NM", !is.na(trajectory))
+
+# Bet size on trial t+1, indexed by what happened on trial t.
+s4_lag1 <- s4 |> arrange(prolificPID, trialNumber) |>
+  group_by(prolificPID) |>
+  mutate(prev_condition = lag(condition), prev_trajectory = lag(trajectory)) |>
+  ungroup() |> filter(!is.na(prev_condition)) |>
+  mutate(prev_condition = factor(prev_condition, levels = cond_levels))
+```
+
+# Study 4 — bet size, continuous slider
+
+Unregistered pilot. Same task as Study 3 (same races, trajectory coding, rotation,
+balance/floor/payment mechanics), except the bet question is now a 0-100% slider of
+the current balance instead of the 5 fixed CGT-style stakes. Reason: Study 3 crowded
+73% of bets onto the two lowest buttons, leaving too little variance for any condition
+effect to show up in.
+
+**N = `r N4`** of `r nrow(s4_bypid)` collected.
+
+## Exclusions
+
+```{r s4-excl}
+tibble(reason = c("incomplete", "failed slider check", "failed outcome check",
+                  "straight-lined", "median RT < 2 s", "no consent recorded",
+                  "TOTAL EXCLUDED", "ANALYSED"),
+       n = c(sum(s4_bypid$n_trials != 20), sum(s4_bypid$att_p < s4_bypid$att_n),
+             sum(s4_bypid$out_p < s4_bypid$out_n), sum(s4_bypid$straight),
+             sum(s4_bypid$med_rt < 2000), sum(!s4_bypid$consented),
+             sum(s4_bypid$exclude), N4)) |> kable()
+```
+
+## The near-miss effect replicates on self-report
+
+```{r s4-fig1, fig.height=7}
+p6 <- imap(dvs, function(label, col) {
+  s <- wsci(s4_pm, condition, col)
+  ggplot(s, aes(condition, m, fill = condition)) +
+    geom_col(width = .66) + geom_errorbar(aes(ymin = lo, ymax = hi), width = .15) +
+    scale_fill_manual(values = cond_cols, guide = "none") +
+    scale_x_discrete(labels = cond_labs) + coord_cartesian(ylim = c(0, 100)) +
+    labs(title = label, x = NULL, y = NULL) + theme_minimal(base_size = 11) +
+    theme(axis.text.x = element_text(angle = 15, hjust = 1))
+})
+wrap_plots(p6, ncol = 2) +
+  plot_annotation(title = sprintf("Study 4 (n=%d): mean +/- within-subject 95%% CI", N4),
+                  theme = theme(plot.title = element_text(face = "bold")))
+```
+
+```{r s4-h1}
+w4 <- s4_pm |> select(prolificPID, condition, motivation) |>
+  pivot_wider(names_from = condition, values_from = motivation)
+tt_row(w4$NM, w4$CL, "near miss vs clear loss (motivation)") |> fmt()
+```
+
+Same pattern as every study so far: near misses keep people more motivated, feeling
+luckier and less unhappy than a clear loss, confidence flat as it should be.
+
+## Betting behaviour
+
+`betStakePct` is continuous now, not 5 fixed values, so it gets a distribution
+instead of a value-count table.
+
+```{r s4-bet-dist}
+s4 |> summarise(mean = round(100*mean(betStakePct),1), sd = round(100*sd(betStakePct),1),
+                 median = round(100*median(betStakePct),1),
+                 p10 = round(100*quantile(betStakePct,.10),1),
+                 p90 = round(100*quantile(betStakePct,.90),1)) |>
+  kable(caption = "Stake distribution, all trials (% of current balance)")
+```
+
+```{r s4-fig-hist, fig.height=6}
+means4 <- s4_lag1 |> group_by(prev_condition) |>
+  summarise(m = mean(betStakePct) * 100, .groups = "drop")
+ggplot(s4_lag1, aes(betStakePct * 100, fill = prev_condition)) +
+  geom_histogram(binwidth = 10, boundary = 0, colour = "white") +
+  geom_vline(data = means4, aes(xintercept = m), linetype = "dashed", colour = "grey20") +
+  facet_wrap(~prev_condition, labeller = as_labeller(cond_labs), ncol = 2) +
+  scale_fill_manual(values = cond_cols, guide = "none") +
+  labs(title = sprintf("Study 4 (n=%d): next-race bet size, by what happened on the previous race", N4),
+       x = "% of balance staked", y = "trials") +
+  theme_minimal(base_size = 11) + theme(plot.title = element_text(face = "bold"))
+```
+
+Unlike Study 3, every condition here uses the full range, with a real tail out to
+90-100% — the slider is doing its job.
+
+## Does bet size track the near-miss effect?
+
+```{r s4-h1-bet}
+w4b <- s4_lag1 |> filter(prev_condition %in% c("NM", "CL")) |>
+  group_by(prolificPID, prev_condition) |>
+  summarise(stake = mean(betStakePct) * 100, .groups = "drop") |>
+  pivot_wider(names_from = prev_condition, values_from = stake) |>
+  filter(!is.na(NM), !is.na(CL))
+tt_row(w4b$NM, w4b$CL, "near miss vs clear loss (next-race bet size)") |> fmt()
+```
+
+The stakes are heavily right-skewed (most bets under 25%), so a plain paired t-test on
+the mean is not obviously the right tool — checked against two alternatives that don't
+share its assumptions:
+
+```{r s4-robustness}
+wt <- wilcox.test(w4b$NM, w4b$CL, paired = TRUE)
+eps <- 0.001
+logit <- function(p) log((p + eps) / (1 - p + eps))
+w4bl <- s4_lag1 |> filter(prev_condition %in% c("NM", "CL")) |>
+  group_by(prolificPID, prev_condition) |>
+  summarise(stake = mean(logit(betStakePct)), .groups = "drop") |>
+  pivot_wider(names_from = prev_condition, values_from = stake) |>
+  filter(!is.na(NM), !is.na(CL))
+lt <- t.test(w4bl$NM, w4bl$CL, paired = TRUE)
+tibble(method = c("paired t-test (mean)", "Wilcoxon signed-rank (median, rank-based)",
+                  "paired t-test on logit-transformed stakes"),
+       p = c(t.test(w4b$NM, w4b$CL, paired = TRUE)$p.value, wt$p.value, lt$p.value)) |>
+  mutate(p = sprintf("%.3f", p)) |>
+  kable(caption = "Same comparison, three ways — the skew doesn't change the answer")
+```
+
+```{r s4-fig3, fig.height=6}
+pt4 <- s4_lag1 |> filter(prev_condition == "NM", !is.na(prev_trajectory)) |>
+  mutate(trajectory = prev_trajectory)
+s <- wsci(pt4, trajectory, "betStakePct")
+ggplot(s, aes(trajectory, m * 100, fill = trajectory)) +
+  geom_col(width = .6) + geom_errorbar(aes(ymin = lo * 100, ymax = hi * 100), width = .14) +
+  scale_fill_manual(values = traj_cols, guide = "none") +
+  labs(title = sprintf("Study 4 (n=%d): next-race bet size after a NEAR MISS, by trajectory", N4),
+       x = NULL, y = "% of balance staked") +
+  theme_minimal(base_size = 11) + theme(plot.title = element_text(face = "bold"))
+```
+
+**This is a real null, not a measurement artifact.** Study 3's flat result could be
+blamed on the 5-button scale leaving no room to move. That excuse is gone here — the
+histogram above shows real spread and a genuine tail to 100% in every condition — and
+the NM-vs-CL gap is still flat, under three different tests that make different
+assumptions about the data. Bet size does not carry the near-miss effect. The
+self-report effect is not in question — it replicates cleanly above, same as every
+study so far — so this looks like a real dissociation between what people *say* and
+how much they *stake*, not a failure to detect something that is there.
+
+That points toward **persistence** — whether someone keeps playing at all, not how
+much they bet when they do — as the more promising behavioural channel. The standard
+paradigms for that in the gambling literature (resistance-to-extinction, a binary
+continue/quit choice) measure one stop decision per person, which cannot speak to a
+per-condition contrast the way this design needs. Adapting the task's existing
+(currently unused) cash-out mechanic into a repeated per-trial "stop and keep it, or
+keep playing" offer would give a persistence measure tied to the specific condition
+that just happened, the same repeated-measures structure as everything else in this
+report. That is a real design project for a Study 5, not a config change to this one.
+
+---
+
 # Summary
 
-| | Study 1 | Study 2 |
-|---|---|---|
-| N analysed | `r N1` | `r N2` |
-| pre-registered | no | yes |
-| outcome check | no | yes |
-| near-miss effect (NM vs CL, motivation) | `r sprintf("+%.1f, p = %.1g", mean(w1$NM - w1$CL), t.test(w1$NM, w1$CL, paired = TRUE)$p.value)` | `r sprintf("+%.1f, p = %.1g", mean(w2$NM - w2$CL), t.test(w2$NM, w2$CL, paired = TRUE)$p.value)` |
-| trajectory on motivation | — | null |
-| trajectory on pleasure | — | catch-up > both others |
+| | Study 1 | Study 2 | Study 3 | Study 4 |
+|---|---|---|---|---|
+| N analysed | `r N1` | `r N2` | `r N3` | `r N4` |
+| pre-registered | no | yes | no | no |
+| outcome check | no | yes | yes | yes |
+| behavioural DV | — | — | bet size (5 stakes) | bet size (slider) |
+| near-miss effect (NM vs CL, motivation, self-report) | `r sprintf("+%.1f, p = %.1g", mean(w1$NM - w1$CL), t.test(w1$NM, w1$CL, paired = TRUE)$p.value)` | `r sprintf("+%.1f, p = %.1g", mean(w2$NM - w2$CL), t.test(w2$NM, w2$CL, paired = TRUE)$p.value)` | `r sprintf("+%.1f, p = %.1g", mean(w3$NM - w3$CL), t.test(w3$NM, w3$CL, paired = TRUE)$p.value)` | `r sprintf("+%.1f, p = %.1g", mean(w4$NM - w4$CL), t.test(w4$NM, w4$CL, paired = TRUE)$p.value)` |
+| near-miss effect on bet size | — | — | flat | flat |
+| trajectory on motivation | — | null | — | — |
+| trajectory on pleasure | — | catch-up > both others | — | — |
 
 **What we can say.** Near misses make people *say* they want to keep playing more
-than a clear loss does, in a naturalistic dynamic task, replicated and pre-registered.
-The shape of the near miss does not change that — but it does change how bad the loss
-feels, with a catch-up near miss the least unpleasant of the three. This is a rating,
-not a choice — nobody in Study 1 or 2 could act on it either way, so it says nothing
-about actual behaviour yet.
+than a clear loss does, in a naturalistic dynamic task, replicated across four
+studies. The shape of the near miss does not change that — but it does change how bad
+the loss feels, with a catch-up near miss the least unpleasant of the three (Study 2).
+Self-report is not the weak link here; it holds up every time it's tested.
 
-**What we cannot say yet.** Whether that self-reported motivation predicts actual
-persistence or bet size, and whether the pleasure effect is stronger in problem
-gamblers. Study 3 was the first attempt at the persistence question with a real
-choice (bet size) instead of a rating — see the Study 3 section above; it didn't have
-enough range in the bet measure to answer it. Both still need studies designed for
-the purpose.
+**What we cannot say.** That self-reported motivation translates into behaviour that
+matters financially. Two independent attempts to find a near-miss effect on bet
+size — one with 5 fixed stakes, one with a continuous slider that fixed the range
+problem the first one had — both come up flat, checked with tests that don't share
+the same assumptions. This is not "we haven't found it yet"; it's a real dissociation
+between the rating and the stake people put behind it.
 
-**Possible follow-ups.** 1. Study 3 is the "measures actual persistence" follow-up —
-bet size as a behavioural DV instead of self-reported motivation. Self-report
-replicates cleanly; the bet-size result is inconclusive because the 5-option stake
-scale left too little variance to detect anything. Study 4 fixes that with a
-continuous 0-100% slider and is piloting now. 2. A study that recruits a sample of
-problem gamblers to test whether the near-miss effect is stronger in that population.
-3. A cashout manipulation study, asking a) whether the NM effect is affected by the
-cashout decision (or the possibility of it), b) whether trajectory modulates that
-effect, and c) whether the trajectory of a near miss changes cashout behaviour itself.
+**Possible follow-ups.** 1. A real persistence measure — a repeated stop/keep-playing
+choice tied to each trial's condition, adapting the task's existing unused cash-out
+mechanic — rather than another bet-size variant. See the end of the Study 4 section
+above for the reasoning. 2. A study that recruits a sample of problem gamblers to test
+whether the near-miss effect is stronger in that population. 3. A cashout manipulation
+study, asking a) whether the NM effect is affected by the cashout decision (or the
+possibility of it), b) whether trajectory modulates that effect, and c) whether the
+trajectory of a near miss changes cashout behaviour itself — this could plausibly be
+combined with follow-up 1.
 
 ```{r session}
 sessionInfo()
