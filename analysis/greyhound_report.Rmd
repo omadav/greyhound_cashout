@@ -971,6 +971,70 @@ report. That is a real design project for a Study 5, not a config change to this
 
 ---
 
+# Cross-study comparison
+
+```{r cross-study-setup}
+all_pm  <- list("Study 1" = s1_pm, "Study 2" = s2_pm, "Study 3" = s3_pm, "Study 4" = s4_pm)
+all_raw <- list("Study 1" = s1,    "Study 2" = s2,    "Study 3" = s3,    "Study 4" = s4)
+
+conf_baseline <- map_dfr(names(all_raw), function(nm) {
+  d <- all_raw[[nm]]
+  tibble(study = nm, N = n_distinct(d$prolificPID),
+         mean_confidence = round(mean(d$confidence), 1), sd = round(sd(d$confidence), 1))
+})
+
+nm_cl_all <- map_dfr(names(all_pm), function(nm) {
+  pm <- all_pm[[nm]]
+  map_dfr(names(dvs), function(v) {
+    w <- pm |> select(prolificPID, condition, all_of(v)) |>
+      pivot_wider(names_from = condition, values_from = all_of(v))
+    if (!all(c("NM", "CL") %in% names(w))) return(NULL)
+    ww <- w |> filter(!is.na(NM), !is.na(CL))
+    tt <- t.test(ww$NM, ww$CL, paired = TRUE)
+    tibble(study = nm, DV = dvs[[v]], diff = mean(ww$NM - ww$CL), p = tt$p.value)
+  })
+})
+```
+
+## Confidence baseline
+
+Confidence stays flat between NM and CL *within* every study (the validity check
+passes every time — see each study's own section), but the overall level drifts down
+as the studies pile on more before each race:
+
+```{r conf-baseline-table}
+conf_baseline |> kable(caption = "Mean pre-race confidence, pooled across all conditions")
+```
+
+Studies 3 and 4 add a real bet, placed right before the confidence rating. Best guess:
+having actual points at stake makes people rate their confidence more conservatively
+than when it is just a rating with nothing riding on it. That is a guess, not a
+finding — flagging the pattern rather than explaining it away.
+
+## Does each effect replicate, study by study?
+
+```{r nm-cl-all-table}
+dv_order <- c("Motivation to continue", "Pleasure", "Luck", "Pre-race confidence")
+nm_cl_all |>
+  mutate(p_fmt = ifelse(p < .0001, "<.0001", sprintf("%.4f", p)),
+         cell = sprintf("%+.1f (p=%s)", diff, p_fmt),
+         cell = bold_if(cell, p < .05),
+         DV = factor(DV, levels = dv_order)) |>
+  select(DV, study, cell) |>
+  pivot_wider(names_from = study, values_from = cell) |>
+  arrange(DV) |>
+  kable(escape = FALSE, caption = "NM vs CL, all four studies (diff in rating points, paired t-test p in parentheses)")
+```
+
+Luck and pleasure replicate cleanly in all four studies. Confidence stays flat in all
+four, as it should. Motivation is the one that fades: solid in Studies 1-3, but drops
+to +3.0 (p=.11) in Study 4 — the weakest of the four, and the only one that misses
+significance. It is still positive, just smaller than before, in the study where
+people also had the most going on before each race (bet slider, then confidence
+rating).
+
+---
+
 # Summary
 
 | | Study 1 | Study 2 | Study 3 | Study 4 |
