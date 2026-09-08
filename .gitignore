@@ -69,6 +69,13 @@ study5-pavlovia/
 # Study 5 participant data + regenerable outputs (public repo)
 study5_analysis/
 
+# Study 6 local video copies, deployment builds, and private data/outputs
+study6-task/assets/videos/
+study6-docs/
+study6-pavlovia/
+study6_analysis/
+tests/study6_artifacts/
+
 # compiled report (regenerate: Rscript -e 'rmarkdown::render("analysis/greyhound_report.Rmd")')
 analysis/greyhound_report.html
 analysis/greyhound_report_files/
