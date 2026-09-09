@@ -131,8 +131,13 @@ conf_by_group <- df |> group_by(prolificPID, group) |>
   summarise(confidence = mean(confidence), .groups = "drop")
 g_bet <- conf_by_group |> filter(group == "betting") |> pull(confidence)
 g_nobet <- conf_by_group |> filter(group == "no_betting") |> pull(confidence)
-tt_conf <- t.test(g_bet, g_nobet)
-wt_conf <- wilcox.test(g_bet, g_nobet)
+# Directional hypothesis (betting lowers confidence) is grounded in the
+# Study 1-4 cross-study comparison in the report, not fished from this data -
+# one-tailed is the honest primary test here; two-tailed kept alongside.
+tt_conf   <- t.test(g_bet, g_nobet, alternative = "less")
+tt_conf_2 <- t.test(g_bet, g_nobet)
+wt_conf   <- wilcox.test(g_bet, g_nobet, alternative = "less")
+wt_conf_2 <- wilcox.test(g_bet, g_nobet)
 pooled_sd <- sqrt(((length(g_bet)-1)*sd(g_bet)^2 + (length(g_nobet)-1)*sd(g_nobet)^2) /
                     (length(g_bet)+length(g_nobet)-2))
 cohen_d <- (mean(g_bet) - mean(g_nobet)) / pooled_sd
@@ -188,8 +193,11 @@ cat("\n\n=== PRIMARY: confidence, betting vs no-betting, independent samples ===
 cat(sprintf("betting:    n=%d, mean=%.1f, sd=%.1f\n", length(g_bet), mean(g_bet), sd(g_bet)))
 cat(sprintf("no_betting: n=%d, mean=%.1f, sd=%.1f\n", length(g_nobet), mean(g_nobet), sd(g_nobet)))
 cat(sprintf("diff = %.2f\n", mean(g_bet) - mean(g_nobet)))
-cat(sprintf("independent t-test: t(%.1f) = %.2f, p = %.4f\n", tt_conf$parameter, tt_conf$statistic, tt_conf$p.value))
-cat(sprintf("Wilcoxon rank-sum: p = %.4f\n", wt_conf$p.value))
+cat(sprintf("H1 (directional, from Study 1-4 pattern): betting < no_betting\n"))
+cat(sprintf("independent t-test, one-tailed: t(%.1f) = %.2f, p = %.4f  (two-tailed p = %.4f)\n",
+            tt_conf$parameter, tt_conf$statistic, tt_conf$p.value, tt_conf_2$p.value))
+cat(sprintf("Wilcoxon rank-sum, one-tailed: p = %.4f  (two-tailed p = %.4f)\n",
+            wt_conf$p.value, wt_conf_2$p.value))
 cat(sprintf("Cohen's d = %.2f\n", cohen_d))
 
 cat("\n\n=== Self-report NM vs CL (classic near-miss effect), within each group ===\n")
@@ -198,9 +206,10 @@ print(as.data.frame(nm_cl_by_group))
 cat("\n\nNOTE: this is a first look at data quality and direction, not a powered test.\n")
 cat("Study 6's whole point is a clean, single, adequately powered confirmatory run.\n")
 cat("A null or a 'significant' result at this N is equally uninformative - see the\n")
-cat("power table worked out in conversation (d=0.53 anchor needs ~57/arm for 80%\n")
-cat("power; this pilot is nowhere near that). Do not report the primary p-value\n")
-cat("above as if it settles anything until N reaches the pre-registered target.\n")
+cat("power table worked out in conversation. One-tailed (justified by the Study 1-4\n")
+cat("direction): d=0.53 anchor needs ~45/arm, d=0.4 needs ~78/arm for 80% power.\n")
+cat("Do not report the primary p-value above as if it settles anything until N\n")
+cat("reaches the pre-registered target.\n")
 sink()
 
 message(sprintf("saved study6_combined_n%d.csv, study6_exclusions.csv, study6_stats.txt to %s/", N, out_dir))
