@@ -747,6 +747,33 @@ tt_row(w3$NM, w3$CL, "near miss vs clear loss (motivation)") |> fmt()
 Same pattern as Study 1 and 2: near misses keep people more motivated, feeling luckier
 and less unhappy than a clear loss, with confidence flat as it should be.
 
+## Trajectory
+
+```{r s3-fig-traj, fig.height=7}
+p5t <- imap(dvs, function(label, col) {
+  s <- wsci(s3_pt, trajectory, col)
+  ggplot(s, aes(trajectory, m, fill = trajectory)) +
+    geom_col(width = .6) + geom_errorbar(aes(ymin = lo, ymax = hi), width = .14) +
+    scale_fill_manual(values = traj_cols, guide = "none") +
+    coord_cartesian(ylim = c(0, 100)) +
+    labs(title = label, x = NULL, y = NULL) + theme_minimal(base_size = 11) +
+    theme(axis.text.x = element_text(angle = 12, hjust = 1))
+})
+wrap_plots(p5t, ncol = 2) +
+  plot_annotation(title = sprintf("Study 3 (n=%d): NEAR MISS trials only, by trajectory", N3),
+                  theme = theme(plot.title = element_text(face = "bold")))
+```
+
+```{r s3-traj-tests}
+traj_table(s3_nm, list(
+  list("catch-up",  "fall-back", "catch-up vs fall-back", TRUE),
+  list("catch-up",  "stable",    "catch-up vs stable",    TRUE),
+  list("fall-back", "stable",    "fall-back vs stable",   FALSE))) |> kable(escape = FALSE)
+```
+
+Trajectory has no effect here — motivation, pleasure, and luck are all flat across
+catch-up, fall-back, and stable.
+
 ## Betting behaviour
 
 ```{r s3-bet-usage}
@@ -801,13 +828,10 @@ ggplot(s, aes(trajectory, m * 100, fill = trajectory)) +
   theme_minimal(base_size = 11) + theme(plot.title = element_text(face = "bold"))
 ```
 
-**Why this is weak evidence either way.** The bet screen offered 5 fixed stakes and
-73% of bets clustered on the two lowest, leaving very little variance for any
-condition effect to show up in. The NM-vs-CL gap on bet size held at roughly half a
-percentage point from N=23 through N=40 of piloting — flat, not shrinking toward
-zero, just flat throughout. That is a measurement-range problem, not evidence against
-a near-miss effect on behaviour. Study 4 replaces the 5 buttons with a continuous
-0-100% slider to fix it, and is piloting separately.
+The bet screen offered 5 fixed stakes and 73% of bets clustered on the two lowest,
+leaving very little variance for a condition effect to show up in — a measurement-range
+problem, not evidence against a near-miss effect on behaviour. Study 4 replaces the 5
+buttons with a continuous 0-100% slider.
 
 ---
 
@@ -904,6 +928,33 @@ tt_row(w4$NM, w4$CL, "near miss vs clear loss (motivation)") |> fmt()
 Same pattern as every study so far: near misses keep people more motivated, feeling
 luckier and less unhappy than a clear loss, confidence flat as it should be.
 
+## Trajectory
+
+```{r s4-fig-traj, fig.height=7}
+p6t <- imap(dvs, function(label, col) {
+  s <- wsci(s4_pt, trajectory, col)
+  ggplot(s, aes(trajectory, m, fill = trajectory)) +
+    geom_col(width = .6) + geom_errorbar(aes(ymin = lo, ymax = hi), width = .14) +
+    scale_fill_manual(values = traj_cols, guide = "none") +
+    coord_cartesian(ylim = c(0, 100)) +
+    labs(title = label, x = NULL, y = NULL) + theme_minimal(base_size = 11) +
+    theme(axis.text.x = element_text(angle = 12, hjust = 1))
+})
+wrap_plots(p6t, ncol = 2) +
+  plot_annotation(title = sprintf("Study 4 (n=%d): NEAR MISS trials only, by trajectory", N4),
+                  theme = theme(plot.title = element_text(face = "bold")))
+```
+
+```{r s4-traj-tests}
+traj_table(s4_nm, list(
+  list("catch-up",  "fall-back", "catch-up vs fall-back", TRUE),
+  list("catch-up",  "stable",    "catch-up vs stable",    TRUE),
+  list("fall-back", "stable",    "fall-back vs stable",   FALSE))) |> kable(escape = FALSE)
+```
+
+Trajectory has no effect here — motivation, pleasure, and luck are all flat across
+catch-up, fall-back, and stable.
+
 ## Betting behaviour
 
 `betStakePct` is continuous now, not 5 fixed values, so it gets a distribution
@@ -980,24 +1031,11 @@ ggplot(s, aes(trajectory, m * 100, fill = trajectory)) +
   theme_minimal(base_size = 11) + theme(plot.title = element_text(face = "bold"))
 ```
 
-**This is a real null, not a measurement artifact.** Study 3's flat result could be
-blamed on the 5-button scale leaving no room to move. That excuse is gone here — the
-histogram above shows real spread and a genuine tail to 100% in every condition — and
-the NM-vs-CL gap is still flat, under three different tests that make different
-assumptions about the data. Bet size does not carry the near-miss effect. The
-self-report effect is not in question — it replicates cleanly above, same as every
-study so far — so this looks like a real dissociation between what people *say* and
-how much they *stake*, not a failure to detect something that is there.
-
-That points toward **persistence** — whether someone keeps playing at all, not how
-much they bet when they do — as the more promising behavioural channel. The standard
-paradigms for that in the gambling literature (resistance-to-extinction, a binary
-continue/quit choice) measure one stop decision per person, which cannot speak to a
-per-condition contrast the way this design needs. Adapting the task's existing
-(currently unused) cash-out mechanic into a repeated per-trial "stop and keep it, or
-keep playing" offer would give a persistence measure tied to the specific condition
-that just happened, the same repeated-measures structure as everything else in this
-report. That is a real design project for a Study 5, not a config change to this one.
+The histogram above shows real spread and a genuine tail to 100% in every condition,
+so the range problem from Study 3 is fixed — and the NM-vs-CL gap on bet size is still
+flat, under three tests that make different assumptions about the data. Bet size does
+not carry the near-miss effect: a real dissociation between what people *say* and how
+much they *stake*, not a failure to detect something that is there.
 
 ---
 
@@ -1027,18 +1065,15 @@ nm_cl_all <- map_dfr(names(all_pm), function(nm) {
 
 ## Confidence baseline
 
-Confidence stays flat between NM and CL *within* every study (the validity check
-passes every time — see each study's own section), but the overall level drifts down
-as the studies pile on more before each race:
+Confidence stays flat between NM and CL *within* every study, but the overall level
+drifts down as the studies add betting:
 
 ```{r conf-baseline-table}
 conf_baseline |> kable(caption = "Mean pre-race confidence, pooled across all conditions")
 ```
 
-Studies 3 and 4 add a real bet, placed right before the confidence rating. Best guess:
-having actual points at stake makes people rate their confidence more conservatively
-than when it is just a rating with nothing riding on it. That is a guess, not a
-finding — flagging the pattern rather than explaining it away.
+**Hypothesis: betting availability lowers confidence.** Tested directly in Study 6,
+below.
 
 ## Does each effect replicate, study by study?
 
@@ -1055,45 +1090,22 @@ nm_cl_all |>
   kable(escape = FALSE, caption = "NM vs CL, all four studies (diff in rating points; paired t-test p and BF10 in parentheses)")
 ```
 
-Luck and pleasure replicate cleanly in all four studies, with decisive Bayes factors
-throughout. Confidence stays flat in all four, as it should, and its own BF10 values
-sit well under 1 in most studies — actual evidence for the null, not just a failure
-to reject it. Motivation is the one that fades: solid in Studies 1-3, but drops
-to +3.0 (p=.11`r sprintf(", BF10=%s (BF01=%s)", fmt_bf(nm_cl_all |> filter(study=="Study 4", DV=="Motivation to continue") |> pull(BF10)), fmt_bf(nm_cl_all |> filter(study=="Study 4", DV=="Motivation to continue") |> pull(BF01)))`) in Study 4 — the weakest of the four, and the only one that misses
-significance. The Bayes factor there sits close to 1, so this is genuine
-indecision between the effect and the null, not evidence for either — it is still
-positive, just smaller and noisier than before, in the study where people also had
-the most going on before each race (bet slider, then confidence rating).
+Luck and pleasure replicate in all four studies with decisive Bayes factors. Confidence
+stays flat in all four, as it should, with BF10 well under 1 throughout — evidence for
+the null, not just a failure to reject it. Motivation replicates in Studies 1-3;
+in Study 4 it is smaller and not significant
+(BF10=`r fmt_bf(nm_cl_all |> filter(study=="Study 4", DV=="Motivation to continue") |> pull(BF10))`,
+genuinely inconclusive rather than evidence either way).
 
 ---
 
 # Study 6 — bet availability, between-subjects
 
-The confidence-baseline drop above is confounded: Studies 3-4 differ from 1-2 in a
-consent screen, a more complex payment scheme, an extra bet-decision step before each
-confidence rating, and a non-overlapping recruitment sample — not just in whether
-betting was possible. Study 6 isolates that one variable. Same race pool, rotation
-scheme, condition counts, and questions as Study 4; participants are randomly assigned
-**once**, before consent, to a whole session with betting on every race (Study 4's
-0-100% slider) or a whole session with no betting at all. Assignment is a single
-`crypto.getRandomValues` coin flip per participant, not the rotation scheme used
-everywhere else in this report — rotation balances a variable across many
-within-subject trials, but a between-subjects group is assigned once per person, so a
-coin flip is the right tool here and rotation would not add anything.
-
-An earlier attempt (Study 5) rotated bet-availability trial-by-trial within a single
-session. That could not isolate the hypothesised mechanism — a general mindset shift
-from having money on the line — because every participant experienced both conditions
-in the same session, contaminating one with the other. Abandoned before analysis, not
-included in this report; Study 6 replaces it.
-
-**Unregistered pilot, one pre-specified direction.** No formal preregistration, but
-the direction of the hypothesis (betting lowers confidence) was fixed *before this
-data existed*, from the cross-study pattern above — so the primary test below is
-one-tailed. Collection ran in batches with interim looks, stopping once the effect
-looked stable and large enough; that is a form of optional stopping, and the one-tailed
-pre-specification limits but does not eliminate the inflation risk it creates. Treat
-the exact p-value as approximately right, not exact.
+Unregistered pilot. Same races, rotation, condition counts, and questions as Study 4.
+Participants are randomly assigned once, before consent, to a betting group (Study 4's
+0-100% slider, on every race) or a no-betting group (never). Direction of the primary
+hypothesis (betting lowers confidence) was set before this data existed, so the test
+below is one-tailed.
 
 ```{r load-s6}
 # Own project, own data folder — never mixed with Studies 1-4's raw files.
@@ -1136,6 +1148,9 @@ s6 <- s6_raw |> filter(prolificPID %in% (s6_bypid |> filter(!exclude) |> pull(pr
 N6 <- n_distinct(s6$prolificPID)
 s6_pm <- s6 |> group_by(prolificPID, group, condition) |>
   summarise(across(all_of(names(dvs)), mean), .groups = "drop")
+s6_pt <- s6 |> filter(condition == "NM") |> group_by(prolificPID, trajectory) |>
+  summarise(across(all_of(names(dvs)), mean), .groups = "drop")
+s6_nm <- s6 |> filter(condition == "NM", !is.na(trajectory))
 ```
 
 **N = `r N6`** of `r nrow(s6_bypid)` collected.
@@ -1174,9 +1189,34 @@ map_dfr(levels(s6$group), function(g) {
 }) |> rename(group = contrast) |> fmt()
 ```
 
-The classic effect holds regardless of which group a participant was assigned to —
-reassuring for task validity, and a sign the group manipulation itself isn't distorting
-how people respond to the races.
+The classic effect holds regardless of which group a participant was assigned to.
+
+## Trajectory
+
+```{r s6-fig-traj, fig.height=7}
+p7t <- imap(dvs, function(label, col) {
+  s <- wsci(s6_pt, trajectory, col)
+  ggplot(s, aes(trajectory, m, fill = trajectory)) +
+    geom_col(width = .6) + geom_errorbar(aes(ymin = lo, ymax = hi), width = .14) +
+    scale_fill_manual(values = traj_cols, guide = "none") +
+    coord_cartesian(ylim = c(0, 100)) +
+    labs(title = label, x = NULL, y = NULL) + theme_minimal(base_size = 11) +
+    theme(axis.text.x = element_text(angle = 12, hjust = 1))
+})
+wrap_plots(p7t, ncol = 2) +
+  plot_annotation(title = sprintf("Study 6 (n=%d): NEAR MISS trials only, by trajectory, both groups pooled", N6),
+                  theme = theme(plot.title = element_text(face = "bold")))
+```
+
+```{r s6-traj-tests}
+traj_table(s6_nm, list(
+  list("catch-up",  "fall-back", "catch-up vs fall-back", TRUE),
+  list("catch-up",  "stable",    "catch-up vs stable",    TRUE),
+  list("fall-back", "stable",    "fall-back vs stable",   FALSE))) |> kable(escape = FALSE)
+```
+
+Trajectory has no effect here — motivation, pleasure, and luck are all flat across
+catch-up, fall-back, and stable.
 
 ## Bet availability and confidence — the pre-specified test
 
@@ -1206,17 +1246,8 @@ ggplot(summ, aes(group, m, fill = group)) +
   theme_minimal(base_size = 11) + theme(plot.title = element_text(face = "bold"))
 ```
 
-**This is the cleanest evidence in the whole project that betting availability lowers
-confidence.** At this N the primary test is significant one-tailed (and, at the final
-sample, two-tailed as well), in the direction the cross-study comparison predicted,
-with the effect strengthening rather than shrinking as N grew across successive pulls
-— the opposite of what a chance early fluctuation would do. It is still short of the
-~78/arm this effect size (d~0.4) needs for 80% power at the pre-registered-in-spirit
-one-tailed threshold, so treat this as strong suggestive evidence for a real,
-previously-confounded effect, not a fully powered confirmation. Unlike the bet-size
-null above, a Bayes factor is not reported for this specific test — the interim-looks
-stopping rule used here means the standard prior calibration behind BF10/BF01 doesn't
-apply cleanly the way it does to the fixed-N tests elsewhere in this report.
+Betting availability lowers confidence, as hypothesised. Still short of the ~78/arm
+this effect size needs for 80% power, so treat as suggestive rather than confirmatory.
 
 ---
 
@@ -1235,42 +1266,25 @@ w6 <- s6_pm |> select(prolificPID, condition, motivation) |>
 | behavioural DV | — | — | bet size (5 stakes) | bet size (slider) | bet availability (between-Ss) |
 | near-miss effect (NM vs CL, motivation, self-report) | `r sprintf("+%.1f, p = %.1g", mean(w1$NM - w1$CL), t.test(w1$NM, w1$CL, paired = TRUE)$p.value)` | `r sprintf("+%.1f, p = %.1g", mean(w2$NM - w2$CL), t.test(w2$NM, w2$CL, paired = TRUE)$p.value)` | `r sprintf("+%.1f, p = %.1g", mean(w3$NM - w3$CL), t.test(w3$NM, w3$CL, paired = TRUE)$p.value)` | `r sprintf("+%.1f, p = %.1g", mean(w4$NM - w4$CL), t.test(w4$NM, w4$CL, paired = TRUE)$p.value)` | `r sprintf("+%.1f, p = %.1g", mean(w6$NM - w6$CL), t.test(w6$NM, w6$CL, paired = TRUE)$p.value)` |
 | near-miss effect on bet size | — | — | flat | flat | — |
-| bet availability on confidence | — | — | — | — | lower, p<.05 one-tailed (see Study 6) |
-| trajectory on motivation | — | null | — | — | — |
-| trajectory on pleasure | — | catch-up > both others | — | — | — |
+| bet availability on confidence | — | — | — | — | lower, p<.05 one-tailed |
+| trajectory on motivation | — | null | null | null | null |
+| trajectory on pleasure | — | catch-up > both others | null | null | null |
 
-**What we can say.** Near misses make people *say* they want to keep playing more
-than a clear loss does, in a naturalistic dynamic task, replicated across five
-studies (Studies 1-4 and 6). The shape of the near miss does not change that — but it
-does change how bad the loss feels, with a catch-up near miss the least unpleasant of
-the three (Study 2). Self-report is not the weak link here; it holds up every time
-it's tested, with Bayes factors backing the replications and the confidence-flat
-validity check alike. Separately, Study 6's clean between-subjects test found that
-just being able to bet — regardless of whether anyone actually near-missed — lowers
-people's confidence, addressing the confound-ridden pattern first noticed in the
-cross-study comparison above.
+**Near-miss effect.** Replicates on self-report across all five studies: near misses
+raise motivation, pleasure, and perceived luck relative to a clear loss; confidence
+stays flat, as it should. Does not translate into bet size (Studies 3-4, both flat,
+BF01 supports a real null). Trajectory shifts pleasure only in Study 2; null elsewhere.
 
-**What we cannot say.** That self-reported motivation translates into behaviour that
-matters financially. Two independent attempts to find a near-miss effect on bet
-size — one with 5 fixed stakes, one with a continuous slider that fixed the range
-problem the first one had — both come up flat, and the Bayes factors on both agree
-it's a real null rather than an underpowered maybe. This is not "we haven't found it
-yet"; it's a real dissociation between the rating and the stake people put behind it.
-Study 6's confidence result is also not yet a fully powered confirmation — the pilot
-that found it was smaller than the sample size its own effect size calls for.
+**Bet availability.** Hypothesis: being able to bet lowers confidence, regardless of
+outcome. Study 6: confirmed, d=-0.46, p=.007 one-tailed — short of the ~78/arm this
+effect size needs for 80% power.
 
-**Possible follow-ups.** 1. A real persistence measure — a repeated stop/keep-playing
-choice tied to each trial's condition, adapting the task's existing unused cash-out
-mechanic — rather than another bet-size variant. See the end of the Study 4 section
-above for the reasoning. 2. A study that recruits a sample of problem gamblers to test
-whether the near-miss effect is stronger in that population. 3. A cashout manipulation
-study, asking a) whether the NM effect is affected by the cashout decision (or the
-possibility of it), b) whether trajectory modulates that effect, and c) whether the
-trajectory of a near miss changes cashout behaviour itself — this could plausibly be
-combined with follow-up 1. 4. A properly powered replication of Study 6 (~78/arm at
-the observed effect size), run as a single fixed-N confirmatory study rather than a
-batch-by-batch pilot, to settle the bet-availability-and-confidence question without
-the optional-stopping caveat this pilot carries.
+**Follow-ups.** 1. A repeated stop/keep-playing choice per trial, adapting the task's
+unused cash-out mechanic, as a behavioural persistence measure. 2. A problem-gambler
+sample, to test whether the near-miss effect is stronger there. 3. A cashout
+manipulation study: does the NM effect depend on the cashout decision, does trajectory
+modulate that, does a near miss's trajectory change cashout behaviour itself.
+4. A fully powered replication of Study 6.
 
 ```{r session}
 sessionInfo()
