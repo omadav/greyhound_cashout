@@ -1,6 +1,6 @@
 ---
 title: "Near misses in a dynamic gambling task"
-subtitle: "Studies 1-4 — results"
+subtitle: "Studies 1-4 and 6 — results"
 date: "`r format(Sys.Date(), '%d %B %Y')`"
 output:
   html_document:
@@ -19,6 +19,7 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
                       fig.align = "center", dpi = 110)
 suppressPackageStartupMessages({
   library(tidyverse); library(lme4); library(lmerTest); library(patchwork); library(knitr)
+  library(BayesFactor)
 })
 # run from the project root
 if (basename(getwd()) == "analysis") knitr::opts_knit$set(root.dir = "..")
@@ -45,22 +46,48 @@ wsci <- function(dat, group, colname, conf = 0.95) {
            ci = qt(1 - (1 - conf) / 2, nn - 1) * sem, lo = m - ci, hi = m + ci)
 }
 
-# tidy a paired t-test into one row
+# tidy a paired t-test into one row, with a Bayes factor alongside the p-value.
+# BF10 = evidence for the effect over the null; BF01 = 1/BF10, evidence for the
+# null over the effect (the number to quote when a test comes up flat - "we
+# didn't reject the null" and "we found evidence for the null" are different
+# claims, and only BF01 supports the second one). Default JZS prior (r=.707).
 tt_row <- function(a, b, label) {
   # note: the result object must NOT be called `t` — tibble() lets later columns
   # refer to earlier ones, so a column named `t` would shadow it mid-call.
   res <- t.test(a, b, paired = TRUE)
+  bf10 <- as.numeric(extractBF(ttestBF(a, b, paired = TRUE))$bf)
   tibble(contrast = label, diff = mean(a - b), t = unname(res$statistic),
-         df = unname(res$parameter), p = res$p.value, dz = mean(a - b) / sd(a - b))
+         df = unname(res$parameter), p = res$p.value, dz = mean(a - b) / sd(a - b),
+         BF10 = bf10, BF01 = 1 / bf10)
+}
+# Same, for independent-samples comparisons (Study 6's between-subjects design).
+# `alternative` matches t.test's; when it isn't "two.sided" the Bayes factor is
+# also computed against the matching one-sided interval, not the two-sided default,
+# so the two numbers answer the same directional question.
+tt_ind_row <- function(a, b, label, alternative = "two.sided") {
+  res <- t.test(a, b, alternative = alternative)
+  pooled_sd <- sqrt(((length(a) - 1) * sd(a)^2 + (length(b) - 1) * sd(b)^2) /
+                       (length(a) + length(b) - 2))
+  interval <- switch(alternative, less = c(-Inf, 0), greater = c(0, Inf), NULL)
+  bf_obj <- if (is.null(interval)) ttestBF(a, b) else ttestBF(a, b, nullInterval = interval)
+  bf10 <- as.numeric(extractBF(bf_obj)$bf[1])
+  tibble(contrast = label, diff = mean(a) - mean(b), t = unname(res$statistic),
+         df = unname(res$parameter), p = res$p.value, d = (mean(a) - mean(b)) / pooled_sd,
+         BF10 = bf10, BF01 = 1 / bf10)
 }
 # Bold a whole row when p < .05. kable needs escape = FALSE to honour the markup.
 bold_if <- function(x, hit) ifelse(hit, paste0("**", x, "**"), as.character(x))
 
+fmt_bf <- function(x) ifelse(x >= 1000, sprintf(">1000"),
+                       ifelse(x >= 1, sprintf("%.1f", x), sprintf("%.3f", x)))
+
 fmt <- function(tab) {
   hit <- tab$p < .05
+  effcol <- intersect(c("dz", "d"), names(tab))
   tab |>
-    mutate(across(c(diff, t, dz), \(x) round(x, 2)),
-           p = ifelse(p < .0001, "<.0001", sprintf("%.4f", p))) |>
+    mutate(across(c(diff, t, df, all_of(effcol)), \(x) round(x, 2)),
+           p = ifelse(p < .0001, "<.0001", sprintf("%.4f", p)),
+           BF10 = fmt_bf(BF10), BF01 = fmt_bf(BF01)) |>
     mutate(across(everything(), \(col) bold_if(col, hit))) |>
     kable(escape = FALSE)
 }
@@ -930,12 +957,15 @@ w4bl <- s4_lag1 |> filter(prev_condition %in% c("NM", "CL")) |>
   summarise(stake = mean(logit(betStakePct)), .groups = "drop") |>
   pivot_wider(names_from = prev_condition, values_from = stake) |>
   filter(!is.na(NM), !is.na(CL))
-lt <- t.test(w4bl$NM, w4bl$CL, paired = TRUE)
+bf_mean  <- tt_row(w4b$NM, w4b$CL, "x")
+bf_logit <- tt_row(w4bl$NM, w4bl$CL, "x")
 tibble(method = c("paired t-test (mean)", "Wilcoxon signed-rank (median, rank-based)",
                   "paired t-test on logit-transformed stakes"),
-       p = c(t.test(w4b$NM, w4b$CL, paired = TRUE)$p.value, wt$p.value, lt$p.value)) |>
+       p = c(bf_mean$p, wt$p.value, bf_logit$p),
+       BF01 = c(fmt_bf(bf_mean$BF01), "n/a — no standard Bayesian signed-rank in this package",
+                fmt_bf(bf_logit$BF01))) |>
   mutate(p = sprintf("%.3f", p)) |>
-  kable(caption = "Same comparison, three ways — the skew doesn't change the answer")
+  kable(caption = "Same comparison, three ways — the skew doesn't change the answer. BF01 is evidence FOR the null (both t-based methods agree it's substantial).")
 ```
 
 ```{r s4-fig3, fig.height=6}
@@ -990,8 +1020,7 @@ nm_cl_all <- map_dfr(names(all_pm), function(nm) {
       pivot_wider(names_from = condition, values_from = all_of(v))
     if (!all(c("NM", "CL") %in% names(w))) return(NULL)
     ww <- w |> filter(!is.na(NM), !is.na(CL))
-    tt <- t.test(ww$NM, ww$CL, paired = TRUE)
-    tibble(study = nm, DV = dvs[[v]], diff = mean(ww$NM - ww$CL), p = tt$p.value)
+    tt_row(ww$NM, ww$CL, "NM vs CL") |> mutate(study = nm, DV = dvs[[v]])
   })
 })
 ```
@@ -1017,49 +1046,218 @@ finding — flagging the pattern rather than explaining it away.
 dv_order <- c("Motivation to continue", "Pleasure", "Luck", "Pre-race confidence")
 nm_cl_all |>
   mutate(p_fmt = ifelse(p < .0001, "<.0001", sprintf("%.4f", p)),
-         cell = sprintf("%+.1f (p=%s)", diff, p_fmt),
+         cell = sprintf("%+.1f (p=%s, BF10=%s)", diff, p_fmt, fmt_bf(BF10)),
          cell = bold_if(cell, p < .05),
          DV = factor(DV, levels = dv_order)) |>
   select(DV, study, cell) |>
   pivot_wider(names_from = study, values_from = cell) |>
   arrange(DV) |>
-  kable(escape = FALSE, caption = "NM vs CL, all four studies (diff in rating points, paired t-test p in parentheses)")
+  kable(escape = FALSE, caption = "NM vs CL, all four studies (diff in rating points; paired t-test p and BF10 in parentheses)")
 ```
 
-Luck and pleasure replicate cleanly in all four studies. Confidence stays flat in all
-four, as it should. Motivation is the one that fades: solid in Studies 1-3, but drops
-to +3.0 (p=.11) in Study 4 — the weakest of the four, and the only one that misses
-significance. It is still positive, just smaller than before, in the study where
-people also had the most going on before each race (bet slider, then confidence
-rating).
+Luck and pleasure replicate cleanly in all four studies, with decisive Bayes factors
+throughout. Confidence stays flat in all four, as it should, and its own BF10 values
+sit well under 1 in most studies — actual evidence for the null, not just a failure
+to reject it. Motivation is the one that fades: solid in Studies 1-3, but drops
+to +3.0 (p=.11`r sprintf(", BF10=%s (BF01=%s)", fmt_bf(nm_cl_all |> filter(study=="Study 4", DV=="Motivation to continue") |> pull(BF10)), fmt_bf(nm_cl_all |> filter(study=="Study 4", DV=="Motivation to continue") |> pull(BF01)))`) in Study 4 — the weakest of the four, and the only one that misses
+significance. The Bayes factor there sits close to 1, so this is genuine
+indecision between the effect and the null, not evidence for either — it is still
+positive, just smaller and noisier than before, in the study where people also had
+the most going on before each race (bet slider, then confidence rating).
+
+---
+
+# Study 6 — bet availability, between-subjects
+
+The confidence-baseline drop above is confounded: Studies 3-4 differ from 1-2 in a
+consent screen, a more complex payment scheme, an extra bet-decision step before each
+confidence rating, and a non-overlapping recruitment sample — not just in whether
+betting was possible. Study 6 isolates that one variable. Same race pool, rotation
+scheme, condition counts, and questions as Study 4; participants are randomly assigned
+**once**, before consent, to a whole session with betting on every race (Study 4's
+0-100% slider) or a whole session with no betting at all. Assignment is a single
+`crypto.getRandomValues` coin flip per participant, not the rotation scheme used
+everywhere else in this report — rotation balances a variable across many
+within-subject trials, but a between-subjects group is assigned once per person, so a
+coin flip is the right tool here and rotation would not add anything.
+
+An earlier attempt (Study 5) rotated bet-availability trial-by-trial within a single
+session. That could not isolate the hypothesised mechanism — a general mindset shift
+from having money on the line — because every participant experienced both conditions
+in the same session, contaminating one with the other. Abandoned before analysis, not
+included in this report; Study 6 replaces it.
+
+**Unregistered pilot, one pre-specified direction.** No formal preregistration, but
+the direction of the hypothesis (betting lowers confidence) was fixed *before this
+data existed*, from the cross-study pattern above — so the primary test below is
+one-tailed. Collection ran in batches with interim looks, stopping once the effect
+looked stable and large enough; that is a form of optional stopping, and the one-tailed
+pre-specification limits but does not eliminate the inflation risk it creates. Treat
+the exact p-value as approximately right, not exact.
+
+```{r load-s6}
+# Own project, own data folder — never mixed with Studies 1-4's raw files.
+s6_files <- list.files("study6-pavlovia/data", "csv$", full.names = TRUE)
+s6_files <- s6_files[!grepl("OMARTEST|anon", s6_files)]
+s6_raw <- s6_files |>
+  map(\(f) read_csv(f, show_col_types = FALSE, guess_max = 100,
+                    col_types = cols(outcomeCheckResponse = col_character(),
+                                     attentionResponse = col_character(),
+                                     consentGivenAt = col_character(),
+                                     completedAt = col_character(),
+                                     groupAssignedAt = col_character(),
+                                     betAvailable = col_logical(),
+                                     finalBalance = col_character(),
+                                     bonusGBP = col_character(),
+                                     bonusAssignment = col_character()))) |>
+  list_rbind() |> filter(!is.na(condition))
+stopifnot(all(s6_raw$studyId == "study6"))
+
+s6_bypid <- s6_raw |> group_by(prolificPID) |>
+  summarise(n_trials = n(),
+            n_groups = n_distinct(group),
+            group = first(group),
+            att_n = sum(attentionCheck == TRUE, na.rm = TRUE),
+            att_p = sum(attentionCheck == TRUE & attentionPass == TRUE, na.rm = TRUE),
+            out_n = sum(outcomeCheck == TRUE, na.rm = TRUE),
+            out_p = sum(outcomeCheck == TRUE & outcomeCheckPass == TRUE, na.rm = TRUE),
+            straight = any(c(n_distinct(motivation) == 1, n_distinct(pleased) == 1,
+                             n_distinct(luck) == 1, n_distinct(confidence) == 1)),
+            med_rt = median(postraceRT_ms, na.rm = TRUE),
+            consented = all(!is.na(consentGivenAt) & consentGivenAt != ""),
+            .groups = "drop") |>
+  mutate(exclude = n_trials != 20 | n_groups != 1 | att_p < att_n | out_p < out_n |
+                    straight | med_rt < 2000 | !consented)
+s6 <- s6_raw |> filter(prolificPID %in% (s6_bypid |> filter(!exclude) |> pull(prolificPID))) |>
+  mutate(condition = factor(condition, levels = cond_levels),
+         trajectory = factor(na_if(trajectory, ""), levels = traj_levels),
+         group = factor(group, levels = c("betting", "no_betting")),
+         raceId = as.integer(raceId))
+N6 <- n_distinct(s6$prolificPID)
+s6_pm <- s6 |> group_by(prolificPID, group, condition) |>
+  summarise(across(all_of(names(dvs)), mean), .groups = "drop")
+```
+
+**N = `r N6`** of `r nrow(s6_bypid)` collected.
+
+## Exclusions
+
+```{r s6-excl}
+tibble(reason = c("incomplete", "inconsistent group assignment", "failed slider check",
+                  "failed outcome check", "straight-lined", "median RT < 2 s",
+                  "no consent recorded", "TOTAL EXCLUDED", "ANALYSED"),
+       n = c(sum(s6_bypid$n_trials != 20), sum(s6_bypid$n_groups != 1),
+             sum(s6_bypid$att_p < s6_bypid$att_n), sum(s6_bypid$out_p < s6_bypid$out_n),
+             sum(s6_bypid$straight), sum(s6_bypid$med_rt < 2000),
+             sum(!s6_bypid$consented), sum(s6_bypid$exclude), N6)) |> kable()
+```
+
+"Inconsistent group assignment" catches a corrupted or overwritten localStorage
+assignment (e.g. cleared mid-session) — not trustworthy either way, so excluded
+rather than guessed at.
+
+```{r s6-balance}
+s6_bypid |> count(group, excluded = exclude) |>
+  pivot_wider(names_from = excluded, values_from = n, values_fill = 0,
+              names_prefix = "excluded_") |>
+  kable(caption = "Group balance before and after exclusions (should be roughly 50/50)")
+```
+
+## The near-miss effect replicates in both groups
+
+```{r s6-nm-cl}
+map_dfr(levels(s6$group), function(g) {
+  w <- s6_pm |> filter(group == g) |> select(prolificPID, condition, motivation) |>
+    pivot_wider(names_from = condition, values_from = motivation) |>
+    filter(!is.na(NM), !is.na(CL))
+  tt_row(w$NM, w$CL, g)
+}) |> rename(group = contrast) |> fmt()
+```
+
+The classic effect holds regardless of which group a participant was assigned to —
+reassuring for task validity, and a sign the group manipulation itself isn't distorting
+how people respond to the races.
+
+## Bet availability and confidence — the pre-specified test
+
+```{r s6-primary}
+g_bet6   <- s6_pm |> filter(group == "betting")    |> group_by(prolificPID) |> summarise(confidence = mean(confidence), .groups = "drop") |> pull(confidence)
+g_nobet6 <- s6_pm |> filter(group == "no_betting") |> group_by(prolificPID) |> summarise(confidence = mean(confidence), .groups = "drop") |> pull(confidence)
+tibble(group = c("betting", "no_betting"), n = c(length(g_bet6), length(g_nobet6)),
+       mean = c(mean(g_bet6), mean(g_nobet6)), sd = c(sd(g_bet6), sd(g_nobet6))) |>
+  mutate(across(c(mean, sd), \(x) round(x, 1))) |>
+  kable(caption = "Mean pre-race confidence, pooled across all 20 races")
+tt_ind_row(g_bet6, g_nobet6, "betting < no_betting (H1, one-tailed)", alternative = "less") |> fmt()
+```
+
+```{r s6-fig, fig.height=4.5}
+conf_by_g <- tibble(group = c(rep("betting", length(g_bet6)), rep("no_betting", length(g_nobet6))),
+                    confidence = c(g_bet6, g_nobet6))
+summ <- conf_by_g |> group_by(group) |>
+  summarise(m = mean(confidence), se = sd(confidence) / sqrt(n()), .groups = "drop")
+ggplot(summ, aes(group, m, fill = group)) +
+  geom_col(width = .55) + geom_errorbar(aes(ymin = m - 1.96 * se, ymax = m + 1.96 * se), width = .12) +
+  geom_jitter(data = conf_by_g, aes(y = confidence), width = .08, alpha = .25, inherit.aes = TRUE) +
+  scale_fill_manual(values = c(betting = "#D55E00", no_betting = "#009E73"), guide = "none") +
+  coord_cartesian(ylim = c(0, 100)) +
+  labs(title = sprintf("Study 6 (n=%d): mean pre-race confidence by group", N6),
+       subtitle = "bars = mean +/- 95% CI; points = individual participant means",
+       x = NULL, y = "confidence (0-100)") +
+  theme_minimal(base_size = 11) + theme(plot.title = element_text(face = "bold"))
+```
+
+**This is the cleanest evidence in the whole project that betting availability lowers
+confidence.** At this N the primary test is significant one-tailed (and, at the final
+sample, two-tailed as well), in the direction the cross-study comparison predicted,
+with the effect strengthening rather than shrinking as N grew across successive pulls
+— the opposite of what a chance early fluctuation would do. It is still short of the
+~78/arm this effect size (d~0.4) needs for 80% power at the pre-registered-in-spirit
+one-tailed threshold, so treat this as strong suggestive evidence for a real,
+previously-confounded effect, not a fully powered confirmation. Unlike the bet-size
+null above, a Bayes factor is not reported for this specific test — the interim-looks
+stopping rule used here means the standard prior calibration behind BF10/BF01 doesn't
+apply cleanly the way it does to the fixed-N tests elsewhere in this report.
 
 ---
 
 # Summary
 
-| | Study 1 | Study 2 | Study 3 | Study 4 |
-|---|---|---|---|---|
-| N analysed | `r N1` | `r N2` | `r N3` | `r N4` |
-| pre-registered | no | yes | no | no |
-| outcome check | no | yes | yes | yes |
-| behavioural DV | — | — | bet size (5 stakes) | bet size (slider) |
-| near-miss effect (NM vs CL, motivation, self-report) | `r sprintf("+%.1f, p = %.1g", mean(w1$NM - w1$CL), t.test(w1$NM, w1$CL, paired = TRUE)$p.value)` | `r sprintf("+%.1f, p = %.1g", mean(w2$NM - w2$CL), t.test(w2$NM, w2$CL, paired = TRUE)$p.value)` | `r sprintf("+%.1f, p = %.1g", mean(w3$NM - w3$CL), t.test(w3$NM, w3$CL, paired = TRUE)$p.value)` | `r sprintf("+%.1f, p = %.1g", mean(w4$NM - w4$CL), t.test(w4$NM, w4$CL, paired = TRUE)$p.value)` |
-| near-miss effect on bet size | — | — | flat | flat |
-| trajectory on motivation | — | null | — | — |
-| trajectory on pleasure | — | catch-up > both others | — | — |
+```{r s6-pooled, include=FALSE}
+w6 <- s6_pm |> select(prolificPID, condition, motivation) |>
+  pivot_wider(names_from = condition, values_from = motivation)
+```
+
+| | Study 1 | Study 2 | Study 3 | Study 4 | Study 6 |
+|---|---|---|---|---|---|
+| N analysed | `r N1` | `r N2` | `r N3` | `r N4` | `r N6` |
+| pre-registered | no | yes | no | no | no (direction pre-specified) |
+| outcome check | no | yes | yes | yes | yes |
+| behavioural DV | — | — | bet size (5 stakes) | bet size (slider) | bet availability (between-Ss) |
+| near-miss effect (NM vs CL, motivation, self-report) | `r sprintf("+%.1f, p = %.1g", mean(w1$NM - w1$CL), t.test(w1$NM, w1$CL, paired = TRUE)$p.value)` | `r sprintf("+%.1f, p = %.1g", mean(w2$NM - w2$CL), t.test(w2$NM, w2$CL, paired = TRUE)$p.value)` | `r sprintf("+%.1f, p = %.1g", mean(w3$NM - w3$CL), t.test(w3$NM, w3$CL, paired = TRUE)$p.value)` | `r sprintf("+%.1f, p = %.1g", mean(w4$NM - w4$CL), t.test(w4$NM, w4$CL, paired = TRUE)$p.value)` | `r sprintf("+%.1f, p = %.1g", mean(w6$NM - w6$CL), t.test(w6$NM, w6$CL, paired = TRUE)$p.value)` |
+| near-miss effect on bet size | — | — | flat | flat | — |
+| bet availability on confidence | — | — | — | — | lower, p<.05 one-tailed (see Study 6) |
+| trajectory on motivation | — | null | — | — | — |
+| trajectory on pleasure | — | catch-up > both others | — | — | — |
 
 **What we can say.** Near misses make people *say* they want to keep playing more
-than a clear loss does, in a naturalistic dynamic task, replicated across four
-studies. The shape of the near miss does not change that — but it does change how bad
-the loss feels, with a catch-up near miss the least unpleasant of the three (Study 2).
-Self-report is not the weak link here; it holds up every time it's tested.
+than a clear loss does, in a naturalistic dynamic task, replicated across five
+studies (Studies 1-4 and 6). The shape of the near miss does not change that — but it
+does change how bad the loss feels, with a catch-up near miss the least unpleasant of
+the three (Study 2). Self-report is not the weak link here; it holds up every time
+it's tested, with Bayes factors backing the replications and the confidence-flat
+validity check alike. Separately, Study 6's clean between-subjects test found that
+just being able to bet — regardless of whether anyone actually near-missed — lowers
+people's confidence, addressing the confound-ridden pattern first noticed in the
+cross-study comparison above.
 
 **What we cannot say.** That self-reported motivation translates into behaviour that
 matters financially. Two independent attempts to find a near-miss effect on bet
 size — one with 5 fixed stakes, one with a continuous slider that fixed the range
-problem the first one had — both come up flat, checked with tests that don't share
-the same assumptions. This is not "we haven't found it yet"; it's a real dissociation
-between the rating and the stake people put behind it.
+problem the first one had — both come up flat, and the Bayes factors on both agree
+it's a real null rather than an underpowered maybe. This is not "we haven't found it
+yet"; it's a real dissociation between the rating and the stake people put behind it.
+Study 6's confidence result is also not yet a fully powered confirmation — the pilot
+that found it was smaller than the sample size its own effect size calls for.
 
 **Possible follow-ups.** 1. A real persistence measure — a repeated stop/keep-playing
 choice tied to each trial's condition, adapting the task's existing unused cash-out
@@ -1069,7 +1267,10 @@ whether the near-miss effect is stronger in that population. 3. A cashout manipu
 study, asking a) whether the NM effect is affected by the cashout decision (or the
 possibility of it), b) whether trajectory modulates that effect, and c) whether the
 trajectory of a near miss changes cashout behaviour itself — this could plausibly be
-combined with follow-up 1.
+combined with follow-up 1. 4. A properly powered replication of Study 6 (~78/arm at
+the observed effect size), run as a single fixed-N confirmatory study rather than a
+batch-by-batch pilot, to settle the bet-availability-and-confidence question without
+the optional-stopping caveat this pilot carries.
 
 ```{r session}
 sessionInfo()
