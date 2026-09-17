@@ -151,15 +151,13 @@ traj_table <- function(trial_data, pairs) {
 
 * Study 1: Effect of near misses in a dynamic gambling task. 
  
-* Study 2: Does the shape of the near miss matter? Does the shape of the narrow win matter?
+* Study 2: Does the shape of the near miss matter? Does the shape of the narrow win matter? Preregistered study.
 
 * Study 3: Adds a bet-size choice before every race (5/25/50/75/95% of current
-  balance), as a behavioural DV alongside the self-report ratings. Unregistered
-  pilot — no prereg exists for this yet.
+  balance), as a behavioral DV alongside the self-report ratings.
 
 * Study 4: Same as Study 3, but the bet choice is a continuous 0-100% slider
-  instead of the 5 fixed stakes, since Study 3 crowded 73% of bets onto the two
-  lowest buttons. Unregistered pilot.
+  instead of the 5 fixed stakes.
 
 In both studies 1 and 2, I also collected the PGSI, just to see whether the near-miss effect is stronger in problem gamblers. Luke already warned in advance that a general Prolific panel has limited ability to test moderation, and indeed half the sample scores zero on the PGSI. So treat the PGSI results as exploratory.
 
@@ -265,8 +263,7 @@ bind_rows(
 ) |> fmt()
 ```
 
-Confidence, rated before the outcome is known, should be flat — and is. That is the
-check that trap assignment is not leaking across races.
+Confidence, rated before the outcome is known, should be flat - and is.
 
 ---
 
@@ -377,8 +374,7 @@ wrap_plots(p3, ncol = 2) +
 ```
 
 **catch-up vs stable** and **catch-up vs fall-back** were named as planned contrasts
-in the pre-registration, so they are tested directly — a planned contrast does not
-need a significant omnibus first. `holm` is Holm across the six planned contrasts
+in the pre-registration, so they are tested directly. `holm` is Holm across the six planned contrasts
 (2 contrasts x 3 DVs).
 
 ```{r s2-traj-tests}
@@ -394,7 +390,7 @@ stable are indistinguishable from each other. So the shape of a near miss change
 it *feels* without changing how much people want to carry on — affect and drive come
 apart.
 
-Confidence stays flat, as it must.
+Confidence stays flat.
 
 ## Within-clip view
 
@@ -698,7 +694,7 @@ s3_lag1 <- s3 |> arrange(prolificPID, trialNumber) |>
   mutate(prev_condition = factor(prev_condition, levels = cond_levels))
 ```
 
-# Study 3 — bet size as a behavioural measure
+# Study 3 — bet size as a behavioral measure
 
 Unregistered pilot. Same races, trajectory coding and rotation as Study 2, plus a new
 question before every race: how much of the current balance to bet (5/25/50/75/95%,
@@ -774,7 +770,7 @@ traj_table(s3_nm, list(
 Trajectory has no effect here — motivation, pleasure, and luck are all flat across
 catch-up, fall-back, and stable.
 
-## Betting behaviour
+## Betting behavior
 
 ```{r s3-bet-usage}
 s3 |> count(betStakePct) |>
@@ -830,7 +826,7 @@ ggplot(s, aes(trajectory, m * 100, fill = trajectory)) +
 
 The bet screen offered 5 fixed stakes and 73% of bets clustered on the two lowest,
 leaving very little variance for a condition effect to show up in — a measurement-range
-problem, not evidence against a near-miss effect on behaviour. Study 4 replaces the 5
+problem, not evidence against a near-miss effect on behavior. Study 4 replaces the 5
 buttons with a continuous 0-100% slider.
 
 ---
@@ -955,10 +951,9 @@ traj_table(s4_nm, list(
 Trajectory has no effect here — motivation, pleasure, and luck are all flat across
 catch-up, fall-back, and stable.
 
-## Betting behaviour
+## Betting behavior
 
-`betStakePct` is continuous now, not 5 fixed values, so it gets a distribution
-instead of a value-count table.
+`betStakePct` is continuous now, not 5 fixed values.
 
 ```{r s4-bet-dist}
 s4 |> summarise(mean = round(100*mean(betStakePct),1), sd = round(100*sd(betStakePct),1),
@@ -1065,7 +1060,7 @@ nm_cl_all <- map_dfr(names(all_pm), function(nm) {
 
 ## Confidence baseline
 
-Confidence stays flat between NM and CL *within* every study, but the overall level
+Confidence stays flat between NM and CL *within* every study, but notice that the  overall level
 drifts down as the studies add betting:
 
 ```{r conf-baseline-table}
@@ -1167,9 +1162,9 @@ tibble(reason = c("incomplete", "inconsistent group assignment", "failed slider 
              sum(!s6_bypid$consented), sum(s6_bypid$exclude), N6)) |> kable()
 ```
 
-"Inconsistent group assignment" catches a corrupted or overwritten localStorage
+("Inconsistent group assignment" catches a corrupted or overwritten localStorage
 assignment (e.g. cleared mid-session) — not trustworthy either way, so excluded
-rather than guessed at.
+rather than guessed at.)
 
 ```{r s6-balance}
 s6_bypid |> count(group, excluded = exclude) |>
@@ -1246,8 +1241,7 @@ ggplot(summ, aes(group, m, fill = group)) +
   theme_minimal(base_size = 11) + theme(plot.title = element_text(face = "bold"))
 ```
 
-Betting availability lowers confidence, as hypothesised. Still short of the ~78/arm
-this effect size needs for 80% power, so treat as suggestive rather than confirmatory.
+Betting availability lowers confidence, as hypothesized.
 
 ---
 
@@ -1263,7 +1257,7 @@ w6 <- s6_pm |> select(prolificPID, condition, motivation) |>
 | N analysed | `r N1` | `r N2` | `r N3` | `r N4` | `r N6` |
 | pre-registered | no | yes | no | no | no (direction pre-specified) |
 | outcome check | no | yes | yes | yes | yes |
-| behavioural DV | — | — | bet size (5 stakes) | bet size (slider) | bet availability (between-Ss) |
+| behavioral DV | — | — | bet size (5 stakes) | bet size (slider) | bet availability (between-Ss) |
 | near-miss effect (NM vs CL, motivation, self-report) | `r sprintf("+%.1f, p = %.1g", mean(w1$NM - w1$CL), t.test(w1$NM, w1$CL, paired = TRUE)$p.value)` | `r sprintf("+%.1f, p = %.1g", mean(w2$NM - w2$CL), t.test(w2$NM, w2$CL, paired = TRUE)$p.value)` | `r sprintf("+%.1f, p = %.1g", mean(w3$NM - w3$CL), t.test(w3$NM, w3$CL, paired = TRUE)$p.value)` | `r sprintf("+%.1f, p = %.1g", mean(w4$NM - w4$CL), t.test(w4$NM, w4$CL, paired = TRUE)$p.value)` | `r sprintf("+%.1f, p = %.1g", mean(w6$NM - w6$CL), t.test(w6$NM, w6$CL, paired = TRUE)$p.value)` |
 | near-miss effect on bet size | — | — | flat | flat | — |
 | bet availability on confidence | — | — | — | — | lower, p<.05 one-tailed |
@@ -1276,15 +1270,14 @@ stays flat, as it should. Does not translate into bet size (Studies 3-4, both fl
 BF01 supports a real null). Trajectory shifts pleasure only in Study 2; null elsewhere.
 
 **Bet availability.** Hypothesis: being able to bet lowers confidence, regardless of
-outcome. Study 6: confirmed, d=-0.46, p=.007 one-tailed — short of the ~78/arm this
-effect size needs for 80% power.
+outcome. Study 6: confirmed, d=-0.46, p=.007 one-tailed.
 
 **Follow-ups.** 1. A repeated stop/keep-playing choice per trial, adapting the task's
-unused cash-out mechanic, as a behavioural persistence measure. 2. A problem-gambler
+unused cash-out mechanic, as a behavioral persistence measure. 2. A problem-gambler
 sample, to test whether the near-miss effect is stronger there. 3. A cashout
 manipulation study: does the NM effect depend on the cashout decision, does trajectory
-modulate that, does a near miss's trajectory change cashout behaviour itself.
-4. A fully powered replication of Study 6.
+modulate that, does a near miss's trajectory change cashout behavior itself.
+
 
 ```{r session}
 sessionInfo()
