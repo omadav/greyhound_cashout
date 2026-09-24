@@ -79,3 +79,16 @@ tests/study6_artifacts/
 # compiled report (regenerate: Rscript -e 'rmarkdown::render("analysis/greyhound_report.Rmd")')
 analysis/greyhound_report.html
 analysis/greyhound_report_files/
+
+# LaTeX build artifacts (manuscript/)
+manuscript/*.aux
+manuscript/*.bbl
+manuscript/*.bcf
+manuscript/*.blg
+manuscript/*.fdb_latexmk
+manuscript/*.fls
+manuscript/*.log
+manuscript/*.out
+manuscript/*.run.xml
+manuscript/*.synctex.gz
+manuscript/*.xdv
