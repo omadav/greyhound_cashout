@@ -1,414 +1,626 @@
 \documentclass[man,floatsintext,donotrepeattitle]{apa7}
 
-% ---------------------------------------------------------------------------
-% Draft manuscript, APA7 format. Target: Journal of Gambling Studies or
-% Journal of Behavioral Addictions (both accept APA-style manuscripts on
-% submission; final typesetting is done by the journal, so this is a working
-% draft, not a camera-ready file). Filled in with the real numbers from
-% analysis/greyhound_report.Rmd as of the date below -- re-pull that report
-% before submission, since Study 6 is still an open pilot and its N will move.
-% ---------------------------------------------------------------------------
+% =============================================================================
+% Draft manuscript (APA 7). Target: Journal of Gambling Studies / Journal of
+% Behavioral Addictions.
+%
+% EVERY number, table and figure comes from manuscript/make_assets.R, which
+% runs the same analysis code as analysis/greyhound_report.Rmd on the raw data.
+% After new data:  Rscript manuscript/make_assets.R  then  latexmk -pdf manuscript.tex
+% Numbers are inserted with \res{key}; a missing key prints as ??key?? in bold.
+%
+% Study numbering: manuscript Study 5 = repo study6 (the repo's study5 was an
+% abandoned within-subject pilot, never analysed, not reported).
+%
+% Introduction and General Discussion are drafting notes for Omar to write up.
+% =============================================================================
 
 \usepackage[american]{babel}
 \usepackage{csquotes}
 \usepackage[style=apa,sortcites=true,sorting=nyt,backend=biber]{biblatex}
 \DeclareLanguageMapping{american}{american-apa}
 \addbibresource{references.bib}
-
 \usepackage{graphicx}
 \usepackage{booktabs}
-\usepackage{siunitx}
+\usepackage{amsmath}
+\usepackage{xcolor}
 
-\title{TITLE PLACEHOLDER: Near misses in a dynamic gambling task: a robust
-  self-report effect that does not translate into betting behavior}
-\shorttitle{NEAR MISSES, CONFIDENCE, AND BETTING}
+\input{numbers}
 
-\author{Omar D. P\'erez\textsuperscript{1} \& Luke Clark\textsuperscript{2}}
-\affiliation{%
-  \textsuperscript{1}Department of Industrial Engineering, Universidad de Chile\\
-  \textsuperscript{2}Centre for Gambling Research, Department of Psychology,
-  University of British Columbia}
+\newcommand{\draftnote}[1]{\textcolor{blue!60!black}{#1}}
+\newenvironment{draftnotes}{\par\noindent\draftnote{\textbf{[Drafting notes --- Omar to write this section. Ideas from our discussions:]}}\begin{itemize}\color{blue!60!black}}{\end{itemize}}
 
-\authornote{% TODO: fill in before submission
-  Correspondence concerning this article should be addressed to Omar D.
-  P\'erez, Department of Industrial Engineering, Universidad de Chile.
-  Email: TODO.
-  \par\medskip
-  \textbf{Author note (draft placeholder).} Add funding sources, conflict of
-  interest statement, preregistration links (Study 2; Study 6 if a
-  confirmatory run is preregistered before submission), and a data/code
-  availability statement (this repository).}
+\title{Near Misses in a Dynamic Betting Task: A Robust Self-Report Effect That Does Not Reach Bet Size, and Lower Confidence When Betting Is Available}
+% Alternatives: "Almost Winning a Race: Near Misses, Betting, and Confidence in Greyhound Racing";
+% "Having Money on the Line Lowers Confidence and Blunts the Near-Miss Effect"
+\shorttitle{NEAR MISSES, BETTING, AND CONFIDENCE}
 
-\abstract{%
-  The near-miss effect -- the finding that narrowly missed gambling outcomes
-  are experienced differently from clear losses -- is well established for
-  self-report and psychophysiological measures, but it is unclear whether it
-  changes what people actually do with their money. Across five online
-  studies (total \emph{N} = TODO after exclusions; TODO before exclusions)
-  using realistic, dynamic gambling stimuli (real greyhound race video,
-  rather than the static slot-machine reels used in most prior work),
-  participants picked a dog to follow on each race and rated their
-  confidence, pleasure, motivation to continue, and perceived luck. The
-  near-miss effect on self-report replicated in every study (motivation,
-  pleasure, and luck all higher after a near miss than a clear loss;
-  confidence unaffected, as it should be if trap assignment was not
-  leaking). In two studies that added a real bet-size decision before each
-  race (Study 3: 5 discrete Cambridge Gambling Task-style stakes; Study 4: a
-  continuous 0--100\% slider), bet size showed no near-miss effect in either
-  study, and three statistical approaches with different assumptions about
-  the skewed betting data agreed the null was real, not a range or
-  measurement artifact. A cross-study comparison suggested that pre-race
-  confidence fell as studies added betting; a final, preregistered-in-spirit
-  study (Study 6, \emph{N} = 120) tested this directly with a clean
-  between-subjects manipulation of bet availability (holding everything else
-  about the task constant) and confirmed it: participants who could bet
-  reported lower confidence than participants who never could, regardless of
-  outcome (\emph{d} = --0.47, one-tailed \emph{p} = .006). The near-miss
-  effect on self-report is therefore highly robust, but dissociates from a
-  concrete financial decision (bet size); separately, the mere availability
-  of a bet -- independent of any near miss -- has a general suppressive
-  effect on confidence that has not, to our knowledge, been demonstrated
-  before in this direct a comparison.
-  \\
-  \textbf{Keywords:} near-miss effect, gambling, confidence, illusion of
-  control, behavioral persistence, online experiment}
+\authorsnames[1,2]{Omar D. P\'erez, Luke Clark}
+\authorsaffiliations{{Department of Industrial Engineering, Universidad de Chile},
+  {Centre for Gambling Research at UBC, Department of Psychology, University of British Columbia}}
+
+\authornote{
+  TODO: ORCIDs; funding; conflicts of interest (standard for Luke's industry-funded centre: state them);
+  preregistration (Study 2, AsPredicted \#TODO); ethics approval (Comit\'e de \'Etica FCFM,
+  Universidad de Chile, protocol TODO); data and code availability (this repository / OSF).
+
+  Correspondence concerning this article should be addressed to Omar D. P\'erez,
+  Department of Industrial Engineering, Universidad de Chile, Santiago, Chile.
+  Email: omar.perez.r@uchile.cl}
+
+\abstract{
+% Draft -- rewrite once the Discussion is written.
+Near misses---losses that come close to a win---increase self-reported motivation to gamble, but most
+evidence comes from static slot-machine outcomes and it is unclear whether the effect reaches financial
+decisions. In five online studies we used real greyhound race footage, in which a near miss unfolds over
+the final strides of a race. Participants backed a dog on each of 20 races, rated their confidence before
+the race, and rated pleasure, luck, and motivation to play again after it. A near miss, relative to a clear
+loss, increased pleasure, perceived luck, and motivation in a first study (\textit{N} = \res{s1-analysed}),
+in a preregistered replication (\textit{N} = \res{s2-analysed}), and in three further studies, while
+pre-race confidence was unaffected. How the near miss unfolded (catching up late, being caught after
+leading, or staying level) changed how pleasant it felt in the preregistered study only. When participants
+staked a share of their balance before each race (Study 3, five fixed stakes; Study 4, a continuous
+slider), near misses did not change the next stake (Bayes factors favoring the null of about 5:1). Across
+studies, confidence was lower in the two studies with betting; a fifth study randomly assigned
+participants to a session with or without betting and confirmed that bet availability lowers confidence
+(\textit{N} = \res{s5-analysed}, $d = \res{s5-d}$). In exploratory analyses, betting also
+reduced the near-miss effect on every rating, because near misses were rated much more like clear losses
+when money was at stake. The near-miss effect on self-report is robust, but it does not translate into
+larger bets, and having money on the line changes both confidence and the experience of almost winning.}
+
+\keywords{near miss, gambling, sports betting, confidence, bet size, greyhound racing}
 
 \begin{document}
 \maketitle
 
+% =============================================================================
 \section{Introduction}
+% =============================================================================
 
-% ---------------------------------------------------------------------------
-% DRAFTING NOTES (delete before submission):
-% - This section is a real first draft, not a skeleton, but every citation
-%   needs to be checked against the source (see references.bib header).
-% - Paragraph order: (1) what the near-miss effect is and why it matters,
-%   (2) the standard paradigm and its limits (static, discrete-trial slot
-%   machine stimuli), (3) what a dynamic/naturalistic stimulus adds, (4) the
-%   open question this project actually answers -- does the effect extend to
-%   money-relevant behavior, and does merely being able to bet change how
-%   confident people feel, (5) explicit aims/hypotheses per study.
-% ---------------------------------------------------------------------------
+\begin{draftnotes}
+  \item \textbf{What a near miss is and why it matters.} Losing outcome close to a win; treated by gamblers as
+    ``almost winning'' rather than losing \parencite{reid1986}. \textcite{clark2009}: near misses rated less
+    pleasant than wins but increased motivation to play, and recruited win-related circuitry (ventral
+    striatum, anterior insula), with stronger responses when the player had personal control. Thought to
+    contribute to persistence and to problem gambling.
+  \item \textbf{Behavioral evidence is thinner and mixed.} Self-report effects replicate well; effects on
+    persistence/betting are less consistent. Candidate references to check and cite (verify before citing):
+    Kassinove \& Schare (2001) on near misses and persistence at a slot machine; C\^ot\'e et al. (2003) on
+    near wins prolonging VLT play; later persistence/extinction paradigms (see \texttt{persistenceTODO} in
+    references.bib). \textcite{studer2015}: confidence and betting move with recent outcomes, but were
+    measured in separate experiments/samples and should not be used as proxies for one another.
+  \item \textbf{The static-paradigm gap.} Nearly all near-miss studies use slot-machine reels or wheels:
+    the near miss is a final static frame. In sports and race betting (a large and growing share of
+    gambling, including in-play betting) a near miss \emph{unfolds}: the dog you backed leads and is caught,
+    or closes fast and runs out of track. Real race video gives (a) ecological validity and (b) a new
+    dimension, \emph{trajectory} of the near miss, that static paradigms cannot manipulate. Link to
+    counterfactual thinking (``if only the race had been 10 m longer'') and to the upward/downward
+    counterfactual literature (candidate refs to check: Medvec et al., 1995, Olympic silver vs bronze).
+  \item \textbf{Why a bet-size measure.} If near misses increase the urge to keep playing, the obvious
+    financial signature is staking more on the next race. Cambridge Gambling Task-style proportional
+    stakes (Rogers et al., 1999 --- verify) give a graded measure within the same repeated-measures design
+    as the ratings (one contrast per trial type, which single stop/continue decisions cannot give).
+  \item \textbf{Confidence.} Rated before each race, so it cannot depend on the outcome: it doubles as a
+    check that the (pre-assigned) outcome is not leaking. Whether real stakes change confidence is itself
+    an open question: \textcite{knoxinkster1968} found bettors more confident \emph{after} placing a bet
+    (before vs after one decision, a different question from bet availability across a whole session).
+  \item \textbf{Series logic / overview.} (1) Is there a near-miss effect with dynamic race stimuli
+    (Study 1, not preregistered)? (2) Preregistered confirmation, plus trajectory (Study 2). (3) Does it
+    reach bet size (Study 3)? (4) Was Study 3's null due to the discrete stake scale (Study 4)? (5) Across
+    studies confidence was lower whenever betting was available $\rightarrow$ hypothesis, tested with random
+    assignment (Study 5).
+\end{draftnotes}
 
-A near miss in gambling -- a losing outcome that comes close to a win, such
-as two matching symbols and a third one line away on a slot machine reel --
-is not treated by most gamblers as an ordinary loss. \textcite{reid1986}
-first described near-misses as functioning like an intermittent
-reinforcement signal despite carrying no informational value about future
-outcomes, and \textcite{clark2009} showed that near-misses recruit
-win-related brain circuitry (ventral striatum, anterior insula) and increase
-self-reported motivation to continue playing, relative to a clear loss, even
-though both outcomes pay nothing. This near-miss effect has since been
-replicated many times, chiefly using slot-machine or roulette-style
-paradigms in which the ``near miss'' is a static, discrete outcome shown for
-a fixed duration.
-
-That paradigm has a limitation for generalizing to real gambling: most
-naturalistic gambling events unfold over time, and a near miss is often only
-apparent from \emph{how} an outcome unfolds, not just the final frame. A
-horse or greyhound that leads for most of a race and is caught right at the
-line, one that trails throughout and then closes fast without quite getting
-there, and one that is never really in contention produce the same binary
-outcome (loss) but plausibly very different subjective experiences.
-Real races also make available a trajectory dimension -- gaining, fading, or
-staying level -- that a static slot-machine reel cannot. TODO: cite any
-existing work on dynamic/naturalistic near-miss stimuli here if it exists;
-otherwise state explicitly that this is (to our knowledge) the first study
-to use real, unedited race footage and to manipulate trajectory this way.
-
-A second open question is whether the near-miss effect, robustly shown on
-self-report, extends to a concrete financial decision. Demonstrating that
-near-misses make people say they want to keep playing is not the same as
-demonstrating that near-misses make people bet more. \textcite{studer2015}
-found that recent outcomes shifted confidence and separately shifted
-betting, but confidence and betting were measured in different experiments,
-with different samples of participants, explicitly cautioning against using
-one as a proxy for the other. \textcite{knoxinkster1968} showed that real
-racetrack bettors reported higher confidence in their horse
-\emph{after} placing a bet than bettors queueing to bet on the same horse
-before placing it -- a postdecision effect in the opposite direction from a
-simple stakes-lower-confidence account, and one 1991 replication attempt
-found no moderation of that effect by bet size. Neither result directly
-answers whether \emph{having a bet available at all}, independent of a near
-miss and independent of any single decision, changes confidence -- which is
-the question the present studies converged on.
-
-We report five studies using real 2013 UK greyhound race footage. Studies 1
-and 2 establish and replicate the near-miss effect on self-report in this
-naturalistic paradigm, and Study 2 (preregistered) additionally manipulates
-the \emph{trajectory} of a near miss (catching up late, leading and then
-caught, or staying close throughout) to ask whether the shape of a near miss
-matters, not just its presence. Studies 3 and 4 add a real bet-size decision
-before each race to test whether the near-miss effect extends to a financial
-stake. Study 6 follows up an unplanned observation from Studies 1--4 -- that
-average confidence was lower in the two studies that included betting -- with
-a clean, randomized, between-subjects test of whether bet availability
-itself lowers confidence.
-
+% =============================================================================
 \section{General Method}
+% =============================================================================
 
-% Shared elements across all studies -- write each Study's Method section to
-% reference back to this one and only describe what differs.
-
-\subsection{Participants and recruitment}
-Participants were recruited on Prolific and completed the task on Pavlovia.
-Studies 1--5 participants were excluded from later studies in the series
-(Study 6 excluded participants from Studies 1--5). TODO: base pay and
-exact eligibility criteria (locale, approval rate) per study.
+\subsection{Participants}
+Participants were adults recruited on Prolific (TODO: country/language filters, approval-rate threshold,
+and base payment for each study; demographics from the Prolific exports) and completed the task in a
+desktop browser, hosted on Pavlovia. Each study recruited new participants: people who had taken part in
+an earlier study in the series were excluded from later ones on Prolific. Median time from the start of
+the session to the last race was \res{dur-min}--\res{dur-max} min across studies (the PGSI came
+afterwards). The studies were approved by the Ethics Committee of the Faculty of Physical and Mathematical
+Sciences, Universidad de Chile (TODO: protocol number), and participants gave informed consent (Studies 3--5
+recorded consent in the task itself). Table~\ref{tab:exclusions} gives the number of completed sessions,
+exclusions, and analyzed participants in each study.
 
 \subsection{Stimuli}
-Race videos were drawn from a fixed pool of real, unedited 2013 UK greyhound
-races (12 ``close'' races used for the near-miss/narrow-win manipulation, 4
-per trajectory, plus 11 ``clear'' races used for the clear-win/clear-loss
-conditions). On every trial, participants chose one of the dogs before the
-race and then watched the video. \emph{Trajectory} was coded from the
-losing dog's perspective on the home stretch as \emph{catch-up} (gaining
-ground but running out of track), \emph{fall-back} (leading, then passed
-before the line), or \emph{stable} (close throughout, gap never changing).
+Races were real, unedited video footage of 23 greyhound races run in the United Kingdom in 2013, with five
+or six runners each. Twelve were \emph{close} races, in which the winner and runner-up finished close
+together, and eleven were \emph{clear} races. Each close race was coded for the \emph{trajectory} of the
+runner-up on the final part of the race: \emph{catch-up} (gaining on the winner but running out of track),
+\emph{fall-back} (leading, then passed before the line), or \emph{stable} (close throughout, the gap never
+changing). There were four close races of each trajectory. In Study 1, clips ended on the trackside result
+board; from Study 2 on, clips were cut at the finish line so that the board could not reveal the result.
+TODO: source of the footage and coding procedure (who coded; agreement).
 
-\subsection{Conditions}
-Each trial ended in one of four conditions from the participant's chosen
-dog's perspective: clear win (CW), narrow win (NW), near miss (NM), or clear
-loss (CL). Role assignment (which dog is followed, and in the close races,
-whether that dog's near/narrow role is a win or a loss) was counterbalanced
-by rotation across the sample (a deterministic assignment keyed to
-participant order/ID), not drawn at random, so that every clip serves in
-both roles an equal number of times across the sample -- with the single
-exception of Study 1, which used random assignment before this rotation
-scheme was adopted (see Study 1).
+\subsection{Task}
+On each of 20 races, participants saw a race card and backed one dog by name. The name they chose was then
+placed in the trap required by the trial's condition, and they were told which trap and jacket color to
+follow (``[Name] will run from Trap 3, wearing the blue jacket''). Participants therefore chose freely, but
+the outcome was fixed by design. Before the race they rated ``How confident are you that your dog will
+win?''. They then watched the race and saw the result. After the result they rated ``How pleased were you
+with the outcome of this race?'', ``How lucky did you feel in that race?'', and ``Right now, how much do
+you want to play the next race?''. All ratings were 0--100 sliders. The betting studies (3, 4, and the
+betting group of Study 5) added a stake decision after the confidence rating (see Study 3).
+
+Each race ended in one of four outcomes for the participant's dog: a \emph{clear win} (CW; a clear race,
+dog wins), a \emph{narrow win} (NW; a close race, dog is the winner), a \emph{near miss} (NM; a close race,
+dog is the runner-up), or a \emph{clear loss} (CL; a clear race, dog finishes well back). Because each close
+race could serve as a narrow win or as a near miss depending on which trap the participant followed, the
+same footage appeared in both roles across participants, and the near miss and narrow win of a given race
+are visually identical apart from which dog is followed.
 
 \subsection{Measures}
-Before each race, participants rated their confidence (0--100 slider) that
-their chosen dog would win. After the outcome, they rated how pleased they
-felt, how motivated they were to keep playing, and how lucky they felt
-(0--100 sliders each). Confidence is taken \emph{before} the outcome and
-should not differ across post-hoc outcome categories; it therefore serves
-throughout as a manipulation-check that role/trap assignment is not leaking
-information. Every study also administered the Problem Gambling Severity
-Index \parencite{ferriswynne2001} once, at the end.
+\textit{Ratings.} Confidence was rated before the outcome was known, so it should not differ between
+outcome conditions; we used it as a check that the pre-assigned outcome was not detectable in advance.
+Pleasure, luck, and motivation to play were rated after the result.
 
-\subsection{Data quality and exclusions}
-Common exclusion criteria across studies: incomplete sessions, failing an
-attention/slider check, straight-lining (zero variance) on any self-report
-measure, and (from Study 2 onward) failing an outcome-check question asked
-immediately after the race and before the result screen. Exact criteria and
-counts are reported per study below.
+\textit{Problem Gambling Severity Index (PGSI).} After the last race, participants completed the nine-item
+PGSI \parencite{ferriswynne2001}, scored 0--27 and categorized as non-problem (0), low risk (1--2),
+moderate risk (3--7), or problem gambling (8+). Table~\ref{tab:pgsi} describes the samples. As expected for
+a general online panel, about half of each sample scored zero.
 
-\subsection{Analysis}
-Unless noted otherwise, the near-miss effect on a given measure is tested as
-a paired-samples comparison of near miss (NM) versus clear loss (CL) trials,
-averaged within participant. We report Bayes factors (JZS prior, $r =
-.707$) alongside every $p$-value, so that a null result can be described as
-evidence \emph{for} the null ($BF_{01} > 3$) rather than only as a failure
-to reject it.
+\subsection{Data Quality and Exclusions}
+Two races per session included an instructed-response slider (``move the slider to 60''). From Study 2 on,
+two races per session were followed, before the result screen, by an outcome check (``Where did your dog
+finish in that race?''; 1st, 2nd, 3rd, did not win). Participants were excluded if they did not complete all
+20 races, failed any instructed-response or outcome check, gave the same response on every race for any
+rating (straight-lining), or (Studies 2--5) had a median post-race rating time under 2 s. Studies 3--5 also
+required a recorded consent, and Study 5 required a single, consistent group assignment. The outcome check
+was the most frequent reason for exclusion (Table~\ref{tab:exclusions}).
 
-\section{Study 1: The Near-Miss Effect in a Dynamic Task}
+\begin{table}[htbp]
+\caption{Completed Sessions, Exclusions, and Analyzed Participants}
+\label{tab:exclusions}
+\input{tables/tab_exclusions}
+\par\smallskip{\small\textit{Note.} Exclusion criteria overlap, so reasons do not sum to the total.
+-- = criterion not used in that study.}
+\end{table}
 
-\subsection{Method}
-Trap assignment (which dog a participant follows, and thus which close races
-become near misses versus narrow wins) was drawn at random rather than by
-rotation, so per-clip role counts are somewhat uneven (reported as a
-manipulation-check table in the full analysis report). Twenty trials per
-participant, five of each condition (CW, NW, NM, CL). \emph{N} = 44
-analyzed of 51 collected; exclusions: incomplete sessions, failed attention
-check, and straight-lining.
+\begin{table}[htbp]
+\caption{Problem Gambling Severity Index (PGSI) Scores of Analyzed Participants}
+\label{tab:pgsi}
+\resizebox{\linewidth}{!}{\input{tables/tab_pgsi}}
+\end{table}
 
-\subsection{Results}
-The near-miss effect replicated on every self-report measure except
-confidence, as expected: motivation was $+9.8$ points higher after a near
-miss than a clear loss ($p = 3\times10^{-6}$). Pleasure and luck showed the
-same pattern (full test statistics in the online supplement / analysis
-report). Confidence, rated before the outcome, was flat between NM and CL,
-confirming that trap assignment was not leaking.
+\subsection{Statistical Analysis}
+The near-miss effect was tested by comparing each participant's mean rating on near-miss and clear-loss
+races with a paired $t$ test (effect size $d_z$). Every test is reported with a JZS Bayes factor (Cauchy
+prior, $r = .707$; BayesFactor package): BF$_{10}$ quantifies evidence for a difference, and BF$_{01} =
+1/\text{BF}_{10}$ evidence for the null, which lets a null result be read as evidence of absence rather than
+only a failure to reject. Trajectory was analyzed on near-miss races with a linear mixed model per rating
+(rating $\sim$ trajectory + (1 $|$ participant); lme4/lmerTest, Satterthwaite degrees of freedom), and with
+paired contrasts on participant means. Error bars in figures are 95\% within-subject confidence intervals
+(Cousineau--Morey) unless stated otherwise. Analyses were run in R (TODO: version); the analysis code and
+data are available at TODO.
 
-\section{Study 2: Does the Shape of the Near Miss Matter?}
-
-\subsection{Method}
-Preregistered on AsPredicted. \emph{N} = 102 analyzed of 181 collected.
-Role assignment now used the rotation scheme described in General Method,
-and an outcome-check question (asked twice, immediately post-race) was
-added to catch inattentive responding.
-
-\subsection{Results}
-The near-miss effect on motivation replicated ($+10.1$, $p = 2\times10^{-13}$).
-Two planned contrasts on the near-miss trials tested whether trajectory
-(catch-up, fall-back, stable) modulates the effect. Motivation was flat
-across trajectory, but pleasure was not: a catch-up near miss felt
-distinctly less unpleasant than either a fall-back or a stable near miss,
-which did not differ from each other -- the shape of a near miss changes how
-it \emph{feels} without changing how much people want to keep playing.
-Confidence again stayed flat across trajectory, as required.
-
-An exploratory analysis asked whether Problem Gambling Severity Index (PGSI)
-score moderates the catch-up advantage on pleasure. The advantage was
-roughly three times larger in the elevated-PGSI band ($\geq 3$) than the low
-band, and the interaction reached significance when PGSI was split at the
-standard clinical cutoff, but not when PGSI was entered as a continuous
-predictor -- treated as suggestive, not confirmatory, moderation evidence
-(about half the sample scored zero on the PGSI, limiting power for this
-test, as anticipated in advance).
-
-\section{Study 3: Does the Near-Miss Effect Extend to Bet Size?}
+% =============================================================================
+\section{Study 1}
+% =============================================================================
+Study 1 asked whether the near-miss effect appears with dynamic race stimuli. It was not preregistered.
 
 \subsection{Method}
-Same races, trajectory coding, and rotation scheme as Study 2. A new
-decision was added before every race: how much of the current balance to
-stake, chosen from five fixed options modeled on the Cambridge Gambling Task
-(5\%, 25\%, 50\%, 75\%, 95\%). Starting balance 100 points, floor 20;
-real payment was decoupled from the literal final balance (a fixed
-component plus a capped variable bonus) so no participant's actual earnings
-depended on the arithmetic of proportional betting. Unregistered pilot.
-\emph{N} = 40 analyzed.
+\textit{Participants.} Of \res{s1-collected} participants who completed the session, \res{s1-excluded}
+were excluded (Table~\ref{tab:exclusions}), leaving \textit{N} = \res{s1-analysed}. PGSI:
+\textit{M} = \res{s1-pgsiM} (\textit{SD} = \res{s1-pgsiSD}); \res{s1-pgsiZero}\% scored 0 and
+\res{s1-pgsiModPlus}\% scored 3 or more.
+
+\textit{Design.} Outcome (CW, NW, NM, CL) was manipulated within participants, five races each, in a random
+order constrained so that the first race was a win and no outcome occurred three times in a row (the same
+rule was used in all studies). The role of each close race (narrow win or near miss) was drawn at random
+for each participant, so the number of times a given race served in each role varied somewhat across the
+sample. The result screen reported the finishing position (``unplaced'' for dogs that finished outside the
+top three), and there was no outcome check.
 
 \subsection{Results}
-Self-report replicated the near-miss effect as in Studies 1--2 ($+6.5$ on
-motivation, $p = .008$). Bet size on the race \emph{following} a near miss
-versus a clear loss showed no difference. However, 73\% of all bets fell on
-the two lowest stake options, leaving little room for any condition
-difference to appear -- a likely floor/range problem rather than evidence
-against a behavioral near-miss effect, motivating Study 4.
+Near misses were rated as more pleasant, luckier, and more motivating than clear losses
+(Figure~\ref{fig:s1}, Table~\ref{tab:nmcl-s1}). Motivation to play after a near miss was
+\res{s1-motivation-diff} points higher than after a clear loss, \res{s1-motivation-stat}. It was still
+lower than after a narrow win of the same close races (\textit{M} = \res{s1-NW-motivation} vs.\
+\res{s1-NM-motivation}), \res{s1-NWvNM-stat}, and narrow and clear wins did not differ,
+\res{s1-CWvNW-stat}: near misses sit between wins and clear losses. Confidence, rated before the race, did
+not differ between near misses and clear losses, \res{s1-confidence-stat}.
 
-\section{Study 4: A Continuous Bet-Size Measure}
+\begin{figure}[htbp]
+\caption{Study 1: Ratings by Race Outcome}
+\label{fig:s1}
+\includegraphics[width=\linewidth]{figures/fig_conditions_s1.pdf}
+\figurenote{Means with 95\% within-subject confidence intervals. \textit{N} = \res{s1-analysed}.
+Confidence was rated before the race.}
+\end{figure}
+
+\begin{table}[htbp]
+\caption{Study 1: Near Miss Versus Clear Loss}
+\label{tab:nmcl-s1}
+\resizebox{\linewidth}{!}{\input{tables/tab_nmcl_s1}}
+\par\smallskip{\small\textit{Note.} NM = near miss; CL = clear loss; Diff. = NM $-$ CL (0--100 scale).
+Paired $t$ tests; BF$_{10}$ = JZS Bayes factor for a difference.}
+\end{table}
+
+% =============================================================================
+\section{Study 2}
+% =============================================================================
+Study 2 was a preregistered replication of Study 1 (AsPredicted \#TODO) with a tighter design, and it asked
+whether the trajectory of a near miss changes its effect.
 
 \subsection{Method}
-Identical to Study 3 except the five fixed stakes were replaced with a
-continuous 0--100\% slider. Unregistered pilot. \emph{N} = 39 analyzed of
-75 collected.
+\textit{Participants.} The preregistered target was 100 analyzed participants. Of \res{s2-collected}
+completed sessions, \res{s2-excluded} were excluded (\res{s2-pctexcl}\%, mostly for failing the outcome
+check), leaving \textit{N} = \res{s2-analysed}. PGSI: \textit{M} = \res{s2-pgsiM} (\textit{SD} =
+\res{s2-pgsiSD}); \res{s2-pgsiZero}\% scored 0 and \res{s2-pgsiModPlus}\% scored 3 or more.
+
+\textit{Design.} Each participant saw 20 races: 4 clear wins, 4 clear losses, 6 narrow wins, and 6 near
+misses, with two narrow wins and two near misses of each trajectory, so trajectory was manipulated within
+participants. Instead of being drawn at random, the role of each close race rotated across participants, so
+that across the sample every close race served as a near miss and as a narrow win equally often, and no
+participant saw a race twice. Other changes from Study 1: clips ended at the finish line; dog names were
+never repeated across races; a loss was reported as ``Your dog did not win''; the luck item read ``How lucky
+did you feel in that race?''; and the outcome check was added.
+
+\textit{Hypotheses.} (1) Near misses would increase motivation relative to clear losses. (2) Trajectory
+would modulate the near-miss effect; the preregistered planned contrasts were catch-up vs.\ fall-back and
+catch-up vs.\ stable, on motivation, pleasure, and luck. PGSI analyses were preregistered as exploratory.
 
 \subsection{Results}
-The bet-size distribution now used the full range, with a genuine tail out
-to 90--100\% in every condition -- the range problem from Study 3 was fixed.
-The near-miss effect on bet size was nonetheless still flat, and this null
-held up under three tests that make different assumptions about the
-right-skewed betting data: a paired $t$-test on the mean ($p = .695$,
-$BF_{01} = 5.4$), a Wilcoxon signed-rank test on the median ($p = .385$),
-and a paired $t$-test on logit-transformed stakes ($p = .926$, $BF_{01} =
-5.8$). All three agree this is a real null, not an artifact of the wrong
-test for skewed data.
+\textit{Near-miss effect.} The effect replicated on every post-race rating (Figure~\ref{fig:s2},
+Table~\ref{tab:nmcl-s2}): motivation was \res{s2-motivation-diff} points higher after a near miss than
+after a clear loss, \res{s2-motivation-stat}. Confidence did not differ, \res{s2-confidence-stat}
+(BF$_{01}$ = \res{s2-confidence-BF01}).
 
-Self-report replicated again, though more weakly than in Studies 1--3:
-motivation was $+3.0$ points higher after a near miss ($p = .1$), the only
-one of the five studies in which this specific test did not reach
-significance, though the direction was unchanged.
+\begin{figure}[htbp]
+\caption{Study 2: Ratings by Race Outcome}
+\label{fig:s2}
+\includegraphics[width=\linewidth]{figures/fig_conditions_s2.pdf}
+\figurenote{Means with 95\% within-subject confidence intervals. \textit{N} = \res{s2-analysed}.}
+\end{figure}
 
-\section{An Unplanned Cross-Study Observation}
+\begin{table}[htbp]
+\caption{Study 2: Near Miss Versus Clear Loss}
+\label{tab:nmcl-s2}
+\resizebox{\linewidth}{!}{\input{tables/tab_nmcl_s2}}
+\par\smallskip{\small\textit{Note.} As in Table~\ref{tab:nmcl-s1}.}
+\end{table}
 
-Pre-race confidence, pooled across all conditions, differed noticeably
-across the four studies run so far: 51.8 (Study 1), 46.7 (Study 2), 40.1
-(Study 3), and 35.3 (Study 4) (all on a 0--100 scale). The two studies with
-a real bet-size decision (3 and 4) had the two lowest confidence levels.
-This comparison is confounded with several other things that changed across
-these studies over time (consent screen, payment complexity, an added
-decision step, non-overlapping recruitment waves), so it does not on its own
-establish that betting availability lowers confidence -- but it generated
-that hypothesis, tested cleanly in Study 6.
+\textit{Trajectory.} On near-miss races, trajectory affected pleasure,
+\res{s2-traj-pleased-omni}, but not motivation, \res{s2-traj-motivation-omni}, luck,
+\res{s2-traj-luck-omni}, or confidence, \res{s2-traj-confidence-omni} (Figure~\ref{fig:s2traj}). A
+catch-up near miss (\textit{M} = \res{s2-traj-pleased-cu}) was rated as more pleasant than a fall-back
+(\textit{M} = \res{s2-traj-pleased-fb}), \res{s2-traj-pleased-cufb}, or a stable one (\textit{M} =
+\res{s2-traj-pleased-st}), \res{s2-traj-pleased-cust}, and both contrasts survived Holm correction
+(Table~\ref{tab:traj-s2}). Neither planned contrast was significant for motivation or luck.
 
-\section{Study 6: Does Bet Availability Itself Lower Confidence?}
+\begin{figure}[htbp]
+\caption{Study 2: Near-Miss Races by Trajectory}
+\label{fig:s2traj}
+\includegraphics[width=\linewidth]{figures/fig_trajectory_s2.pdf}
+\figurenote{Near-miss races only. Catch-up = the participant's dog was gaining but ran out of track;
+fall-back = led, then was passed; stable = close throughout. 95\% within-subject confidence intervals.}
+\end{figure}
+
+\begin{table}[htbp]
+\caption{Study 2: Preregistered Trajectory Contrasts on Near-Miss Races}
+\label{tab:traj-s2}
+\resizebox{\linewidth}{!}{\input{tables/tab_traj_s2}}
+\par\smallskip{\small\textit{Note.} Diff. = first minus second trajectory. $p_{\text{Holm}}$: Holm
+correction across the six planned contrasts.}
+\end{table}
+
+\textit{PGSI (exploratory).} The catch-up advantage in pleasure was larger in participants scoring 3 or
+more on the PGSI (\res{s2-pgsi-elevated-diff} points, \textit{n} = \res{s2-pgsi-elevated-n},
+\res{s2-pgsi-elevated-stat}) than in those scoring 0--2 (\res{s2-pgsi-low-diff} points, \textit{n} =
+\res{s2-pgsi-low-n}, \res{s2-pgsi-low-stat}; Figure~\ref{fig:s2pgsi}). The difference between groups was
+significant at this cutoff, \res{s2-pgsi-band-stat}, and PGSI correlated with the catch-up advantage,
+\res{s2-pgsi-rho-stat}, but the trajectory $\times$ PGSI interaction was not significant with PGSI as a
+continuous predictor, \res{s2-pgsi-cont-stat}, or log-transformed, \res{s2-pgsi-log-stat}. We treat this
+moderation as suggestive only.
+
+\begin{figure}[htbp]
+\caption{Study 2: Pleasure on Near-Miss Races by Trajectory and PGSI Score}
+\label{fig:s2pgsi}
+\includegraphics[width=.65\linewidth]{figures/fig_pgsi_s2.pdf}
+\figurenote{PGSI 3+ = moderate risk or problem gambling (\textit{n} = \res{s2-pgsi-elevated-n});
+PGSI 0--2 = non-problem or low risk (\textit{n} = \res{s2-pgsi-low-n}). 95\% within-subject confidence
+intervals computed within each group.}
+\end{figure}
+
+% =============================================================================
+\section{Study 3}
+% =============================================================================
+Study 3 asked whether the near-miss effect extends to a financial decision: the amount staked on the next
+race. It was not preregistered.
 
 \subsection{Method}
-Same race pool, rotation scheme, condition counts, and questions as Study 4.
-Participants were randomly assigned once, before consent, to one of two
-whole-session conditions: a \emph{betting} group (Study 4's 0--100\% slider,
-on every race) or a \emph{no-betting} group (never offered a bet, and never
-shown a balance). The direction of the hypothesis (betting lowers
-confidence) was fixed before this data existed, from the pattern above, so
-the primary test is one-tailed. \emph{N} = 120 analyzed (65 betting, 55
-no-betting).
+\textit{Participants.} Of \res{s3-collected} completed sessions, \res{s3-excluded} were excluded, leaving
+\textit{N} = \res{s3-analysed} (target: 40). PGSI: \textit{M} = \res{s3-pgsiM} (\textit{SD} =
+\res{s3-pgsiSD}); \res{s3-pgsiZero}\% scored 0 and \res{s3-pgsiModPlus}\% scored 3 or more.
 
-% TODO before submission: decide and state whether this N is the final,
-% locked sample (stop-collection decision) or an interim look, and whether
-% a separate confirmatory preregistered replication is planned/run. As of
-% this draft the target power analysis called for roughly 45-100 per arm
-% depending on assumed effect size; check the current analysis report for
-% the up-to-date number before writing this paragraph for real.
+\textit{Design and betting.} Races, trajectory coding, trial counts, and rotation were as in Study 2.
+Participants started with 100 points. After the confidence rating on every race they chose how much of
+their current balance to bet, from five options modeled on the Cambridge Gambling Task: 5\%, 25\%, 50\%,
+75\%, or 95\%. A winning bet returned the stake plus the same amount again (even money); a losing bet was
+lost. The balance could not fall below 20 points. The result screen showed the points won or lost and the
+new balance. Participants earned a bonus of \pounds0.50 + \pounds1.50 $\times$ min(final balance / 100, 1),
+that is, between \pounds0.80 and \pounds2.00, in addition to the base payment (TODO). Because the
+participant's dog won on 10 of the 20 races by design, the expected value of any stake was zero.
+
+\textit{Measure.} The behavioral measure was the stake (\% of balance) placed on the race \emph{following}
+each outcome, compared between near misses and clear losses.
 
 \subsection{Results}
-Participants in the betting group reported lower average pre-race
-confidence (\emph{M} = 40.2, \emph{SD} = 20.9) than participants in the
-no-betting group (\emph{M} = 49.6, \emph{SD} = 19.0), $t(117.3) = -2.58$,
-one-tailed $p = .006$, $d = -0.47$, $BF_{10} = 7.1$ -- moderate evidence for
-the effect over the null. The classic near-miss effect on motivation
-replicated within this sample as well, pooled across both groups
-($+10.3$, $p = 5\times10^{-10}$), confirming the manipulation and task were
-behaving normally in both arms.
+\textit{Near-miss effect on ratings.} The near-miss effect replicated on all three post-race ratings
+(Figure~\ref{fig:s3}, Table~\ref{tab:nmcl-s3}); for motivation, \res{s3-motivation-stat}. Confidence did not
+differ, \res{s3-confidence-stat}.
 
+\begin{figure}[htbp]
+\caption{Study 3: Ratings by Race Outcome}
+\label{fig:s3}
+\includegraphics[width=\linewidth]{figures/fig_conditions_s3.pdf}
+\figurenote{Means with 95\% within-subject confidence intervals. \textit{N} = \res{s3-analysed}.}
+\end{figure}
+
+\begin{table}[htbp]
+\caption{Study 3: Near Miss Versus Clear Loss}
+\label{tab:nmcl-s3}
+\resizebox{\linewidth}{!}{\input{tables/tab_nmcl_s3}}
+\par\smallskip{\small\textit{Note.} As in Table~\ref{tab:nmcl-s1}.}
+\end{table}
+
+\textit{Stakes.} Participants bet cautiously: \res{s3-opt5}\% of bets were the 5\% option and
+\res{s3-opt25}\% the 25\% option, so \res{s3-twolowest}\% of all bets used the two lowest stakes
+(Figure~\ref{fig:s3bets}A); \res{s3-opt95}\% used the 95\% option. Final balances ranged from
+\res{s3-balMin} to \res{s3-balMax} points (\textit{Mdn} = \res{s3-balMdn}), and \res{s3-floorN}
+participants reached the 20-point floor at least once.
+
+\textit{Near-miss effect on stakes.} The stake placed after a near miss (\textit{M} = \res{s3-bet-NM}\%)
+did not differ from the stake placed after a clear loss (\textit{M} = \res{s3-bet-CL}\%),
+\res{s3-bet-stat}; the data favored the null, BF$_{01}$ = \res{s3-bet-BF01} (Figure~\ref{fig:s3bets}B,
+Table~\ref{tab:nextstake}). Trajectory did not affect any rating (Table~\ref{tab:traj-omnibus}).
+
+\begin{figure}[htbp]
+\caption{Study 3: Stakes}
+\label{fig:s3bets}
+\includegraphics[width=\linewidth]{figures/fig_bets_s3.pdf}
+\figurenote{(A) Distribution of chosen stakes across all races. (B) Mean stake on the next race by the
+outcome of the previous race, with 95\% within-subject confidence intervals.}
+\end{figure}
+
+With most bets on the two lowest options, the five-option scale left little room for a difference between
+outcomes. Study 4 therefore replaced it with a continuous scale.
+
+% =============================================================================
+\section{Study 4}
+% =============================================================================
+Study 4 tested whether the null effect on stakes in Study 3 was due to the discrete stake scale. It was not
+preregistered.
+
+\subsection{Method}
+\textit{Participants.} Of \res{s4-collected} completed sessions, \res{s4-excluded} were excluded, leaving
+\textit{N} = \res{s4-analysed} (target: 40). PGSI: \textit{M} = \res{s4-pgsiM} (\textit{SD} =
+\res{s4-pgsiSD}); \res{s4-pgsiZero}\% scored 0 and \res{s4-pgsiModPlus}\% scored 3 or more.
+
+\textit{Design.} Identical to Study 3, except that the stake was set with a continuous slider from 0\% to
+100\% of the current balance (``How much do you want to bet?''), with the amount in points shown as the
+slider moved. The slider started at a random position on each race.
+
+\subsection{Results}
+\textit{Near-miss effect on ratings.} The near-miss effect replicated for pleasure and luck
+(Figure~\ref{fig:s4}, Table~\ref{tab:nmcl-s4}). The effect on motivation was in the same direction but
+smaller and not significant, \res{s4-motivation-stat}, with an inconclusive Bayes factor. Confidence did not
+differ, \res{s4-confidence-stat}.
+
+\begin{figure}[htbp]
+\caption{Study 4: Ratings by Race Outcome}
+\label{fig:s4}
+\includegraphics[width=\linewidth]{figures/fig_conditions_s4.pdf}
+\figurenote{Means with 95\% within-subject confidence intervals. \textit{N} = \res{s4-analysed}.}
+\end{figure}
+
+\begin{table}[htbp]
+\caption{Study 4: Near Miss Versus Clear Loss}
+\label{tab:nmcl-s4}
+\resizebox{\linewidth}{!}{\input{tables/tab_nmcl_s4}}
+\par\smallskip{\small\textit{Note.} As in Table~\ref{tab:nmcl-s1}.}
+\end{table}
+
+\textit{Stakes.} With the continuous scale, stakes spread over the full range
+(Figure~\ref{fig:s4bets}A): \textit{M} = \res{s4-stakeM}\% (\textit{SD} = \res{s4-stakeSD}),
+\textit{Mdn} = \res{s4-stakeMdn}\%; \res{s4-stakeLE25}\% of bets were 25\% of the balance or less and
+\res{s4-stakeGE90}\% were 90\% or more.
+
+\textit{Near-miss effect on stakes.} The stake after a near miss (\textit{M} = \res{s4-bet-NM}\%) again did
+not differ from the stake after a clear loss (\textit{M} = \res{s4-bet-CL}\%), \res{s4-bet-stat},
+BF$_{01}$ = \res{s4-bet-BF01} (Figure~\ref{fig:s4bets}B, Table~\ref{tab:nextstake}). Because stakes were
+right-skewed, we checked this with a Wilcoxon signed-rank test, $p \res{s4-bet-wilcox-p}$, and with a paired
+$t$ test on logit-transformed stakes, \res{s4-bet-logit-stat}; all three agreed. Trajectory did not affect
+any rating (Table~\ref{tab:traj-omnibus}).
+
+\begin{figure}[htbp]
+\caption{Study 4: Stakes}
+\label{fig:s4bets}
+\includegraphics[width=\linewidth]{figures/fig_bets_s4.pdf}
+\figurenote{(A) Distribution of stakes across all races (5-point bins). (B) Mean stake on the next race by
+the outcome of the previous race, with 95\% within-subject confidence intervals.}
+\end{figure}
+
+\begin{table}[htbp]
+\caption{Mean Stake (\% of Balance) on the Race After Each Outcome, Studies 3 and 4}
+\label{tab:nextstake}
+\input{tables/tab_nextstake}
+\par\smallskip{\small\textit{Note.} Participant means; \textit{SD} in parentheses.}
+\end{table}
+
+% =============================================================================
+\section{Confidence Across Studies}
+% =============================================================================
+Across Studies 1--4, pre-race confidence did not differ between near misses and clear losses in any study,
+as expected. Its overall level, however, was lower in the two studies in which participants bet
+(Figure~\ref{fig:confacross}): mean confidence was \res{s1-confM} and \res{s2-confM} in Studies 1 and 2 and
+\res{s3-confM} and \res{s4-confM} in Studies 3 and 4. Pooling participants, confidence was lower with
+betting (\textit{M} = \res{cross-M34}, \textit{n} = \res{cross-n34}) than without
+(\textit{M} = \res{cross-M12}, \textit{n} = \res{cross-n12}), \res{cross-stat}. Because the studies differed
+in more than betting, this comparison cannot isolate the cause. It led to the hypothesis that the
+availability of betting lowers confidence, which Study 5 tested with random assignment.
+
+\begin{figure}[htbp]
+\caption{Mean Pre-Race Confidence by Study and Betting Availability}
+\label{fig:confacross}
+\includegraphics[width=.85\linewidth]{figures/fig_confidence_across.pdf}
+\figurenote{Participant means with 95\% confidence intervals (between-subjects). Studies 1--4 are separate
+samples; in Study 5, participants were randomly assigned to betting or no betting.}
+\end{figure}
+
+\begin{table}[htbp]
+\caption{Omnibus Effect of Near-Miss Trajectory on Each Rating, Studies 2--5}
+\label{tab:traj-omnibus}
+\resizebox{\linewidth}{!}{\input{tables/tab_traj_omnibus}}
+\par\smallskip{\small\textit{Note.} Near-miss races only. Linear mixed models, rating $\sim$ trajectory +
+(1 $|$ participant); $F$ tests with Satterthwaite degrees of freedom.}
+\end{table}
+
+% =============================================================================
+\section{Study 5}
+% =============================================================================
+Study 5 tested whether the availability of betting lowers confidence, by randomly assigning participants to
+a whole session with betting or without it. The direction of the hypothesis was fixed in advance from the
+cross-study comparison, so the test is one-tailed. The study was not preregistered.
+
+\subsection{Method}
+\textit{Participants.} The cross-study effect ($d = \res{cross-d}$) implied \res{s5-power-n-cross}
+participants per group for 80\% power (one-tailed $\alpha$ = .05); a smaller effect of \textit{d} = 0.40
+would require \res{s5-power-n-d4} per group. % TODO: state the stopping rule plainly (data were collected in batches).
+Of \res{s5-collected} completed sessions (\res{s5-assigned-bet} assigned to betting,
+\res{s5-assigned-nobet} to no betting), \res{s5-excluded} were excluded, leaving \textit{N} =
+\res{s5-analysed} (\res{s5-nbet} betting, \res{s5-nnobet} no betting). Exclusion rates did not differ between
+groups (\res{s5-excl-bet}\% vs.\ \res{s5-excl-nobet}\%), \res{s5-excl-chisq}. PGSI: \textit{M} =
+\res{s5-pgsiM} (\textit{SD} = \res{s5-pgsiSD}); \res{s5-pgsiZero}\% scored 0 and \res{s5-pgsiModPlus}\%
+scored 3 or more.
+
+\textit{Design.} Races, trial counts, rotation, and ratings were as in Study 4. Before the consent screen,
+each participant was assigned by a random draw (1:1) to one of two groups for the whole session. In the
+\emph{betting} group, participants placed a bet with the Study 4 slider on every race, after the confidence
+rating, and saw their balance throughout. In the \emph{no-betting} group, participants never saw a bet or a
+balance. Instructions, consent, and payment information were adapted to each group; everything else was
+identical. The betting group's bonus was computed as in Studies 3 and 4; no-betting participants were paid
+bonuses matched to the betting group's distribution after data collection, so that expected payment did not
+differ between groups. Because confidence was rated before the bet on each race, any difference in
+confidence cannot reflect the size of that race's bet.
+
+\textit{Primary outcome.} Each participant's mean confidence across all 20 races, compared between groups
+(Welch's $t$ test, one-tailed; directional Bayes factor BF$_{-0}$, the evidence for lower confidence in the
+betting group against the null).
+
+\subsection{Results}
+\textit{Bet availability and confidence.} Participants who could bet were less confident that their dog
+would win (\textit{M} = \res{s5-betM}, \textit{SD} = \res{s5-betSD}) than participants who could not
+(\textit{M} = \res{s5-nobetM}, \textit{SD} = \res{s5-nobetSD}), \res{s5-stat}
+(Figure~\ref{fig:s5}). The result held with a two-tailed test, $p \res{s5-p2}$, and a one-tailed
+Mann--Whitney test, $p \res{s5-wilcox-p}$. The size of the effect ($d = \res{s5-d}$) was close to the
+cross-study estimate ($d = \res{cross-d}$). In the betting group, stakes were similar to Study 4
+(\textit{Mdn} = \res{s5bet-stakeMdn}\% of the balance; \res{s5bet-stakeLE25}\% of bets at 25\% or less).
+
+\begin{figure}[htbp]
+\caption{Study 5: Pre-Race Confidence by Group}
+\label{fig:s5}
+\includegraphics[width=.55\linewidth]{figures/fig_s5_primary.pdf}
+\figurenote{Points are participant means across the 20 races; black points and bars are group means with
+95\% confidence intervals. \textit{n} = \res{s5-nbet} (betting), \res{s5-nnobet} (no betting).}
+\end{figure}
+
+\textit{Near-miss effect.} Pooling both groups, the near-miss effect replicated on every post-race rating
+(Figure~\ref{fig:s5cond}, Table~\ref{tab:nmcl-s5}), and confidence again did not differ between near misses
+and clear losses, \res{s5-confidence-stat}. The effect on motivation was present in each group (betting:
+\res{s5-betting-mot-stat}; no betting: \res{s5-nobetting-mot-stat}). Trajectory did not affect any rating
+(Table~\ref{tab:traj-omnibus}).
+
+\begin{figure}[htbp]
+\caption{Study 5: Ratings by Race Outcome, Both Groups Pooled}
+\label{fig:s5cond}
+\includegraphics[width=\linewidth]{figures/fig_conditions_s5.pdf}
+\figurenote{Means with 95\% within-subject confidence intervals. \textit{N} = \res{s5-analysed}.}
+\end{figure}
+
+\begin{table}[htbp]
+\caption{Study 5: Near Miss Versus Clear Loss, Both Groups Pooled}
+\label{tab:nmcl-s5}
+\resizebox{\linewidth}{!}{\input{tables/tab_nmcl_s5}}
+\par\smallskip{\small\textit{Note.} As in Table~\ref{tab:nmcl-s1}.}
+\end{table}
+
+\textit{Exploratory: betting and the size of the near-miss effect.} The near-miss effect was smaller in the
+betting group on every post-race rating (Figure~\ref{fig:s5groups}; two-tailed tests on the NM $-$ CL
+difference): motivation, \res{s5-inter-motivation-bet} vs.\ \res{s5-inter-motivation-nobet} points,
+\res{s5-inter-motivation}; pleasure, \res{s5-inter-pleased-bet} vs.\ \res{s5-inter-pleased-nobet},
+\res{s5-inter-pleased}; luck, \res{s5-inter-luck-bet} vs.\ \res{s5-inter-luck-nobet}, \res{s5-inter-luck}.
+This was not because clear losses sat at the floor: ratings after wins and clear losses were similar in the
+two groups, while ratings after near misses were much lower with betting (pleasure after a near miss:
+\res{s5-betting-pleased-NM} vs.\ \res{s5-nobetting-pleased-NM}; after a clear loss:
+\res{s5-betting-pleased-CL} vs.\ \res{s5-nobetting-pleased-CL}). With a bet on the race, a near miss was
+experienced much more like a clear loss.
+
+\begin{figure}[htbp]
+\caption{Study 5 (Exploratory): Post-Race Ratings by Outcome and Group}
+\label{fig:s5groups}
+\includegraphics[width=\linewidth]{figures/fig_s5_groups.pdf}
+\figurenote{Means with 95\% within-subject confidence intervals computed within each group.}
+\end{figure}
+
+% =============================================================================
 \section{General Discussion}
+% =============================================================================
 
-Across five independent samples and three variants of this dynamic,
-naturalistic gambling task, the near-miss effect on self-reported
-motivation, pleasure, and perceived luck was remarkably consistent: near
-misses made people feel and say they wanted to continue more than a clear
-loss, while confidence -- rated before the outcome was known -- stayed flat,
-exactly as a valid manipulation should produce. This replicates the
-foundational self-report finding \parencite{clark2009} in a task built from
-real, dynamic race footage rather than static slot-machine outcomes, and
-extends it with a trajectory dimension not available in prior paradigms:
-Study 2 showed that a near miss that involves a late charge (catch-up) feels
-less bad than one where the lead was surrendered (fall-back) or where the
-gap never changed (stable), even though motivation to continue does not
-depend on this distinction.
-
-That self-report robustness makes the second main finding more striking:
-across two independently piloted bet-size measures using different scales
-(five fixed Cambridge Gambling Task-style stakes in Study 3; a continuous
-slider in Study 4), the near-miss effect on bet size was flat, and in Study
-4 this null was confirmed under three different statistical approaches that
-do not share the same assumptions about the skewed betting data. Wanting to
-keep playing, as measured by a rating, did not translate into staking more
-money on the next race. This is a genuine dissociation, not a failure to
-detect an effect that is there: Study 4's histogram shows real variance and
-a genuine tail to the top of the scale in every condition, ruling out the
-range/floor explanation that could be raised against Study 3.
-
-The third finding was not part of the original design. An unplanned
-observation that average confidence fell as studies added a bet-size
-decision motivated Study 6, a clean, randomized, between-subjects test:
-merely being able to bet -- with the near-miss manipulation, race pool, and
-every other feature of the task held constant -- lowered confidence relative
-to a group that could never bet, regardless of what happened in any given
-race. To our knowledge this is a more direct test of whether stakes being
-available changes confidence than is available in the existing literature:
-\textcite{knoxinkster1968} compared confidence before versus after a single
-bet decision, not a between-groups comparison of ever-available versus
-never-available stakes, and found postdecision confidence \emph{increased}
-after commitment -- the opposite direction from the present result, though
-answering a different question. \textcite{studer2015} measured confidence
-and betting in separate experiments with different samples, explicitly
-cautioning against treating one as a stand-in for the other. Whether the
-mechanism here is a general conservatism induced by real stakes, an
-attentional or cognitive-load cost of the extra decision, or something else
-is not resolved by this design and is worth its own follow-up.
-
-\subsection{Limitations}
-Studies 3, 4, and 6 were unregistered pilots (Study 6's hypothesis direction
-was fixed in advance from the cross-study pattern, which licenses a
-one-tailed test, but the study as a whole was not formally preregistered).
-Study 6's current sample, while sufficient to detect the observed effect
-size, is smaller than would be wanted for a fully powered confirmatory claim
-if the true effect is closer to the small-to-medium end of plausible values;
-TODO -- update this paragraph with the final, locked sample size and state
-plainly whether a larger confirmatory run was completed before submission.
-All self-report measures are single-item 0--100 sliders rather than
-validated multi-item scales. The Prolific sample, like most online panels,
-is not enriched for problem gambling (roughly half of participants scored
-zero on the PGSI in every study), limiting the power of the PGSI moderation
-analyses, consistent with prior cautions about testing this kind of
-moderation in general-population online samples.
-
-\subsection{Future directions}
-Because bet size did not carry the near-miss effect, a natural next
-behavioral measure is \emph{persistence} -- whether someone keeps playing at
-all -- rather than how much they stake when they do. Adapting this task's
-existing (currently unused) cash-out mechanic into a repeated, per-trial
-stop-or-continue offer would give a persistence measure tied to the specific
-condition that just occurred, within the same repeated-measures structure
-used throughout this project. A sample enriched for problem gambling would
-give the PGSI-moderation questions raised in Study 2 real power. Finally, a
-dedicated cashout-manipulation study could ask whether the near-miss effect
-depends on the availability of a cashout decision, whether trajectory
-moderates that dependency, and whether a near miss's trajectory itself
-changes cashout behavior -- combining the open questions from Studies 2 and
-6 with the persistence measure above.
+\begin{draftnotes}
+  \item \textbf{Summary.} Five studies, real dynamic race footage. The near-miss effect on pleasure, luck and
+    motivation replicated in every sample (motivation in Study 4 same direction, n.s., inconclusive BF).
+    Pre-race confidence never differed between NM and CL (BF$_{01}$ $\approx$ 5--6): the manipulation is clean
+    and the outcome did not leak. First near-miss evidence with naturally unfolding sports outcomes.
+  \item \textbf{Trajectory.} Preregistered Study 2: a catch-up near miss is less unpleasant than a fall-back or
+    stable one, without changing motivation --- affect and drive come apart. But it did not replicate in
+    Studies 3--5. Options: (a) fragile/small effect; (b) betting flattens near-miss affect (Study 5
+    exploratory), which would explain 3--4 but not the pooled Study 5 --- check trajectory in the Study 5
+    no-betting group alone before writing this (exploratory, TODO). Link to counterfactual closeness
+    (``almost caught him'' vs ``had it and lost it'').
+  \item \textbf{No near-miss effect on stakes.} Two measures (discrete CGT-style, continuous slider), both flat,
+    BF$_{01}$ $\approx$ 5.4; Study 4 fixed the range problem of Study 3 and the null held under three tests.
+    Wanting to keep playing (rating) $\neq$ staking more. People bet small proportions (median
+    $\approx$ 11--25\%). Consistent with \textcite{studer2015}'s caution not to treat confidence/betting as
+    proxies. Implication: the near-miss effect may act on \emph{persistence} (whether to keep playing) rather
+    than \emph{intensity} (how much). Luke's point: persistence is probably where it shows.
+  \item \textbf{Stakes after wins vs.\ losses} (Table~\ref{tab:nextstake}, Figures~\ref{fig:s3bets}B and
+    \ref{fig:s4bets}B): stakes were higher after \emph{any} loss (NM or CL) than after a win --- loss-chasing
+    pattern? Careful: stakes are a \% of the balance, which just shrank after a loss, so a constant bet in
+    points shows up as a higher \%. Would need the stake in points to interpret (not analyzed yet).
+  \item \textbf{Bet availability lowers confidence} (the main new finding): $d \approx -0.47$ with random
+    assignment, same size as the confounded cross-study estimate. Confidence was rated \emph{before} the
+    bet on each race, so it is a session-level shift (a mindset of having money on the line), not a reaction
+    to a particular stake. Possible mechanisms: stakes make people more cautious/realistic (less illusion of
+    control); loss aversion made salient by the balance; the extra decision. Contrast with
+    \textcite{knoxinkster1968} (confidence up \emph{after} committing a bet --- different comparison).
+    Implication for the many near-miss/illusion-of-control paradigms that measure confidence or expectancy
+    without real stakes: they may overestimate confidence.
+  \item \textbf{Betting blunts the near-miss effect (exploratory, Study 5)}: near misses were rated much more
+    like clear losses when a bet was on (win and clear-loss ratings unchanged). Consistent with the weaker
+    effects in Studies 3--4 than in 1--2 (e.g., pleasure gap $\approx$ 27 points without betting,
+    $\approx$ 9--11 with). Possible reasons: the result screen shows points lost, so a near miss is
+    unambiguously a loss; attention shifts from the race to the balance. Implication: near-miss effects in
+    paradigms without stakes might overstate what happens when real money is involved --- or, conversely,
+    the ``free-play'' near miss is the purer effect. Needs a preregistered confirmation.
+  \item \textbf{PGSI.} General-population sample, about half scoring 0, few problem gamblers: limited power
+    for moderation (as Luke anticipated). Study 2's exploratory result (catch-up advantage larger at PGSI
+    3+) was significant at the standard cutoff but not with PGSI continuous --- suggestive only.
+  \item \textbf{Limitations.} Online sample; high exclusion rate from the outcome check (about 40--48\% in
+    Studies 2--5; it is strict, but exclusion rates were equal across Study 5 groups); only Study 2
+    preregistered; Study 5 collected in batches (state the stopping rule); single-item slider ratings;
+    points rather than the participant's own money (bonus decoupled from the balance); the outcome was
+    pre-assigned (choice of dog was nominal) --- although that is what allows a clean near-miss manipulation.
+  \item \textbf{Future directions.} (1) A persistence measure within this task: a repeated per-race
+    stop/cash-out-or-continue choice (the task already has an unused cash-out mechanic), giving a behavioral
+    near-miss contrast per trial type. (2) A sample of regular sports bettors / people with elevated PGSI.
+    (3) Preregistered confirmation of the two Study 5 findings (confidence; blunted near-miss effect),
+    ideally with real stakes. (4) Does trajectory change cash-out decisions?
+\end{draftnotes}
 
 \printbibliography
 

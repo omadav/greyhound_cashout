@@ -92,3 +92,4 @@ manuscript/*.out
 manuscript/*.run.xml
 manuscript/*.synctex.gz
 manuscript/*.xdv
+manuscript/*.bbl-SAVE-ERROR
